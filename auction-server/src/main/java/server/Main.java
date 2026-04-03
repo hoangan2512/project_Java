@@ -45,7 +45,7 @@ public class Main {
             stmt.execute(bidsTable);
             stmt.close();
         } catch(Exception e){
-            System.out.println("❌ Có lỗi xảy ra khi tạo bảng!");
+            System.out.println("Có lỗi xảy ra khi tạo bảng!");
             e.printStackTrace();
         }
 
