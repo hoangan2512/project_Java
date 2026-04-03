@@ -72,6 +72,7 @@ class Admin extends User {
         System.out.println("[Admin] ID: " + id + " | Tên: " + getName() + " | Quyền: " + getRole());
     }
 
+    
     // Chức năng riêng của Admin (Ví dụ: Khóa người dùng)
     public void blockUser(User user) {
         System.out.println("Admin " + getName() + " đã khóa người dùng: " + user.getName());
