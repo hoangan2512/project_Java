@@ -1,19 +1,63 @@
-/* Đổi màu nút bấm và bo góc */
-.button {
-    -fx-background-color: #2ecc71;
-    -fx-text-fill: white;
-    -fx-background-radius: 10px;
-    -fx-font-weight: bold;
+/* Nền của bảng điều khiển chính (AnchorPane hoặc VBox) */
+.root {
+    -fx-background-color: #000000;
 }
 
-/* Hiệu ứng khi di chuột vào */
-.button:hover {
-    -fx-background-color: #27ae60;
+/* Tùy chỉnh các ô nhập liệu (TextField & PasswordField) */
+.text-field, .password-field {
+    -fx-background-color: #1b1b1b;
+    -fx-text-fill: orange;
+    -fx-prompt-text-fill: #888888;
+    -fx-border-color: #ffa31a;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px;
+}
+
+/* Hiệu ứng khi click vào ô nhập */
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #ff9000;
+}
+
+/* Nút bấm chung */
+.button {
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+}
+
+/* Nút Back (Màu tối) */
+.btn-back {
+    -fx-background-color: #111111;
+    -fx-text-fill: white;
+    -fx-border-color: #333333;
+}
+
+/* Nút Sign In (Nền cam, Chữ trắng) */
+#signin {
+    -fx-background-color: #ffa31a; /* Màu cam thương hiệu */
+    -fx-text-fill: #ffffff;       /* Chữ trắng */
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-padding: 10 20;            /* Tạo độ dày cho nút */
     -fx-cursor: hand;
 }
 
-/* Style cho cái Label Status của bạn */
-#Status {
-    -fx-text-fill: #e74c3c;
-    -fx-font-style: italic;
+/* Hiệu ứng khi di chuột qua (Hover) */
+.btn-signin:hover {
+    -fx-background-color: #ffaa33; /* Cam sáng hơn một chút khi hover */
+}
+
+/* Hiệu ứng khi nhấn giữ (Pressed) */
+.btn-signin:armed {
+    -fx-background-color: #e68200; /* Cam tối hơn khi nhấn */
+}
+
+/* Label tiêu đề */
+.label-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
 }
