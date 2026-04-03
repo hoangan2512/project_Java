@@ -1,7 +1,7 @@
 package model;
 
 // lớp cơ sở
-public abstract class entity {
+abstract class entity {
     private int id;
     private String name;
     public entity(int id, String name){

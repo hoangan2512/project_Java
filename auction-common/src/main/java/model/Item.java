@@ -49,10 +49,11 @@ public abstract class Item extends entity {
     public void setCreate_id(LocalDateTime create_id) {
         this.create_id = create_id;
     }
+}
 
-    class Electronics extends Item {
-        public Electronics(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
-            super(id, name, description, starting_price, seller_id, create_id);
+class Electronics extends Item {
+    public Electronics(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
+        super(id, name, description, starting_price, seller_id, create_id);
         }
     }
 
@@ -68,4 +69,3 @@ public abstract class Item extends entity {
             super(id, name, description, starting_price, seller_id, create_id);
         }
     }
-}
