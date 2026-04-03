@@ -2,8 +2,8 @@ package model;
 
 // lớp cơ sở
 abstract class entity {
-    private int id;
-    private String name;
+    protected int id;
+    protected String name;
     public entity(int id, String name){
         this.id = id;
         this.name = name;
