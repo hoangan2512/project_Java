@@ -54,6 +54,7 @@ public abstract class Item extends entity {
 class Electronics extends Item {
     public Electronics(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
         super(id, name, description, starting_price, seller_id, create_id);
+
         }
     }
 
