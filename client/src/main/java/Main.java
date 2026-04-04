@@ -15,11 +15,11 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/signIn.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/mainPage.fxml"));
         Parent root = loader.load();
 
         Scene scene = new Scene(root);
-        Image icon = new Image(getClass().getResourceAsStream("/logo_project.jpg"));
+        Image icon = new Image(getClass().getResourceAsStream("/image/logo_project_2.jpg"));
         primaryStage.getIcons().add(icon);
         primaryStage.setTitle("BidHub");
 

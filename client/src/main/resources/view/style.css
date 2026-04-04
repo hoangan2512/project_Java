@@ -20,32 +20,15 @@
     -fx-border-color: #ff9000;
 }
 
-/* Nút bấm chung */
-.button {
-    -fx-cursor: hand;
-    -fx-font-weight: bold;
-    -fx-background-radius: 5px;
-    -fx-border-radius: 5px;
-}
-
-/* Nút Back (Màu tối) */
-.btn-back {
-    -fx-background-color: #111111;
-    -fx-text-fill: white;
-    -fx-border-color: #333333;
-}
-
 /* Nút Sign In (Nền cam, Chữ trắng) */
-#signin {
+.btn-signin {
     -fx-background-color: #ffa31a; /* Màu cam thương hiệu */
     -fx-text-fill: #ffffff;       /* Chữ trắng */
     -fx-font-weight: bold;
     -fx-background-radius: 5px;
-    -fx-padding: 10 20;            /* Tạo độ dày cho nút */
     -fx-cursor: hand;
 }
 
-/* Hiệu ứng khi di chuột qua (Hover) */
 .btn-signin:hover {
     -fx-background-color: #ffaa33; /* Cam sáng hơn một chút khi hover */
 }
@@ -53,11 +36,4 @@
 /* Hiệu ứng khi nhấn giữ (Pressed) */
 .btn-signin:armed {
     -fx-background-color: #e68200; /* Cam tối hơn khi nhấn */
-}
-
-/* Label tiêu đề */
-.label-title {
-    -fx-text-fill: white;
-    -fx-font-size: 24px;
-    -fx-font-weight: bold;
 }
