@@ -6,16 +6,16 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.shape.Circle?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" styleClass="root" stylesheets="@mainpage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.mainPageController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1280.0" styleClass="root" stylesheets="@mainpage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.mainPageController">
    <children>
-      <AnchorPane prefHeight="110.0" prefWidth="1920.0" styleClass="header">
+      <AnchorPane prefHeight="110.0" prefWidth="1280.0" styleClass="header">
          <children>
             <ImageView fitHeight="71.0" fitWidth="200.0" layoutX="48.0" layoutY="20.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../image/logo_project_2.jpg" />
                </image>
             </ImageView>
-            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1847.0" layoutY="56.0" onMouseClicked="#handleAvatarClick" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
+            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1226.0" layoutY="56.0" onMouseClicked="#handleAvatarClick" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
          </children>
       </AnchorPane>
       <HBox layoutY="110.0" prefHeight="50.0" prefWidth="1920.0" />
