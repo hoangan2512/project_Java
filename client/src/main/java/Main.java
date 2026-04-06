@@ -22,6 +22,7 @@ public class Main extends Application {
         Image icon = new Image(getClass().getResourceAsStream("/image/logo_project_2.jpg"));
         primaryStage.getIcons().add(icon);
         primaryStage.setTitle("BidHub");
+        primaryStage.setFullScreen(true);
 
         primaryStage.setScene(scene);
         primaryStage.show();

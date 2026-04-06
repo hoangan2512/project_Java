@@ -15,7 +15,7 @@
                   <Image url="@../image/logo_project_2.jpg" />
                </image>
             </ImageView>
-            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1832.0" layoutY="55.0" onMouseClicked="#handleAvatarClick" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
+            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1847.0" layoutY="56.0" onMouseClicked="#handleAvatarClick" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
          </children>
       </AnchorPane>
       <HBox layoutY="110.0" prefHeight="50.0" prefWidth="1920.0" />

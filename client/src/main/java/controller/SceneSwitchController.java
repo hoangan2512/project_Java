@@ -13,18 +13,16 @@ import java.io.IOException;
 
 public class SceneSwitchController {
 
-    // 1. Chuyển sang Sign In (Thay thế toàn bộ nội dung cửa sổ hiện tại)
+    // Chuyển sang SignIn (Thay thế toàn bộ nội dung cửa sổ hiện tại)
     public void switchToSignIn(Event e) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/signIn.fxml"));
-        // Lấy Stage hiện tại từ sự kiện (Event)
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
 
-    // 2. Chuyển sang MainPage (Thay thế toàn bộ nội dung cửa sổ hiện tại)
-    // Dùng Event e thay cho ActionEvent e để hỗ trợ cả MouseEvent (nếu cần)
+    // Chuyển sang MainPage (Thay thế toàn bộ nội dung cửa sổ hiện tại)
     public void switchToMainPage(Event e) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/mainPage.fxml"));
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
@@ -33,7 +31,7 @@ public class SceneSwitchController {
         stage.show();
     }
 
-    // 3. Mở Sign In dưới dạng Popup (Trang Main vẫn nằm ở dưới)
+    // Mở Sign In dưới dạng Popup
     public void openSignInPopup() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/signIn.fxml"));
         Parent root = loader.load();
