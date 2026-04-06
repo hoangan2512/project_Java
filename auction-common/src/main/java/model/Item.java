@@ -72,4 +72,4 @@ class Art extends Item {
             super(id, name, description, starting_price, seller_id, create_id);
         }
 
-        }
+}
