@@ -21,19 +21,19 @@
                   <Image url="@../image/project_logo_1e1e1e.jpg" />
                </image>
             </ImageView>
-            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1227.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="19.0" stroke="BLACK" strokeType="INSIDE" />
-            <TextField layoutX="371.0" layoutY="27.0" prefHeight="37.0" prefWidth="441.0" promptText="Search BidHub" style="-fx-background-radius: 30px; -fx-background-color: #2b2b2b;">
+            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1227.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="19.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
+            <TextField layoutX="371.0" layoutY="27.0" prefHeight="37.0" prefWidth="441.0" promptText="Search BidHub" style="-fx-background-radius: 30px; -fx-background-color: #2b2b2b; -fx-text-fill: white;">
                <padding>
                   <Insets left="15.0" />
                </padding>
             </TextField>
-            <Circle fx:id="searchBtn" fill="#ff8e1f" layoutX="347.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="16.0" stroke="BLACK" strokeType="INSIDE" />
-            <Button layoutX="830.0" layoutY="29.0" mnemonicParsing="false" prefHeight="32.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px;" text="Custom Search">
+            <Circle fx:id="searchBtn" fill="#ff8e1f" layoutX="347.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="16.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
+            <Button layoutX="830.0" layoutY="29.0" mnemonicParsing="false" prefHeight="32.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Custom Search">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-            <Button layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px;" text="Go to SellerHub">
+            <Button layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Go to SellerHub">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
@@ -56,9 +56,9 @@
             </MenuButton>
             <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn" text="Auction Status" textFill="WHITE">
                <items>
-                  <MenuItem mnemonicParsing="false" text="Đang đấu giá" />
-                  <MenuItem mnemonicParsing="false" text="Sắp kết thúc" />
-                  <MenuItem mnemonicParsing="false" text="Mới đăng" />
+                  <MenuItem mnemonicParsing="false" text="Active Bidding" />
+                  <MenuItem mnemonicParsing="false" text="Ending Soon" />
+                  <MenuItem mnemonicParsing="false" text="Newly Listed" />
                </items>
                <font>
                   <Font name="System Bold" size="12.0" />
@@ -77,10 +77,10 @@
             </MenuButton>
             <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn" text="Help &amp; News" textFill="WHITE">
                <items>
-                  <MenuItem mnemonicParsing="false" text="Hướng dẫn đấu giá" />
-                  <MenuItem mnemonicParsing="false" text="Chính sách thanh toán" />
-                  <MenuItem mnemonicParsing="false" text="Chính sách bảo mật" />
-                  <MenuItem mnemonicParsing="false" text="Báo lỗi/ gian lận" />
+                  <MenuItem mnemonicParsing="false" text="How BidHub Works" />
+                  <MenuItem mnemonicParsing="false" text="Payment Policy" />
+                  <MenuItem mnemonicParsing="false" text="Private Policy" />
+                  <MenuItem mnemonicParsing="false" text="Report Issues / Fraud" />
                </items>
                <font>
                   <Font name="System Bold" size="12.0" />

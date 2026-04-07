@@ -9,23 +9,18 @@
     -fx-border-color: #ffb300;
 }
 
-.bidhub-menu-btn {
-    -fx-pref-width: 285px;
-    -fx-pref-height: 20px;
-    -fx-min-height: 20px;
-    -fx-max-height: 20px;
-
+.context-menu {
     -fx-background-color: #1E1E1E;
+    -fx-pref-width: 285px;
     -fx-text-fill: white;
-
-    -fx-font-size: 12px;
-    -fx-alignment: CENTER;
-
     -fx-cursor: hand;
-
-    -fx-padding: 0 10 0 10;
 }
 
-.bidhub-menu-btn:hover {
-    -fx-background-color: #2A2A2A;
+.context-menu .label{
+     -fx-text-fill: white;
+     -fx-font-size: 13px;
+}
+
+.menu-item:focused, .menu-item:hover {
+    -fx-background-color: #4A4A4A;
 }
