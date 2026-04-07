@@ -20,7 +20,7 @@ public class signInController {
     @FXML
     private PasswordField PassField;
     @FXML
-    private Button NextBtn;
+    private Button LoginBtn;
     @FXML
     private Button SignInBtn;
 
@@ -28,8 +28,6 @@ public class signInController {
     public void initialize() {
         Status.setAlignment(javafx.geometry.Pos.CENTER);
         Status.setMaxWidth(Double.MAX_VALUE);
-        PassField.setVisible(false);
-        PassField.setManaged(false);
         SignInBtn.setVisible(false);
         SignInBtn.setManaged(false);
         Status.setVisible(false);
@@ -40,6 +38,7 @@ public class signInController {
 
         if ("123".equals(password)) {
             Status.setText("Signing In...");
+            Status.setStyle("-fx-text-fill: #FFFFFF;");
             Status.setVisible(true);
 
             PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
@@ -79,13 +78,9 @@ public class signInController {
             Status.setStyle("-fx-text-fill: red;");
             Status.setVisible(true);
         } else {
-            UsrNameField.setVisible(false);
-            UsrNameField.setManaged(false);
-            NextBtn.setVisible(false);
-            NextBtn.setManaged(false);
+            LoginBtn.setVisible(false);
+            LoginBtn.setManaged(false);
 
-            PassField.setVisible(true);
-            PassField.setManaged(true);
             SignInBtn.setVisible(true);
             SignInBtn.setManaged(true);
             Status.setVisible(false);
