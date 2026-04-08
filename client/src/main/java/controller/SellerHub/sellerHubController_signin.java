@@ -1,5 +1,6 @@
-package controller;
+package controller.SellerHub;
 
+import controller.SceneSwitchController;
 import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -11,7 +12,9 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-public class signInController {
+import java.io.IOException;
+
+public class sellerHubController_signin {
 
     @FXML
     private Label Status;
@@ -23,6 +26,8 @@ public class signInController {
     private Button LoginBtn;
     @FXML
     private Button SignInBtn;
+
+    private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
     @FXML
     public void initialize() {
@@ -51,8 +56,12 @@ public class signInController {
                 PauseTransition pause2 = new PauseTransition(Duration.seconds(0.3));
 
                 pause2.setOnFinished(closeEvent -> {
-                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                    stage.close();
+                    try {
+                        sceneSwitcher.switchToSellerHub(event);
+                    } catch (IOException ec) {
+                        ec.printStackTrace();
+                        System.out.println("Lỗi chuyển cảnh");
+                    }
                 });
                 pause2.play();
             });
