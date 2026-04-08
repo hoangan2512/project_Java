@@ -1,5 +1,6 @@
-package controller;
+package controller.SellerHub;
 
+import controller.SceneSwitchController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -10,18 +11,15 @@ import javafx.scene.shape.Circle;
 
 import java.io.IOException;
 
-public class mainPageController {
-
+public class sellerHubController_homepage {
     @FXML
-    private Circle userAvatar; // Đảm bảo fx:id trong FXML là "userAvatar"
+    private Circle userAvatar;
     @FXML
     private Circle searchBtn;
     @FXML
     private TextField searchBar;
     @FXML
-    private Button CustomSearch;
-    @FXML
-    private Button SellerHub;
+    private Button BidHub;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
@@ -38,19 +36,6 @@ public class mainPageController {
         }
     }
 
-    // Hàm xử lý khi bấm vào nút tròn hình người (Avatar)
-    @FXML
-    public void handleAvatarClick(MouseEvent event) {
-        try {
-            // 2. Gọi hàm chuyển cảnh từ đối tượng đã tạo
-            // Lưu ý: Đảm bảo bên SceneSwitchController bạn đã đổi tham số thành (Event e)
-            sceneSwitcher.openSignInPopup();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Lỗi chuyển cảnh");
-        }
-    }
-
     public void handleSearchBtnClick(MouseEvent event) {
         String searchText = searchBar.getText();
         if (searchText == null || searchText.trim().isEmpty()) {
@@ -59,10 +44,9 @@ public class mainPageController {
             System.out.println("searching");
         }
     }
-
-    public void handleSellerHub(MouseEvent event) {
+    public void handleBidHub(MouseEvent event) {
         try {
-            sceneSwitcher.switchToSellerSignIn(event);
+            sceneSwitcher.switchToMainPage(event);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Lỗi chuyển cảnh");

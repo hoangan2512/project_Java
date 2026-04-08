@@ -22,7 +22,6 @@ public class SceneSwitchController {
         stage.show();
     }
 
-    // Chuyển sang MainPage (Thay thế toàn bộ nội dung cửa sổ hiện tại)
     public void switchToMainPage(Event e) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/mainPage.fxml"));
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
@@ -47,5 +46,21 @@ public class SceneSwitchController {
 
         // Hiển thị và đợi người dùng đóng cửa sổ này mới thực hiện code tiếp theo (nếu có)
         popupStage.showAndWait();
+    }
+
+    public void switchToSellerHub(Event e) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/view/sellerHub/sellerHub_homepage.fxml"));
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public void switchToSellerSignIn(Event e) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/view/sellerHub/sellerHub_signin.fxml"));
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
     }
 }
