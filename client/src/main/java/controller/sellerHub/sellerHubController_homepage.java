@@ -1,10 +1,12 @@
 package controller.sellerHub;
 
 import controller.SceneSwitchController;
+import controller.sellerHub.new_item_page.basicInfo;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
@@ -25,8 +27,14 @@ public class sellerHubController_homepage {
     private Button BidHub;
     @FXML
     private StackPane contentArea;
+    @FXML
+    private Button NextBtn;
+    @FXML
+    private Label Status;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+
+    private Object currentSubController;
 
     @FXML
     public void initialize() {
@@ -41,6 +49,9 @@ public class sellerHubController_homepage {
         }
 
         loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
+
+        Status.setVisible(false);
+        Status.setManaged(false);
     }
 
     public void loadChildFXML(String fxmlPath) {
@@ -50,10 +61,34 @@ public class sellerHubController_homepage {
 
             // Xóa cái cũ, nạp cái mới
             contentArea.getChildren().setAll(node);
+            currentSubController = loader.getController();
 
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
+        }
+    }
+
+    public void handleNextBtn(MouseEvent event) {
+        if (currentSubController instanceof basicInfo) {
+            basicInfo bic = (basicInfo) currentSubController;
+
+            String name = bic.getPrdName();
+            String id = bic.getPrdId();
+            String description = bic.getDescription();
+
+            // Logic kiểm tra tập trung tại Homepage
+            if (name.isBlank() || id.isBlank()) {
+                Status.setVisible(true);
+                Status.setManaged(true);
+                Status.setText("Infomation missing");
+                return;
+            }
+
+            // Nếu ok, load trang tiếp theo
+            loadChildFXML("/view/sellerHub/new_item_page/graphicInfo.fxml");
+            Status.setVisible(false);
+            Status.setManaged(false);
         }
     }
 
@@ -73,5 +108,6 @@ public class sellerHubController_homepage {
             System.out.println("Lỗi chuyển cảnh");
         }
     }
+
 
 }
