@@ -8,6 +8,7 @@ abstract class entity {
         this.id = id;
         this.name = name;
     }
+    public entity(){}
 
     public int getId() {
         return id;
