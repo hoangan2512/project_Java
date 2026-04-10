@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="600.0" prefWidth="300.0" stylesheets="@sellerHub_signin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.SellerHub.sellerHubController_signin">
+<AnchorPane prefHeight="600.0" prefWidth="300.0" stylesheets="@sellerHub_signin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.sellerHubController_signin">
     <children>
         <Button fx:id="SignInBtn" layoutX="167.0" layoutY="529.0" mnemonicParsing="false" onAction="#signIn" prefHeight="27.0" prefWidth="71.0" styleClass="btn-signin" text="Sign In" visible="false" />
         <TextField fx:id="UsrNameField" layoutX="125.0" layoutY="428.0" promptText="Username" />

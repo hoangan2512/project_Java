@@ -1,11 +1,14 @@
-package controller.SellerHub;
+package controller.sellerHub;
 
 import controller.SceneSwitchController;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 
@@ -20,6 +23,8 @@ public class sellerHubController_homepage {
     private TextField searchBar;
     @FXML
     private Button BidHub;
+    @FXML
+    private StackPane contentArea;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
@@ -33,6 +38,22 @@ public class sellerHubController_homepage {
             searchBtn.setFill(new ImagePattern(search_img));
         } catch (Exception e) {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
+        }
+
+        loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
+    }
+
+    public void loadChildFXML(String fxmlPath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent node = loader.load();
+
+            // Xóa cái cũ, nạp cái mới
+            contentArea.getChildren().setAll(node);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
         }
     }
 

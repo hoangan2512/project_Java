@@ -1,10 +1,13 @@
 package controller;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 
@@ -22,6 +25,18 @@ public class mainPageController {
     private Button CustomSearch;
     @FXML
     private Button SellerHub;
+    @FXML
+    private StackPane prd1;
+    @FXML
+    private StackPane prd2;
+    @FXML
+    private StackPane prd3;
+    @FXML
+    private StackPane prd4;
+    @FXML
+    private StackPane prd5;
+    @FXML
+    private StackPane prd6;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
@@ -35,6 +50,34 @@ public class mainPageController {
             searchBtn.setFill(new ImagePattern(search_img));
         } catch (Exception e) {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
+        }
+
+        //load prd_card
+        String fxmlPath = "/view/prd_preview.fxml";
+        fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", "1200$", "Bidding");
+        fillProductCard(prd2, fxmlPath, "Bàn phím cơ Custom", "350$",  "Bidding");
+        fillProductCard(prd3, fxmlPath, "Chuột Logitech G Pro", "120$", "Bidding");
+        fillProductCard(prd4, fxmlPath, "Màn hình Dell Ultrasharp", "500$", "Bidding");
+        fillProductCard(prd5, fxmlPath, "Tai nghe Sony WH-1000XM5", "300$", "Bidding");
+        fillProductCard(prd6, fxmlPath, "Card đồ họa RTX 4090", "1600$", "Bidding");
+    }
+
+    public void fillProductCard(StackPane container, String fxmlPath, String name, String price, String auction_status) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent node = loader.load();
+
+            prd_previewController controller = loader.getController();
+
+            if (controller != null) {
+                controller.setData(name, price, auction_status, null);
+            }
+
+            container.getChildren().setAll(node);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
         }
     }
 
@@ -57,6 +100,12 @@ public class mainPageController {
             searchBar.requestFocus();
         } else {
             System.out.println("searching");
+            try {
+                sceneSwitcher.switchToPrdPage(event);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Lỗi chuyển cảnh");
+            }
         }
     }
 
@@ -68,5 +117,6 @@ public class mainPageController {
             System.out.println("Lỗi chuyển cảnh");
         }
     }
+
 
 }
