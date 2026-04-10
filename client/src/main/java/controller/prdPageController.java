@@ -70,13 +70,13 @@ public class prdPageController {
         Image prdImg = new Image(getClass().getResourceAsStream(ImgPath));
         prdImage.setPreserveRatio(true);
         prdImage.setSmooth(true);
-
         prdImage.setImage(prdImg);
 
         //set prd_name - prd_price
         String prd_name = "Quả lọ phi hành gia";
         long current_price = 10000000;
         prdName.setText(prd_name);
+
         // định dạng giá trị current_price
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
         symbols.setGroupingSeparator('.');
@@ -88,6 +88,7 @@ public class prdPageController {
         long hours = secondsLeft / 3600;
         long minutes = (secondsLeft % 3600) / 60;
         long seconds = secondsLeft % 60;
+
         // định dạng thời gian
         String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
         timeLeft.setText(timeString);

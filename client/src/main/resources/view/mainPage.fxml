@@ -48,8 +48,9 @@
          <children>
             <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn" text="Categories" textFill="WHITE">
               <items>
-                <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Item 1" />
-                <MenuItem mnemonicParsing="false" text="Item 2" />
+                <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Art" />
+                <MenuItem mnemonicParsing="false" text="Electronics" />
+                  <MenuItem mnemonicParsing="false" text="Vehicle" />
               </items>
                <font>
                   <Font name="System Bold" size="12.0" />
