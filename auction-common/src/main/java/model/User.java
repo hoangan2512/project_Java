@@ -2,7 +2,7 @@ package model;
 
 //User.java (Abstract Class): Chứa các thuộc tính chung như username, password, role.
 
-public abstract class User extends entity {
+public  class User extends entity {
     private String password;
     protected String role;
 
@@ -10,6 +10,9 @@ public abstract class User extends entity {
         super(id, name);
         this.password = password;
         this.role = role;
+    }
+    public User(){
+        super(0, "");
     }
 
 
@@ -33,7 +36,6 @@ public abstract class User extends entity {
         return this.password.equals(inputPassword);
     }
 
-    public abstract void displayInfo();
 
     public static User createUser(String role, int id, String username, String password) {
         if ("Bidder".equalsIgnoreCase(role)) {
@@ -53,10 +55,7 @@ public abstract class User extends entity {
 
         }
 
-        @Override
-        public void displayInfo() { // Kiểm tra xem lớp cha dùng displayInfo hay dissplayInfo
-            System.out.println("[Bidder] " + getName());
-        }
+
     }
 
     // Lớp Seller: Người đăng bán sản phẩm
@@ -65,10 +64,7 @@ public abstract class User extends entity {
             super(id, username, password, "Seller");
         }
 
-        @Override
-        public void displayInfo() {
-            System.out.println("[Seller] " + getName());
-        }
+
     }
 
 
@@ -78,12 +74,6 @@ public abstract class User extends entity {
         public Admin(int id, String name, String password) {
             // Truyền đủ 4 tham số: id, name, password, role
             super(id, name, password, "Admin");
-        }
-
-        @Override
-        public void displayInfo() {
-            // Lưu ý: Dùng getName() thay vì getUsername() nếu lớp cha đặt là name
-            System.out.println("[Admin] ID: " + id + " | Tên: " + getName() + " | Quyền: " + getRole());
         }
 
 

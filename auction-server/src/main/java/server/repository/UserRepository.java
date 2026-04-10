@@ -9,8 +9,8 @@ import java.sql.ResultSet;
 public class UserRepository {
     public boolean addUser(User user) {
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        Connection conn = DatabaseConnection.getInstance();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getName());
             pstmt.setString(2, user.getPassword());
@@ -30,9 +30,8 @@ public class UserRepository {
     public User login(String username, String password) {
 
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-
-        try (Connection conn = DatabaseConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        Connection conn = DatabaseConnection.getInstance();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
             pstmt.setString(2, password);

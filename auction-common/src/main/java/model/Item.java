@@ -4,18 +4,21 @@ import java.time.LocalDateTime;
 
 //Item.java (Abstract Class): Chứa id, name, description, startingPrice, currentPrice, endTime, status.
 //các lớp con Electronics.java, Art.java, Vehicle.java: Kế thừa từ Item để minh họa tính kế thừa rõ ràng.
-public abstract class Item extends entity {
+public class Item extends entity {
     private String description;
     private double starting_price;
     private int seller_id;
-    private LocalDateTime create_id;
+    private LocalDateTime created_at;
 
-    public Item(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id) {
+    public Item(int id, String name, String description, double starting_price, int seller_id, LocalDateTime created_at) {
         super(id, name);
         this.description = description;
         this.starting_price = starting_price;
         this.seller_id = seller_id;
-        this.create_id = create_id;
+        this.created_at = created_at;
+    }
+    public Item(){
+        super(0, "");
     }
 
     public String getDescription() {
@@ -42,34 +45,11 @@ public abstract class Item extends entity {
         this.seller_id = seller_id;
     }
 
-    public LocalDateTime getCreate_id() {
-        return create_id;
+    public LocalDateTime getCreated_at() {
+        return created_at;
     }
 
-    public void setCreate_id(LocalDateTime create_id) {
-        this.create_id = create_id;
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
     }
-}
-
-class Electronics extends Item {
-    public Electronics(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
-        super(id, name, description, starting_price, seller_id, create_id);
-
-    }
-}
-
-
-
-class Art extends Item {
-    public Art(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id) {
-        super(id, name, description, starting_price, seller_id, create_id);
-    }
-
-}
-
-    class Vehicle extends Item {
-        public Vehicle(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id) {
-            super(id, name, description, starting_price, seller_id, create_id);
-        }
-
 }
