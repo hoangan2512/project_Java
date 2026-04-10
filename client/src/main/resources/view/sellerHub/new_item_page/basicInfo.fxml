@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.new_item_page.basicInfo">
+   <children>
+      <Label fx:id="InfoType" layoutX="49.0" layoutY="35.0" prefHeight="43.0" prefWidth="264.0" text="Basic Information" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Label>
+      <TextField fx:id="prdName" layoutX="49.0" layoutY="143.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert product name" style="-fx-background-color: #2b2b2b; -fx-background-radius: 20px;" styleClass="priceField" stylesheets="@../../prdPage.css">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </TextField>
+      <Label layoutX="49.0" layoutY="113.0" prefHeight="25.0" prefWidth="126.0" text="Product name:" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label layoutX="49.0" layoutY="193.0" prefHeight="25.0" prefWidth="194.0" text="Product category:" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <MenuButton fx:id="categories" layoutX="49.0" layoutY="223.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="540.0" style="-fx-background-color: #2b2b2b; -fx-background-radius: 20px;" styleClass="btn" stylesheets="@../../mainpage.css" text="Choose product category" textFill="#b9b9b9">
+         <items>
+            <MenuItem mnemonicParsing="false" text="Action 1" />
+            <MenuItem mnemonicParsing="false" text="Action 2" />
+         </items>
+         <font>
+            <Font size="16.0" />
+         </font>
+      </MenuButton>
+      <Label layoutX="49.0" layoutY="273.0" prefHeight="25.0" prefWidth="126.0" text="Product ID:" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <TextField fx:id="ID" layoutX="49.0" layoutY="303.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert product ID" style="-fx-background-color: #2b2b2b; -fx-background-radius: 20px;" styleClass="priceField" stylesheets="@../../prdPage.css">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </TextField>
+      <Label layoutX="49.0" layoutY="353.0" prefHeight="25.0" prefWidth="194.0" text="Product discription:" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <TextField fx:id="discription" alignment="TOP_LEFT" layoutX="49.0" layoutY="383.0" prefHeight="165.0" prefWidth="540.0" promptText="Insert product discription (Max 100 words)" style="-fx-background-color: #2b2b2b; -fx-background-radius: 5px;" styleClass="priceField" stylesheets="@../../prdPage.css">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </TextField>
+      <Button fx:id="NextBtn" layoutX="452.0" layoutY="578.0" mnemonicParsing="false" prefHeight="32.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Next">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>

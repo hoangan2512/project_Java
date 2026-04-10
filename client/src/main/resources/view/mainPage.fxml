@@ -9,6 +9,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
@@ -88,5 +89,11 @@
             </MenuButton>
          </children>
       </HBox>
+      <StackPane fx:id="prd1" layoutX="70.0" layoutY="200.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
+      <StackPane fx:id="prd2" layoutX="470.0" layoutY="200.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
+      <StackPane fx:id="prd3" layoutX="870.0" layoutY="200.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
+      <StackPane fx:id="prd4" layoutX="70.0" layoutY="450.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
+      <StackPane fx:id="prd5" layoutX="470.0" layoutY="450.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
+      <StackPane fx:id="prd6" layoutX="870.0" layoutY="450.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
    </children>
 </AnchorPane>
