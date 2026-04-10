@@ -1,6 +1,8 @@
 package message;
 
-public class respone {
+import java.io.Serializable; //gui du lieu qua Socket
+
+public class Response implements Serializable {
     private String status;
     private String data;
     private String message;
@@ -23,7 +25,7 @@ public class respone {
     public void setData(){
         this.data=data;
     }
-    public void setMessage(){
+    public void setMessage(String s){
         this.message=message;
     }
     public String getMessage(){
