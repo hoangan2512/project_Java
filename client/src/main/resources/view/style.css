@@ -1,0 +1,35 @@
+.root {
+    -fx-background-color: #000000;
+}
+
+.text-field, .password-field {
+    -fx-background-color: #1b1b1b;
+    -fx-text-fill: orange;
+    -fx-prompt-text-fill: #888888;
+    -fx-border-color: #ffa31a;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #ff9000;
+}
+
+.btn-signin {
+    -fx-background-color: #ffa31a;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.btn-signin:hover {
+    -fx-background-color: #ffaa33; /* Cam sáng hơn một chút khi hover */
+}
+
+/* Hiệu ứng khi nhấn giữ (Pressed) */
+.btn-signin:armed {
+    -fx-background-color: #e68200; /* Cam tối hơn khi nhấn */
+}
