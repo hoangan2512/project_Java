@@ -1,12 +1,13 @@
 package server.network;
 import java.io.IOException;
-import java.sql.ClientInfoStatus;
 import java.util.*;
 import java.net.Socket;
 import java.net.ServerSocket;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class AuctionServer {
     private static final int PORT=2810; //tạo 1 cổng
-    public static List<ClientHandler> clients= new ArrayList<>(); // Quản lí các kết nối của người dùng
+    public static List<ClientHandler> clients = new CopyOnWriteArrayList<>(); // Quản lí các kết nối của người dùng
     public static void main(String[] args){
         try (ServerSocket serverSocket = new ServerSocket(PORT)){
             System.out.println("Server đấu giá tại cổng: "+PORT);
