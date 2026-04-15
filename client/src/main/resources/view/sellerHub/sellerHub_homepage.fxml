@@ -75,5 +75,10 @@
             <Font name="System Bold" size="14.0" />
          </font>
       </Label>
+      <Button fx:id="backBtn" contentDisplay="CENTER" layoutX="260.0" layoutY="120.0" mnemonicParsing="false" onMouseClicked="#handleBackBtn" prefHeight="30.0" prefWidth="30.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Button>
     </children>
 </AnchorPane>

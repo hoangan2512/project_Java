@@ -11,7 +11,6 @@
 
 .context-menu {
     -fx-background-color: #1E1E1E;
-    -fx-pref-width: 285px;
     -fx-text-fill: white;
     -fx-cursor: hand;
 }
