@@ -45,7 +45,7 @@ public class Main {
                 "FOREIGN KEY (bidder_id) REFERENCES users(id)" +
                 ");";
         try{
-            Connection conn = DatabaseConnection.getInstance();
+            Connection conn = DatabaseConnection.getInstance().getConnection();
             Statement stmt = conn.createStatement();
             stmt.execute(UsersTable);
             stmt.execute(ItemsTable);

@@ -9,4 +9,5 @@ public enum ActionType {
     LOGOUT,
     NOTIFY_NEW_PRICE,
     AUCTION_END,
+    CREATE_ITEM,
 }

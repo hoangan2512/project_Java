@@ -9,12 +9,16 @@ import java.sql.ResultSet;
 public class UserRepository {
     public boolean addUser(User user) {
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-        Connection conn = DatabaseConnection.getInstance();
+        Connection conn = DatabaseConnection.getInstance().getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getName());
             pstmt.setString(2, user.getPassword());
-            pstmt.setString(3, user.getRole());
+            if (user.getRole() == null || user.getRole().isEmpty()) {
+                pstmt.setString(3, "BIDDER"); // Tự gán cứng là BIDDER
+            } else {
+                pstmt.setString(3, user.getRole());
+            }
 
             int rowsAffected = pstmt.executeUpdate();
 
@@ -30,7 +34,7 @@ public class UserRepository {
     public User login(String username, String password) {
 
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-        Connection conn = DatabaseConnection.getInstance();
+        Connection conn = DatabaseConnection.getInstance().getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);

@@ -1,1 +1,0 @@
-Package com.uet.client.network: Duy trì kết nối Socket với Server để nhận cập nhật Realtime (Observer Pattern).

@@ -1,10 +1,14 @@
 package controller.sellerHub.new_item_page;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -33,7 +37,6 @@ public class graphicInfo {
     @FXML
     private Label Status;
 
-    private int step = 0;
     private List<ImageView> imageViews;
 
     public void initialize() {
@@ -87,4 +90,23 @@ public class graphicInfo {
     }
 
     public Image getImg() { return prd_previewImage.getImage(); }
+
+    @FXML
+    private void handleDeleteImage(ActionEvent event) {
+        // Lấy nút X
+        Button clickedButton = (Button) event.getSource();
+
+        // Lấy cha của nút X (chính là cái StackPane chứa ảnh và nút)
+        StackPane parent = (StackPane) clickedButton.getParent();
+
+        // Tìm thằng con nào là ImageView trong cái StackPane đó và xóa ảnh
+        for (Node node : parent.getChildren()) {
+            if (node instanceof ImageView) {
+                ((ImageView) node).setImage(null);
+                Status.setVisible(true);
+                Status.setText("Image deleted");
+                break;
+            }
+        }
+    }
 }
