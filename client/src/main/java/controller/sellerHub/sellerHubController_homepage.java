@@ -1,7 +1,9 @@
 package controller.sellerHub;
 
 import controller.SceneSwitchController;
+import controller.sellerHub.new_item_page.auctionInfo;
 import controller.sellerHub.new_item_page.basicInfo;
+import controller.sellerHub.new_item_page.graphicInfo;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -13,6 +15,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import jdk.jfr.Event;
 
 import java.io.IOException;
 
@@ -77,8 +80,23 @@ public class sellerHubController_homepage {
             String id = bic.getPrdId();
             String description = bic.getDescription();
 
-            // Logic kiểm tra tập trung tại Homepage
-            if (name.isBlank() || id.isBlank()) {
+            String categories = bic.getCategories();
+
+            if (name.isBlank() || id.isBlank() || categories == null) {
+                Status.setVisible(true);
+                Status.setManaged(true);
+                Status.setText("Infomation missing");
+                return;
+            }
+
+            // fxml loader
+            loadChildFXML("/view/sellerHub/new_item_page/graphicInfo.fxml");
+            Status.setVisible(false);
+            Status.setManaged(false);
+        } else if (currentSubController instanceof graphicInfo) {
+            graphicInfo gic = (graphicInfo) currentSubController;
+
+            if (gic.getImg() == null) {
                 Status.setVisible(true);
                 Status.setManaged(true);
                 Status.setText("Infomation missing");
@@ -86,9 +104,17 @@ public class sellerHubController_homepage {
             }
 
             // Nếu ok, load trang tiếp theo
-            loadChildFXML("/view/sellerHub/new_item_page/graphicInfo.fxml");
+            loadChildFXML("/view/sellerHub/new_item_page/auctionInfo.fxml");
             Status.setVisible(false);
             Status.setManaged(false);
+        }
+    }
+
+    public void handleBackBtn(MouseEvent event) {
+        if (currentSubController instanceof graphicInfo) {
+            loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
+        } else if (currentSubController instanceof auctionInfo) {
+            loadChildFXML("/view/sellerHub/new_item_page/graphicInfo.fxml");
         }
     }
 

@@ -2,10 +2,7 @@ package controller.sellerHub.new_item_page;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 public class basicInfo {
 
@@ -18,11 +15,16 @@ public class basicInfo {
     @FXML
     private TextField discription;
     @FXML
-    private MenuButton categories;
+    private ChoiceBox<String> categories;
     @FXML
     private Label Status;
 
+    public void initialize() {
+        categories.getItems().addAll("Art", "Electronics", "Vehicle");
+    }
+
     public String getPrdName() { return prdName.getText(); }
     public String getPrdId() { return ID.getText(); }
+    public String getCategories() { return categories.getValue(); }
     public String getDescription() { return discription.getText(); }
 }
