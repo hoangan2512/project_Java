@@ -1,0 +1,18 @@
+.btn {
+    -fx-border-color: #ff9800;
+    -fx-border-width: 0 0 3 0;
+    -fx-cursor: hand;
+}
+.btn_sub {
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 3 0;
+    -fx-cursor: hand;
+}
+
+.btn:hover {
+    -fx-border-color: #ffffff;
+}
+
+.btn_sub:hover {
+    -fx-border-color: #ffffff;
+}

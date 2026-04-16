@@ -1,0 +1,25 @@
+.btn {
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 3 0;
+    -fx-cursor: hand;
+}
+
+.btn:hover {
+    -fx-border-color: #ff9800;
+    -fx-border-color: #ffb300;
+}
+
+.context-menu {
+    -fx-background-color: #1E1E1E;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+.context-menu .label{
+     -fx-text-fill: white;
+     -fx-font-size: 13px;
+}
+
+.menu-item:focused, .menu-item:hover {
+    -fx-background-color: #4A4A4A;
+}

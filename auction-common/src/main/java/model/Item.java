@@ -4,69 +4,53 @@ import java.time.LocalDateTime;
 
 //Item.java (Abstract Class): Chứa id, name, description, startingPrice, currentPrice, endTime, status.
 //các lớp con Electronics.java, Art.java, Vehicle.java: Kế thừa từ Item để minh họa tính kế thừa rõ ràng.
-public abstract class Item extends entity {
+
+import java.time.LocalDateTime;
+
+// Bỏ abstract nếu bạn muốn dùng 'new Item()' trong Repository
+public class Item extends entity {
     private String description;
     private double starting_price;
     private int seller_id;
-    private LocalDateTime create_id;
+    private LocalDateTime created_at;
+    private String status = "OPEN";
+    private double currentPrice;
+    private LocalDateTime endTime;
+    private int highestBidderId = -1;
 
-    public Item(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id) {
+    public Item(int id, String name, String description, double starting_price, int seller_id, LocalDateTime created_at) {
         super(id, name);
         this.description = description;
         this.starting_price = starting_price;
+        this.currentPrice = starting_price;
         this.seller_id = seller_id;
-        this.create_id = create_id;
+        this.created_at = created_at;
     }
 
-    public String getDescription() {
-        return description;
+    public Item() {
+        super(0, "");
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public double getStarting_price() {
-        return starting_price;
-    }
-
+    // --- CÁC HÀM SETTER (Để fix lỗi đỏ ở Repository và Service) ---
+    public void setDescription(String description) { this.description = description; }
     public void setStarting_price(double starting_price) {
         this.starting_price = starting_price;
+        this.currentPrice = starting_price; // Mặc định giá hiện tại = giá khởi điểm
     }
+    public void setSeller_id(int seller_id) { this.seller_id = seller_id; }
+    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+    public void setStatus(String status) { this.status = status; }
+    public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    public void setHighestBidderId(int highestBidderId) { this.highestBidderId = highestBidderId; }
 
-    public int getSeller_id() {
-        return seller_id;
-    }
-
-    public void setSeller_id(int seller_id) {
-        this.seller_id = seller_id;
-    }
-
-    public LocalDateTime getCreate_id() {
-        return create_id;
-    }
-
-    public void setCreate_id(LocalDateTime create_id) {
-        this.create_id = create_id;
-    }
-}
-
-class Electronics extends Item {
-    public Electronics(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
-        super(id, name, description, starting_price, seller_id, create_id);
-
-    }
-}
-
-
-class Art extends Item {
-    public Art(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
-        super(id, name, description, starting_price, seller_id, create_id);
-    }
-}
-
-class Vehicle extends Item {
-    public Vehicle(int id, String name, String description, double starting_price, int seller_id, LocalDateTime create_id){
-        super(id, name, description, starting_price, seller_id, create_id);
-    }
+    // --- CÁC HÀM GETTER ---
+    public String getDescription() { return description; }
+    public double getStarting_price() { return starting_price; }
+    public int getSeller_id() { return seller_id; }
+    public LocalDateTime getCreated_at() { return created_at; }
+    public String getStatus() { return status; }
+    public double getCurrentPrice() { return currentPrice; }
+    public LocalDateTime getEndTime() { return endTime; }
+    public int getHighestBidderId() { return highestBidderId; }
 }

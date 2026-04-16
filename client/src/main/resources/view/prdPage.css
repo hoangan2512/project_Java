@@ -1,0 +1,68 @@
+.btn_main {
+    -fx-border-color: #ff9800;
+    -fx-border-width: 0 0 3 0;
+    -fx-cursor: hand;
+}
+.btn {
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 3 0;
+    -fx-cursor: hand;
+}
+
+.btn:hover {
+    -fx-border-color: #ffffff;
+}
+
+.context-menu {
+    -fx-background-color: #1E1E1E;
+    -fx-pref-width: 285px;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+.context-menu .label{
+     -fx-text-fill: white;
+     -fx-font-size: 13px;
+}
+
+.menu-item:focused, .menu-item:hover {
+    -fx-background-color: #4A4A4A;
+}
+
+.prd_img {
+    -fx-border-width: 3 3 3 3;
+    -fx-border-color: #ff9800
+}
+
+.priceField {
+    -fx-text-fill: orange;
+}
+
+.custom-price-chart .plot-content {
+    -fx-background-color: #2b2b2b;
+}
+
+/* 2. Đặt màu cho đường line chính thành màu cam */
+.custom-price-chart .default-color0.chart-series-line {
+    -fx-stroke: #ff8c00; /* Màu cam đậm (darkorange) */
+    -fx-stroke-width: 2px; /* Độ dày của đường kẻ */
+}
+
+/* 3. Đặt màu và kiểu dáng cho các biểu tượng (symbols) trên đường kẻ */
+.custom-price-chart .default-color0.chart-line-symbol {
+    -fx-background-color:  #ff8e1f, white; /* Màu cam ở ngoài, màu trắng ở trong */
+    -fx-background-radius: 5px; /* Làm cho biểu tượng thành hình tròn */
+    -fx-padding: 5px; /* Kích thước của biểu tượng */
+}
+
+/* 4. Ẩn lưới nền (grid lines) nếu cần (tùy chọn) */
+.custom-price-chart .chart-vertical-grid-lines,
+.custom-price-chart .chart-horizontal-grid-lines {
+    -fx-stroke: transparent;
+}
+
+/* 5. Ẩn trục X và Y nếu Scene Builder chưa làm hết (tùy chọn) */
+.custom-price-chart .axis {
+    -fx-tick-mark-visible: false;
+    -fx-tick-labels-visible: false;
+}
