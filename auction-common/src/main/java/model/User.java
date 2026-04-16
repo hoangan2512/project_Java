@@ -2,7 +2,10 @@ package model;
 
 //User.java (Abstract Class): Chứa các thuộc tính chung như username, password, role.
 
-public  class User extends entity {
+import java.io.Serializable;
+
+public  class User extends Entity implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String password;
     protected String role;
 
@@ -37,7 +40,7 @@ public  class User extends entity {
     }
 
 
-    public static User createUser(String role, int id, String username, String password) {
+    public static User createUser(String role, int id, String username, String password)  {
         if ("Bidder".equalsIgnoreCase(role)) {
             return new Bidder(id, username, password);
         } else if ("Seller".equalsIgnoreCase(role)) {

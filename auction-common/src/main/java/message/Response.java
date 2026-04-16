@@ -22,10 +22,10 @@ public class Response implements Serializable {
     public String getData(){
         return data;
     }
-    public void setData(){
+    public void setData(String data){
         this.data=data;
     }
-    public void setMessage(String s){
+    public void setMessage(String message){
         this.message=message;
     }
     public String getMessage(){

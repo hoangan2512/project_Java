@@ -5,10 +5,8 @@ import java.time.LocalDateTime;
 //Item.java (Abstract Class): Chứa id, name, description, startingPrice, currentPrice, endTime, status.
 //các lớp con Electronics.java, Art.java, Vehicle.java: Kế thừa từ Item để minh họa tính kế thừa rõ ràng.
 
-import java.time.LocalDateTime;
-
 // Bỏ abstract nếu bạn muốn dùng 'new Item()' trong Repository
-public class Item extends entity {
+public class Item extends Entity {
     private String description;
     private double starting_price;
     private int seller_id;

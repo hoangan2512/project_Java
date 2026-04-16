@@ -1,14 +1,14 @@
 package model;
 
 // lớp cơ sở
-abstract class entity {
+abstract class Entity {
     protected int id;
     protected String name;
-    public entity(int id, String name){
+    public Entity(int id, String name){
         this.id = id;
         this.name = name;
     }
-    public entity(){}
+    public Entity(){}
 
     public int getId() {
         return id;
