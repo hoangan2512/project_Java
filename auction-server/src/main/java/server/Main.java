@@ -1,7 +1,15 @@
 package server;
+import model.Item;
+import model.User;
 import server.repository.DatabaseConnection;
+import server.repository.ItemRepository;
+import server.repository.UserRepository;
+
 import java.sql.Connection;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) {
         String UsersTable = "CREATE TABLE IF NOT EXISTS users (" +
@@ -48,6 +56,7 @@ public class Main {
             System.out.println("Có lỗi xảy ra khi tạo bảng!");
             e.printStackTrace();
         }
+
 
 
     }
