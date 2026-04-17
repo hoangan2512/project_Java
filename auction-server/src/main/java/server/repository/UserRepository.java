@@ -14,11 +14,8 @@ public class UserRepository {
 
             pstmt.setString(1, user.getName());
             pstmt.setString(2, user.getPassword());
-            if (user.getRole() == null || user.getRole().isEmpty()) {
-                pstmt.setString(3, "BIDDER"); // Tự gán cứng là BIDDER
-            } else {
-                pstmt.setString(3, user.getRole());
-            }
+            pstmt.setString(3, user.getRole());
+
 
             int rowsAffected = pstmt.executeUpdate();
 

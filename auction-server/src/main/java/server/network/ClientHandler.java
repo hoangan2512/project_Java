@@ -101,11 +101,12 @@ public class ClientHandler implements Runnable {
             String[] regData = ((String) request.getPayload()).split(",");
             String regUsername = regData[0];
             String regPassword = regData[1];
+            String regRole = regData[2];
 
             User newUser = new User();
             newUser.setName(regUsername);
             newUser.setPassword(regPassword);
-            newUser.setRole("BIDDER");
+            newUser.setRole(regRole);
 
             boolean isRegistered = userRepo.addUser(newUser);
 

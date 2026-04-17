@@ -146,7 +146,7 @@ public class mainPageController {
 
     public void updateAvatarUI() {
         // Hỏi "bộ nhớ" xem hiện tại có ai đang đăng nhập không?
-        if (SessionManager.getInstance().isLoggedIn()) {
+        if (SessionManager.getInstance().isBidder()) {
             // Đã đăng nhập: Viền xanh lá
             // Hoặc nếu bạn dùng CSS: avatarBorder.setStyle("-fx-border-color: green;");
             userAvatar.setStroke(Color.GREEN);

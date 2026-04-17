@@ -1,6 +1,7 @@
 package controller.sellerHub;
 
 import controller.SceneSwitchController;
+import controller.SessionManager;
 import controller.sellerHub.new_item_page.auctionInfo;
 import controller.sellerHub.new_item_page.basicInfo;
 import controller.sellerHub.new_item_page.graphicInfo;
@@ -13,9 +14,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import jdk.jfr.Event;
+import model.User;
 
 import java.io.IOException;
 
@@ -55,6 +58,10 @@ public class sellerHubController_homepage {
 
         Status.setVisible(false);
         Status.setManaged(false);
+
+        userAvatar.setStroke(Color.GREEN);
+        User user = SessionManager.getInstance().getCurrentUser();
+        System.out.println("Logged In: " + user.getUsername());
     }
 
     public void loadChildFXML(String fxmlPath) {
@@ -134,6 +141,4 @@ public class sellerHubController_homepage {
             System.out.println("Lỗi chuyển cảnh");
         }
     }
-
-
 }

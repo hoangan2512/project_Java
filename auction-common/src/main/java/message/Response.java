@@ -7,7 +7,7 @@ public class Response implements Serializable {
     private Object data;
     private String message;
 
-    public void responeAction(String status, String data, String message) {
+    public void responeAction(String status, Object data, String message) {
         this.status = status;
         this.message = message;
         this.data = data;
