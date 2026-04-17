@@ -19,17 +19,13 @@
 
 .btn-signin {
     -fx-background-color: #ffa31a;
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
-    -fx-background-radius: 5px;
     -fx-cursor: hand;
 }
 
 .btn-signin:hover {
-    -fx-background-color: #ffaa33; /* Cam sáng hơn một chút khi hover */
+    -fx-background-color: #ffaa33;
 }
 
-/* Hiệu ứng khi nhấn giữ (Pressed) */
 .btn-signin:armed {
     -fx-background-color: #e68200; /* Cam tối hơn khi nhấn */
 }

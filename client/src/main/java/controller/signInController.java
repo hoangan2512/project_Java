@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import message.Request;
@@ -19,7 +20,7 @@ import network.ClientSocket;
 public class signInController {
 
     @FXML
-    private Label Status;
+    private Label Status, OR;
     @FXML
     private TextField UsrNameField;
     @FXML
@@ -27,14 +28,25 @@ public class signInController {
     @FXML
     private Button LoginBtn;
     @FXML
-    private Button SignInBtn;
+    private Button SignInBtn, SignInOpt, LoginOpt, backBtn;
+    @FXML
+    private Line line1, line2;
 
     @FXML
     public void initialize() {
         Status.setAlignment(javafx.geometry.Pos.CENTER);
         Status.setMaxWidth(Double.MAX_VALUE);
+        UsrNameField.setVisible(false);
+        PassField.setVisible(false);
+        LoginBtn.setVisible(false);
+        backBtn.setVisible(false);
         SignInBtn.setVisible(false);
-        Status.setVisible(false);
+
+        SignInOpt.setVisible(true);
+        LoginOpt.setVisible(true);
+        line1.setVisible(true);
+        line2.setVisible(true);
+        OR.setVisible(true);
     }
 
     public void signIn(ActionEvent event) {
@@ -58,9 +70,20 @@ public class signInController {
         Response res = clientService.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            Status.setText("Tạo tài khoản thành công!");
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: green;");
+            Status.setText("Account created successfully");
+            PauseTransition pause1 = new PauseTransition(Duration.seconds(2));
+
+            pause1.setOnFinished(e -> {
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.close();
+            });
+            pause1.play();
         } else {
-            Status.setText("Lỗi: Không thể tạo người dùng!");
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Error: Cannot create user!");
         }
     }
 
@@ -73,13 +96,50 @@ public class signInController {
             Status.setVisible(true);
         } else {
             LoginBtn.setVisible(false);
-            LoginBtn.setManaged(false);
 
             SignInBtn.setVisible(true);
-            SignInBtn.setManaged(true);
             Status.setVisible(false);
         }
     }
 
+    public void handleSigninOpt(ActionEvent event) {
+        SignInOpt.setVisible(false);
+        LoginOpt.setVisible(false);
+        line1.setVisible(false);
+        line2.setVisible(false);
+        OR.setVisible(false);
+
+        UsrNameField.setVisible(true);
+        PassField.setVisible(true);
+        SignInBtn.setVisible(true);
+        backBtn.setVisible(true);
+    }
+
+    public void handleLoginOpt(ActionEvent event) {
+        SignInOpt.setVisible(false);
+        LoginOpt.setVisible(false);
+        line1.setVisible(false);
+        line2.setVisible(false);
+        OR.setVisible(false);
+
+        UsrNameField.setVisible(true);
+        PassField.setVisible(true);
+        LoginBtn.setVisible(true);
+        backBtn.setVisible(true);
+    }
+
+    public void handleBackBtn(ActionEvent event) {
+        UsrNameField.setVisible(false);
+        PassField.setVisible(false);
+        LoginBtn.setVisible(false);
+        backBtn.setVisible(false);
+        SignInBtn.setVisible(false);
+
+        SignInOpt.setVisible(true);
+        LoginOpt.setVisible(true);
+        line1.setVisible(true);
+        line2.setVisible(true);
+        OR.setVisible(true);
+    }
 
 }
