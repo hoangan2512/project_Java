@@ -26,7 +26,7 @@ public class ServerApplication {
 
         // Bước 2: Mở cổng mạng
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("✅ Server đã bật! Đang lắng nghe ở port: " + PORT);
+            System.out.println("Server đã bật! Đang lắng nghe ở port: " + PORT);
 
             // Vòng lặp vô tận: Để Server luôn sống và chờ đợi Client
             while (true) {
@@ -54,10 +54,10 @@ public class ServerApplication {
 
                     if (isSaved) {
                         res.setStatus("SUCCESS");
-                        System.out.println("✅ Đã lưu vào DB sản phẩm: " + newItem.getName());
+                        System.out.println("Đã lưu vào DB sản phẩm: " + newItem.getName());
                     } else {
                         res.setStatus("FAIL");
-                        System.out.println("❌ Lỗi khi lưu sản phẩm vào DB!");
+                        System.out.println("Lỗi khi lưu sản phẩm vào DB!");
                     }
                 }
                 else if (req.getAction() == ActionType.REGISTER) { // Nếu Client muốn ĐĂNG KÝ
