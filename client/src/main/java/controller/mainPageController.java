@@ -35,6 +35,10 @@ public class mainPageController {
 
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+    private static mainPageController instance;
+    public static mainPageController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
@@ -47,7 +51,7 @@ public class mainPageController {
         } catch (Exception e) {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
         }
-
+        instance = this;
         updateAvatarUI();
         prdPagePane.setVisible(false);
 
@@ -111,9 +115,7 @@ public class mainPageController {
     @FXML
     public void handleAvatarClick(MouseEvent event) {
         try {
-            sceneSwitcher.openSignInPopup(() -> {
-                updateAvatarUI();
-            });
+            sceneSwitcher.openSignInPopup(null);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Lỗi chuyển cảnh");

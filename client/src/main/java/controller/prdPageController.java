@@ -47,6 +47,7 @@ public class prdPageController {
     @FXML
     private NumberAxis yAxis;
 
+    private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
     public void initialize() {
         // Tải ảnh sp (default)
@@ -68,9 +69,13 @@ public class prdPageController {
     }
 
 
-    public void handleBidBtn(MouseEvent event) {
-        String bid_amount = bidAmount.getText();
-        System.out.println("Bidding: " + bid_amount);
+    public void handleBidBtn(MouseEvent event) throws IOException {
+        if (SessionManager.getInstance().isBidder()) {
+            String bid_amount = bidAmount.getText();
+            System.out.println("Bidding: " + bid_amount);
+        } else {
+            sceneSwitcher.openSignInPopup(null);
+        }
     }
 
     public void setData(String name, long price, long time, String imagePath) {
