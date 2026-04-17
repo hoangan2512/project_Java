@@ -4,7 +4,7 @@ import java.io.Serializable; //gui du lieu qua Socket
 
 public class Response implements Serializable {
     private String status;
-    private String data;
+    private Object data;
     private String message;
 
     public void responeAction(String status, String data, String message) {
@@ -19,10 +19,10 @@ public class Response implements Serializable {
     public void setStatus(String status){
     this.status=status;
     }
-    public String getData(){
+    public Object getData(){
         return data;
     }
-    public void setData(String data){
+    public void setData(Object data){
         this.data=data;
     }
     public void setMessage(String message){

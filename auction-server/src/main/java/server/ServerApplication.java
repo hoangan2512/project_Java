@@ -22,7 +22,7 @@ public class ServerApplication {
     public static void main(String[] args) {
         // Bước 1: Khởi tạo Database trước (gọi lại logic tạo bảng của bạn nếu cần)
         System.out.println("Đang kiểm tra Database...");
-        DatabaseConnection.getInstance().getConnection();
+        DatabaseConnection.getInstance();
 
         // Bước 2: Mở cổng mạng
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -84,10 +84,10 @@ public class ServerApplication {
 
                     if (authenticatedUser != null) {
                         res.setStatus("SUCCESS");
-                        System.out.println("✅ Đăng nhập thành công cho: " + authenticatedUser.getName());
+                        System.out.println("Đăng nhập thành công cho: " + authenticatedUser.getName());
                     } else {
                         res.setStatus("FAIL");
-                        System.out.println("❌ Đăng nhập thất bại cho: " + userFromClient.getName());
+                        System.out.println("Đăng nhập thất bại cho: " + userFromClient.getName());
                     }
                 }
                 // Các chức năng khác như LOGIN, BID... viết tương tự ở đây
@@ -102,7 +102,7 @@ public class ServerApplication {
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Lỗi Server: " + e.getMessage());
+            System.err.println("Lỗi Server: " + e.getMessage());
             e.printStackTrace();
         }
     }
