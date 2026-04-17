@@ -8,6 +8,8 @@ import  java.util.*;
 import  message.Request;
 import message.Response;
 import model.ActionType;
+import model.User;
+import server.repository.UserRepository;
 
 public class ClientHandler implements Runnable {
     private Socket socket;
@@ -61,12 +63,31 @@ public class ClientHandler implements Runnable {
     //Hàm xử lí request
     private Response handleBusinessLogic(Request request){
         Response response=new Response();
-        ActionType type =request.getAction();   //
-    switch(type){
-        case LOGIN:
-            response.setStatus("SUCCESS");
-            response.setMessage("Chào mừng quý khách " + request.getPayload() + " đã trở lại");
-            break;
+        ActionType type =request.getAction();
+//        switch(type){
+//            case LOGIN:
+//            response.setStatus("SUCCESS");
+//            response.setMessage("Chào mừng quý khách " + request.getPayload() + " đã trở lại");
+//            break;
+        UserRepository userRepo = new UserRepository();
+
+        switch(type){
+            case LOGIN:
+                String[] loginData = ((String) request.getPayload()).split(",");
+                String username = loginData[0];
+                String password = loginData[1];
+
+                User loggedInUser = userRepo.login(username, password);
+
+                if (loggedInUser != null) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đăng nhập thành công!");
+                    response.setData(loggedInUser);
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Sai tài khoản hoặc mật khẩu!");
+                }
+                break;
 
         case LOGOUT:
             response.setStatus("SUCCESS");
@@ -74,8 +95,27 @@ public class ClientHandler implements Runnable {
             break;
 
         case REGISTER:
-            response.setStatus("SUCCESS");
-            response.setMessage("Đăng ký thành công!: " + request.getPayload());
+//            response.setStatus("SUCCESS");
+//            response.setMessage("Đăng ký thành công!: " + request.getPayload());
+//            break;
+            String[] regData = ((String) request.getPayload()).split(",");
+            String regUsername = regData[0];
+            String regPassword = regData[1];
+
+            User newUser = new User();
+            newUser.setName(regUsername);
+            newUser.setPassword(regPassword);
+            newUser.setRole("BIDDER");
+
+            boolean isRegistered = userRepo.addUser(newUser);
+
+            if(isRegistered){
+                response.setStatus("SUCCESS");
+                response.setMessage("Đăng ký thành công! Chào mừng " + regUsername);
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Đăng ký thất bại! Tên tài khoản đã tồn tại.");
+            }
             break;
 
         case BID:

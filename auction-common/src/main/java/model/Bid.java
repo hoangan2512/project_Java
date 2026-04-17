@@ -18,6 +18,9 @@ public class Bid implements Serializable {
         this.amount =amount;
         this.bid_time = bid_time;
     }
+    public Bid(){
+
+    }
 
     public int getId() {
         return id;

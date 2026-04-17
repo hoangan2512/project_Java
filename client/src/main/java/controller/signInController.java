@@ -47,7 +47,6 @@ public class signInController {
         }
 
         User newUser = new User();
-        // QUAN TRỌNG: Kiểm tra class User của bạn dùng setName hay setUsername
         newUser.setName(username);
         newUser.setPassword(password);
 

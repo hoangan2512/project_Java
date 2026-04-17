@@ -16,6 +16,8 @@ public class Auction {
         this.end_time = end_time;
         this.status = status;
     }
+    public Auction() {
+    }
 
     public int getId() {
         return id;

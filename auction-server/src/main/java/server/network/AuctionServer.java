@@ -1,4 +1,6 @@
 package server.network;
+import server.repository.DatabaseConnection;
+
 import java.io.IOException;
 import java.util.*;
 import java.net.Socket;
@@ -9,6 +11,8 @@ public class AuctionServer {
     private static final int PORT=2810; //tạo 1 cổng
     public static List<ClientHandler> clients = new CopyOnWriteArrayList<>(); // Quản lí các kết nối của người dùng
     public static void main(String[] args){
+        DatabaseConnection.getInstance().getConnection();
+        System.out.println("[HỆ THỐNG] Đã mở Database thành công!");
         try (ServerSocket serverSocket = new ServerSocket(PORT)){
             System.out.println("Server đấu giá tại cổng: "+PORT);
             while (true) {
