@@ -54,26 +54,23 @@ public class signInController {
         String username = UsrNameField.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
-            Status.setText("Vui lòng nhập đầy đủ!");
+            Status.setText("Please insert username & password");
             return;
         }
 
         User newUser = new User();
-        // QUAN TRỌNG: Kiểm tra class User của bạn dùng setName hay setUsername
         newUser.setName(username);
         newUser.setPassword(password);
 
-        // Đổi ACTION sang REGISTER
         Request req = new Request(newUser, ActionType.REGISTER);
 
-        ClientSocket clientService = new ClientSocket();
-        Response res = clientService.sendRequest(req);
+        Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: green;");
             Status.setText("Account created successfully");
-            PauseTransition pause1 = new PauseTransition(Duration.seconds(2));
+            PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
 
             pause1.setOnFinished(e -> {
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -87,19 +84,41 @@ public class signInController {
         }
     }
 
-    public void UserNameInput(ActionEvent event) {
+    public void logIn(ActionEvent event) {
+        String password = PassField.getText();
         String username = UsrNameField.getText();
 
-        if (username == null || username.trim().isEmpty()) {
-            Status.setText("Please enter username!");
-            Status.setStyle("-fx-text-fill: red;");
-            Status.setVisible(true);
-        } else {
-            LoginBtn.setVisible(false);
-
-            SignInBtn.setVisible(true);
-            Status.setVisible(false);
+        if (username.isEmpty() || password.isEmpty()) {
+            Status.setText("Please insert username & password");
+            return;
         }
+
+        User loginUser = new User();
+        loginUser.setName(username);
+        loginUser.setPassword(password);
+
+        Request req = new Request(loginUser, ActionType.LOGIN);
+
+        Response res = ClientSocket.sendRequest(req);
+
+        if (res != null && "SUCCESS".equals(res.getStatus())) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: green;");
+            Status.setText("Login successful!");
+
+            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            pause.setOnFinished(e -> {
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.close();
+            });
+            pause.play();
+
+        } else {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Error: Invalid username or password!");
+        }
+
     }
 
     public void handleSigninOpt(ActionEvent event) {
