@@ -29,17 +29,10 @@ public class mainPageController {
     @FXML
     private Button SellerHub;
     @FXML
-    private StackPane prd1;
+    private StackPane prd1, prd2, prd3, prd4, prd5, prd6;
     @FXML
-    private StackPane prd2;
-    @FXML
-    private StackPane prd3;
-    @FXML
-    private StackPane prd4;
-    @FXML
-    private StackPane prd5;
-    @FXML
-    private StackPane prd6;
+    private StackPane prdPagePane;
+
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
@@ -56,18 +49,19 @@ public class mainPageController {
         }
 
         updateAvatarUI();
+        prdPagePane.setVisible(false);
 
         //load prd_card
         String fxmlPath = "/view/prd_preview.fxml";
-        fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", "1200$", "Bidding");
-        fillProductCard(prd2, fxmlPath, "Bàn phím cơ Custom", "350$",  "Bidding");
-        fillProductCard(prd3, fxmlPath, "Chuột Logitech G Pro", "120$", "Bidding");
-        fillProductCard(prd4, fxmlPath, "Màn hình Dell Ultrasharp", "500$", "Bidding");
-        fillProductCard(prd5, fxmlPath, "Tai nghe Sony WH-1000XM5", "300$", "Bidding");
-        fillProductCard(prd6, fxmlPath, "Card đồ họa RTX 4090", "1600$", "Bidding");
+        fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", 1000000, 3666);
+        fillProductCard(prd2, fxmlPath, "Bàn phím cơ Custom", 1000000,  3665);
+        fillProductCard(prd3, fxmlPath, "Chuột Logitech G Pro", 1000000, 3665);
+        fillProductCard(prd4, fxmlPath, "Màn hình Dell Ultrasharp", 1000000, 3665);
+        fillProductCard(prd5, fxmlPath, "Tai nghe Sony WH-1000XM5", 1000000, 3665);
+        fillProductCard(prd6, fxmlPath, "Card đồ họa RTX 4090", 1000000, 3665);
     }
 
-    public void fillProductCard(StackPane container, String fxmlPath, String name, String price, String auction_status) {
+    public void fillProductCard(StackPane container, String fxmlPath, String name, long price, long time) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent node = loader.load();
@@ -75,7 +69,11 @@ public class mainPageController {
             prd_previewController controller = loader.getController();
 
             if (controller != null) {
-                controller.setData(name, price, auction_status, null);
+                controller.setData(name, price, time, null);
+
+                controller.setOnBidAction(() -> {
+                    fillProductPage(name, price, time);
+                });
             }
 
             container.getChildren().setAll(node);
@@ -86,20 +84,26 @@ public class mainPageController {
         }
     }
 
-    public void fillProductPage(StackPane container, String fxmlPath, String name, String price, String auction_status) {
+    public void fillProductPage(String name, long price, long time) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent node = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
+            Parent prdPageNode = loader.load();
 
-            prd_previewController controller = loader.getController();
+            // Lấy controller của trang chi tiết
+            prdPageController controller = loader.getController();
 
             if (controller != null) {
-                controller.setData(name, price, auction_status, null);
+                // Đẩy dữ liệu sang trang chi tiết
+                controller.setData(name, price, time, null);
             }
+
+            // Hiển thị trang chi tiết lên (đè lên hoặc thay thế nội dung)
+            // Giả sử bạn muốn dùng chính cái prd1 để hiển thị hoặc một vùng lớn hơn
+            prdPagePane.getChildren().setAll(prdPageNode);
+            prdPagePane.setVisible(true);
 
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
         }
     }
 

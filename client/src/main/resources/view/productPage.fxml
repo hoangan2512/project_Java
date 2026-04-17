@@ -27,7 +27,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="currrentPrice" layoutX="702.0" layoutY="179.0" prefHeight="20.0" prefWidth="400.0" text="Current price" textFill="#0bff00">
+      <Label fx:id="currentPrice" layoutX="702.0" layoutY="179.0" prefHeight="20.0" prefWidth="400.0" text="Current price" textFill="#0bff00">
          <font>
             <Font name="System Bold" size="28.0" />
          </font>
