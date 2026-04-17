@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 //các lớp con Electronics.java, Art.java, Vehicle.java: Kế thừa từ Item để minh họa tính kế thừa rõ ràng.
 
 // Bỏ abstract nếu bạn muốn dùng 'new Item()' trong Repository
-public class Item extends Entity {
+public class Item extends entity {
     private String description;
     private double starting_price;
     private int seller_id;
