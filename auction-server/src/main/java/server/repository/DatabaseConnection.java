@@ -16,10 +16,10 @@ public class DatabaseConnection {
 
             // CHUYỂN DÒNG NÀY VÀO ĐÂY
             File dbFile = new File("auction_db.db");
-            System.out.println("🚩 [HỆ THỐNG] Database khởi tạo tại: " + dbFile.getAbsolutePath());
+            System.out.println("Database khởi tạo tại: " + dbFile.getAbsolutePath());
 
         } catch (Exception e) {
-            System.err.println("❌ Lỗi kết nối DB trong Constructor!");
+            System.err.println("Lỗi kết nối DB trong Constructor!");
             e.printStackTrace();
         }
     }

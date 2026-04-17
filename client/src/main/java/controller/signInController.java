@@ -124,20 +124,27 @@ public class signInController {
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            Status.setVisible(true);
-            Status.setStyle("-fx-text-fill: green;");
-            Status.setText("Login successful!");
-
             User userFromServer = (User) res.getData();
-            SessionManager.getInstance().setCurrentUser(userFromServer);
 
-            PauseTransition pause = new PauseTransition(Duration.seconds(2));
-            pause.setOnFinished(e -> {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.close();
-            });
-            pause.play();
+            if ("BIDDER".equalsIgnoreCase(userFromServer.getRole())) {
+                SessionManager.getInstance().setCurrentUser(userFromServer);
+                Status.setVisible(true);
+                Status.setStyle("-fx-text-fill: green;");
+                Status.setText("Login successful!");
 
+                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+                pause.setOnFinished(e -> {
+                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    stage.close();
+                });
+                pause.play();
+
+            } else {
+                Status.setVisible(true);
+                Status.setStyle("-fx-text-fill: red;");
+                Status.setText("This is not a bidder account");
+                SessionManager.getInstance().logout();
+            }
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
