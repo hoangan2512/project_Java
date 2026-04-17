@@ -11,7 +11,7 @@ import java.util.List;
 public class ItemRepository {
     public boolean addItem(Item item) {
         String sql = "INSERT INTO items (name, description, starting_price, seller_id, created_at) VALUES (?, ?, ?, ?, ?)";
-        Connection conn = DatabaseConnection.getInstance();
+        Connection conn = DatabaseConnection.getInstance().getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, item.getName());
@@ -31,7 +31,7 @@ public class ItemRepository {
     public List<Item> getAllItems(){
         List<Item> itemList = new ArrayList<>();
         String sql = "SELECT * FROM items";
-        Connection conn = DatabaseConnection.getInstance();
+        Connection conn = DatabaseConnection.getInstance().getConnection();
         try(PreparedStatement pstmt = conn.prepareStatement(sql)){
 
             ResultSet rs = pstmt.executeQuery();

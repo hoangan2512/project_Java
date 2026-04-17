@@ -1,11 +1,10 @@
 package model;
 
-//User.java (Abstract Class): Chứa các thuộc tính chung như username, password, role.
-
 import java.io.Serializable;
 
-public  class User extends Entity implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class User extends entity implements Serializable {
+    private static final long serialVersionUID = 1L; // Giúp tránh lỗi khác phiên bản
+
     private String password;
     protected String role;
 
@@ -14,10 +13,22 @@ public  class User extends Entity implements Serializable {
         this.password = password;
         this.role = role;
     }
+
     public User(){
         super(0, "");
     }
 
+    // =========================================================
+    // THÊM 2 HÀM NÀY ĐỂ ĐỒNG BỘ VỚI CODE MẠNG (CLIENT/SERVER)
+    // =========================================================
+    public String getUsername() {
+        return super.getName();
+    }
+
+    public void setUsername(String username) {
+        super.setName(username);
+    }
+    // =========================================================
 
     public String getPassword() {
         return password;
@@ -39,8 +50,7 @@ public  class User extends Entity implements Serializable {
         return this.password.equals(inputPassword);
     }
 
-
-    public static User createUser(String role, int id, String username, String password)  {
+    public static User createUser(String role, int id, String username, String password) {
         if ("Bidder".equalsIgnoreCase(role)) {
             return new Bidder(id, username, password);
         } else if ("Seller".equalsIgnoreCase(role)) {
@@ -49,16 +59,12 @@ public  class User extends Entity implements Serializable {
             return new Admin(id, username, password);
         }
     }
+
     // Lớp Bidder: Người tham gia đấu giá
     static class Bidder extends User {
-
         public Bidder(int id, String username, String password) {
-            // Cần truyền 4 tham số: id, name, password, role
             super(id, username, password, "Bidder");
-
         }
-
-
     }
 
     // Lớp Seller: Người đăng bán sản phẩm
@@ -70,21 +76,14 @@ public  class User extends Entity implements Serializable {
 
     }
 
-
     // Lớp Admin: Quản lý hệ thống
     static class Admin extends User {
-
         public Admin(int id, String name, String password) {
-            // Truyền đủ 4 tham số: id, name, password, role
             super(id, name, password, "Admin");
         }
 
-
-        // Chức năng riêng của Admin (Ví dụ: Khóa người dùng)
         public void blockUser(User user) {
             System.out.println("Admin " + getName() + " đã khóa người dùng: " + user.getName());
         }
     }
-
-
 }

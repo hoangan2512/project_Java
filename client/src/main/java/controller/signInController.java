@@ -10,6 +10,11 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import message.Request;
+import message.Response;
+import model.ActionType;
+import model.User;
+import network.ClientSocket;
 
 public class signInController {
 
@@ -29,44 +34,33 @@ public class signInController {
         Status.setAlignment(javafx.geometry.Pos.CENTER);
         Status.setMaxWidth(Double.MAX_VALUE);
         SignInBtn.setVisible(false);
-        SignInBtn.setManaged(false);
         Status.setVisible(false);
     }
 
     public void signIn(ActionEvent event) {
         String password = PassField.getText();
+        String username = UsrNameField.getText();
 
-        if ("123".equals(password)) {
-            Status.setText("Signing In...");
-            Status.setStyle("-fx-text-fill: #FFFFFF;");
-            Status.setVisible(true);
+        if (username.isEmpty() || password.isEmpty()) {
+            Status.setText("Vui lòng nhập đầy đủ!");
+            return;
+        }
 
-            PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
+        User newUser = new User();
+        // QUAN TRỌNG: Kiểm tra class User của bạn dùng setName hay setUsername
+        newUser.setName(username);
+        newUser.setPassword(password);
 
-            pause1.setOnFinished(e -> {
+        // Đổi ACTION sang REGISTER
+        Request req = new Request(newUser, ActionType.REGISTER);
 
-                Status.setText("Sign In Successfully!");
-                Status.setStyle("-fx-text-fill: #4CAF50;");
+        ClientSocket clientService = new ClientSocket();
+        Response res = clientService.sendRequest(req);
 
-                PauseTransition pause2 = new PauseTransition(Duration.seconds(0.3));
-
-                pause2.setOnFinished(closeEvent -> {
-                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                    stage.close();
-                });
-                pause2.play();
-            });
-            pause1.play();
+        if (res != null && "SUCCESS".equals(res.getStatus())) {
+            Status.setText("Tạo tài khoản thành công!");
         } else {
-            Status.setText("Wrong password!");
-            Status.setStyle("-fx-text-fill: red; -fx-font-weight: bold");
-            Status.setVisible(true);
-            PauseTransition pause3 = new PauseTransition(Duration.seconds(2));
-
-            pause3.setOnFinished(e -> {
-                Status.setVisible(false);
-            });
-            pause3.play();
+            Status.setText("Lỗi: Không thể tạo người dùng!");
         }
     }
 
