@@ -8,15 +8,18 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import model.User;
+import controller.prdPageController;
 
 import java.io.IOException;
 
 public class mainPageController {
 
     @FXML
-    private Circle userAvatar; // Đảm bảo fx:id trong FXML là "userAvatar"
+    private Circle userAvatar;
     @FXML
     private Circle searchBtn;
     @FXML
@@ -26,17 +29,10 @@ public class mainPageController {
     @FXML
     private Button SellerHub;
     @FXML
-    private StackPane prd1;
+    private StackPane prd1, prd2, prd3, prd4, prd5, prd6;
     @FXML
-    private StackPane prd2;
-    @FXML
-    private StackPane prd3;
-    @FXML
-    private StackPane prd4;
-    @FXML
-    private StackPane prd5;
-    @FXML
-    private StackPane prd6;
+    private StackPane prdPagePane;
+
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
@@ -52,17 +48,20 @@ public class mainPageController {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
         }
 
+        updateAvatarUI();
+        prdPagePane.setVisible(false);
+
         //load prd_card
         String fxmlPath = "/view/prd_preview.fxml";
-        fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", "1200$", "Bidding");
-        fillProductCard(prd2, fxmlPath, "Bàn phím cơ Custom", "350$",  "Bidding");
-        fillProductCard(prd3, fxmlPath, "Chuột Logitech G Pro", "120$", "Bidding");
-        fillProductCard(prd4, fxmlPath, "Màn hình Dell Ultrasharp", "500$", "Bidding");
-        fillProductCard(prd5, fxmlPath, "Tai nghe Sony WH-1000XM5", "300$", "Bidding");
-        fillProductCard(prd6, fxmlPath, "Card đồ họa RTX 4090", "1600$", "Bidding");
+        fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", 1000000, 3666);
+        fillProductCard(prd2, fxmlPath, "Bàn phím cơ Custom", 1000000,  3665);
+        fillProductCard(prd3, fxmlPath, "Chuột Logitech G Pro", 1000000, 3665);
+        fillProductCard(prd4, fxmlPath, "Màn hình Dell Ultrasharp", 1000000, 3665);
+        fillProductCard(prd5, fxmlPath, "Tai nghe Sony WH-1000XM5", 1000000, 3665);
+        fillProductCard(prd6, fxmlPath, "Card đồ họa RTX 4090", 1000000, 3665);
     }
 
-    public void fillProductCard(StackPane container, String fxmlPath, String name, String price, String auction_status) {
+    public void fillProductCard(StackPane container, String fxmlPath, String name, long price, long time) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent node = loader.load();
@@ -70,7 +69,11 @@ public class mainPageController {
             prd_previewController controller = loader.getController();
 
             if (controller != null) {
-                controller.setData(name, price, auction_status, null);
+                controller.setData(name, price, time, null);
+
+                controller.setOnBidAction(() -> {
+                    fillProductPage(name, price, time);
+                });
             }
 
             container.getChildren().setAll(node);
@@ -81,13 +84,36 @@ public class mainPageController {
         }
     }
 
+    public void fillProductPage(String name, long price, long time) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
+            Parent prdPageNode = loader.load();
+
+            // Lấy controller của trang chi tiết
+            prdPageController controller = loader.getController();
+
+            if (controller != null) {
+                // Đẩy dữ liệu sang trang chi tiết
+                controller.setData(name, price, time, null);
+            }
+
+            // Hiển thị trang chi tiết lên (đè lên hoặc thay thế nội dung)
+            // Giả sử bạn muốn dùng chính cái prd1 để hiển thị hoặc một vùng lớn hơn
+            prdPagePane.getChildren().setAll(prdPageNode);
+            prdPagePane.setVisible(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     // Hàm xử lý khi bấm vào nút tròn hình người (Avatar)
     @FXML
     public void handleAvatarClick(MouseEvent event) {
         try {
-            // 2. Gọi hàm chuyển cảnh từ đối tượng đã tạo
-            // Lưu ý: Đảm bảo bên SceneSwitchController bạn đã đổi tham số thành (Event e)
-            sceneSwitcher.openSignInPopup();
+            sceneSwitcher.openSignInPopup(() -> {
+                updateAvatarUI();
+            });
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Lỗi chuyển cảnh");
@@ -118,5 +144,18 @@ public class mainPageController {
         }
     }
 
-
+    public void updateAvatarUI() {
+        // Hỏi "bộ nhớ" xem hiện tại có ai đang đăng nhập không?
+        if (SessionManager.getInstance().isLoggedIn()) {
+            // Đã đăng nhập: Viền xanh lá
+            // Hoặc nếu bạn dùng CSS: avatarBorder.setStyle("-fx-border-color: green;");
+            userAvatar.setStroke(Color.GREEN);
+            User user = SessionManager.getInstance().getCurrentUser();
+            System.out.println("Logged In: " + user.getUsername());
+        } else {
+            // Chưa đăng nhập (Bấm tắt popup mà không login): Viền đỏ
+            System.out.println("Status: Waiting for login");
+            userAvatar.setStroke(Color.RED);
+        }
+    }
 }

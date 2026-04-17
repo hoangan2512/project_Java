@@ -1,139 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
     <children>
-        <AnchorPane prefHeight="90.0" prefWidth="1280.0" style="-fx-background-color: #1E1E1E;">
-            <children>
-                <ImageView fx:id="BidHub" fitHeight="44.0" fitWidth="115.0" layoutX="60.0" layoutY="23.0" onMouseClicked="#handleHomePage" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
-                    <image>
-                        <Image url="@../image/project_logo.jpg" />
-                    </image>
-                </ImageView>
-                <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1227.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="19.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
-                <TextField fx:id="searchBar" layoutX="371.0" layoutY="27.0" prefHeight="37.0" prefWidth="441.0" promptText="Search BidHub" style="-fx-background-radius: 30px; -fx-background-color: #2b2b2b; -fx-text-fill: white;">
-                    <padding>
-                        <Insets left="15.0" />
-                    </padding>
-                </TextField>
-                <Circle fx:id="searchBtn" fill="#ff8e1f" layoutX="347.0" layoutY="45.0" onMouseClicked="#handleSearchBtnClick" radius="16.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
-                <Button fx:id="CustomSearch" layoutX="830.0" layoutY="29.0" mnemonicParsing="false" prefHeight="32.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Custom Search">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Button>
-                <Button fx:id="SellerHub" layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" onMouseClicked="#handleSellerHub" prefHeight="31.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Go to SellerHub">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Button>
-            </children>
-        </AnchorPane>
-        <HBox layoutY="90.0" prefHeight="44.0" prefWidth="1280.0" style="-fx-background-color: #1E1E1E;">
-            <padding>
-                <Insets left="70.0" />
-            </padding>
-            <children>
-                <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn_main" text="Categories" textFill="WHITE">
-                    <items>
-                        <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Art" />
-                        <MenuItem mnemonicParsing="false" text="Electronics" />
-                  <MenuItem mnemonicParsing="false" text="Vehicle" />
-                    </items>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </MenuButton>
-                <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn" text="Auction Status" textFill="WHITE">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="Active Bidding" />
-                        <MenuItem mnemonicParsing="false" text="Ending Soon" />
-                        <MenuItem mnemonicParsing="false" text="Newly Listed" />
-                    </items>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </MenuButton>
-                <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn" text="Price Range" textFill="WHITE">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="Dưới 1M" />
-                        <MenuItem mnemonicParsing="false" text="1M - 10M" />
-                        <MenuItem mnemonicParsing="false" text="Trên 10M" />
-                        <MenuItem mnemonicParsing="false" text="Tùy chỉnh" />
-                    </items>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </MenuButton>
-                <MenuButton mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 0px;" styleClass="btn" text="Help &amp; News" textFill="WHITE">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="How BidHub Works" />
-                        <MenuItem mnemonicParsing="false" text="Payment Policy" />
-                        <MenuItem mnemonicParsing="false" text="Private Policy" />
-                        <MenuItem mnemonicParsing="false" text="Report Issues / Fraud" />
-                    </items>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </MenuButton>
-            </children>
-        </HBox>
-      <StackPane fx:id="imgPane" layoutX="105.0" layoutY="220.0" prefHeight="315.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
+      <StackPane fx:id="imgPane" layoutX="102.0" layoutY="94.0" prefHeight="315.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
          <children>
             <ImageView fx:id="prdImage" fitHeight="310.0" fitWidth="530.0" pickOnBounds="true" preserveRatio="true" />
          </children>
       </StackPane>
-      <Label fx:id="prdName" layoutX="705.0" layoutY="222.0" prefHeight="60.0" prefWidth="476.0" text="Product name" textFill="WHITE">
+      <Label fx:id="prdName" layoutX="702.0" layoutY="96.0" prefHeight="60.0" prefWidth="476.0" text="Product name" textFill="WHITE">
          <font>
             <Font name="System Bold" size="30.0" />
          </font>
       </Label>
-      <Label layoutX="705.0" layoutY="289.0" prefHeight="24.0" prefWidth="476.0" text="Current price" textFill="WHITE">
+      <Label layoutX="702.0" layoutY="163.0" prefHeight="24.0" prefWidth="476.0" text="Current price" textFill="WHITE">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="currrentPrice" layoutX="705.0" layoutY="305.0" prefHeight="20.0" prefWidth="400.0" text="Current price" textFill="#0bff00">
+      <Label fx:id="currentPrice" layoutX="702.0" layoutY="179.0" prefHeight="20.0" prefWidth="400.0" text="Current price" textFill="#0bff00">
          <font>
             <Font name="System Bold" size="28.0" />
          </font>
       </Label>
-      <Button fx:id="Bid" layoutX="663.0" layoutY="584.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="10.0" prefWidth="231.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px;" text="Place a bid">
+      <Button fx:id="Bid" layoutX="660.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="10.0" prefWidth="231.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px;" text="Place a bid">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
       </Button>
-      <TextField fx:id="bidAmount" layoutX="105.0" layoutY="584.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert a number" style="-fx-background-color: #2b2b2b; -fx-background-radius: 20px;" styleClass="priceField" stylesheets="@prdPage.css">
+      <TextField fx:id="bidAmount" layoutX="102.0" layoutY="458.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert a number" style="-fx-background-color: #2b2b2b; -fx-background-radius: 20px;" styleClass="priceField" stylesheets="@prdPage.css">
          <font>
             <Font size="16.0" />
          </font>
       </TextField>
-      <Label layoutX="105.0" layoutY="555.0" prefHeight="25.0" prefWidth="126.0" text="Time Remaining:" textFill="WHITE">
+      <Label layoutX="102.0" layoutY="429.0" prefHeight="25.0" prefWidth="126.0" text="Time Remaining:" textFill="WHITE">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="timeLeft" layoutX="231.0" layoutY="555.0" prefHeight="24.0" prefWidth="476.0" text="00:00:00" textFill="WHITE">
+      <Label fx:id="timeLeft" layoutX="228.0" layoutY="429.0" prefHeight="24.0" prefWidth="476.0" text="00:00:00" textFill="WHITE">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
       </Label>
-      <LineChart fx:id="prcieChart" layoutX="663.0" layoutY="378.0" prefHeight="189.0" prefWidth="427.0">
+      <LineChart fx:id="prcieChart" layoutX="660.0" layoutY="252.0" prefHeight="189.0" prefWidth="427.0">
         <xAxis>
             <NumberAxis side="BOTTOM" />
         </xAxis>
@@ -141,7 +60,7 @@
           <NumberAxis side="LEFT" />
         </yAxis>
       </LineChart>
-      <Label layoutX="705.0" layoutY="360.0" prefHeight="24.0" prefWidth="476.0" text="Price Movement Chart" textFill="WHITE">
+      <Label layoutX="702.0" layoutY="234.0" prefHeight="24.0" prefWidth="476.0" text="Price Movement Chart" textFill="WHITE">
          <font>
             <Font size="16.0" />
          </font>
