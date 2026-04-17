@@ -1,9 +1,11 @@
 package model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 //Bid.java: Lưu thông tin một lượt đặt giá: bidderId, itemId, amount, timestamp.
-public class Bid {
+public class Bid implements Serializable {
+    private static final long serialVersionUID = 1L; // Đảm bảo đồng bộ Client-Server
     private int id;
     private int auction_id;
     private int bidder_id;
