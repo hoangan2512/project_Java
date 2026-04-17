@@ -69,10 +69,10 @@ public class ServerApplication {
 
                     if (isSaved) {
                         res.setStatus("SUCCESS");
-                        System.out.println("✅ Đã lưu User mới vào DB: " + newUser.getName());
+                        System.out.println("Đã lưu User mới vào DB: " + newUser.getName());
                     } else {
                         res.setStatus("FAIL");
-                        System.out.println("❌ Lỗi khi đăng ký User!");
+                        System.out.println("Lỗi khi đăng ký User!");
                     }
                 } else if (req.getAction() == ActionType.LOGIN) {
                     User userFromClient = (User) req.getPayload();

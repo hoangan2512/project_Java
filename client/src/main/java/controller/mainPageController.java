@@ -8,15 +8,18 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import model.User;
+import controller.prdPageController;
 
 import java.io.IOException;
 
 public class mainPageController {
 
     @FXML
-    private Circle userAvatar; // Đảm bảo fx:id trong FXML là "userAvatar"
+    private Circle userAvatar;
     @FXML
     private Circle searchBtn;
     @FXML
@@ -52,6 +55,8 @@ public class mainPageController {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
         }
 
+        updateAvatarUI();
+
         //load prd_card
         String fxmlPath = "/view/prd_preview.fxml";
         fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", "1200$", "Bidding");
@@ -81,13 +86,30 @@ public class mainPageController {
         }
     }
 
+    public void fillProductPage(StackPane container, String fxmlPath, String name, String price, String auction_status) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent node = loader.load();
+
+            prd_previewController controller = loader.getController();
+
+            if (controller != null) {
+                controller.setData(name, price, auction_status, null);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
+        }
+    }
+
     // Hàm xử lý khi bấm vào nút tròn hình người (Avatar)
     @FXML
     public void handleAvatarClick(MouseEvent event) {
         try {
-            // 2. Gọi hàm chuyển cảnh từ đối tượng đã tạo
-            // Lưu ý: Đảm bảo bên SceneSwitchController bạn đã đổi tham số thành (Event e)
-            sceneSwitcher.openSignInPopup();
+            sceneSwitcher.openSignInPopup(() -> {
+                updateAvatarUI();
+            });
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Lỗi chuyển cảnh");
@@ -118,5 +140,18 @@ public class mainPageController {
         }
     }
 
-
+    public void updateAvatarUI() {
+        // Hỏi "bộ nhớ" xem hiện tại có ai đang đăng nhập không?
+        if (SessionManager.getInstance().isLoggedIn()) {
+            // Đã đăng nhập: Viền xanh lá
+            // Hoặc nếu bạn dùng CSS: avatarBorder.setStyle("-fx-border-color: green;");
+            userAvatar.setStroke(Color.GREEN);
+            User user = SessionManager.getInstance().getCurrentUser();
+            System.out.println("Logged In: " + user.getUsername());
+        } else {
+            // Chưa đăng nhập (Bấm tắt popup mà không login): Viền đỏ
+            System.out.println("Status: Waiting for login");
+            userAvatar.setStroke(Color.RED);
+        }
+    }
 }

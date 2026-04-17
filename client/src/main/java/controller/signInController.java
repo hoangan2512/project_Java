@@ -16,6 +16,7 @@ import message.Response;
 import model.ActionType;
 import model.User;
 import network.ClientSocket;
+import controller.SessionManager;
 
 public class signInController {
 
@@ -71,6 +72,7 @@ public class signInController {
             Status.setStyle("-fx-text-fill: green;");
             Status.setText("Account created successfully");
             PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
+            SessionManager.getInstance().setCurrentUser(newUser);
 
             pause1.setOnFinished(e -> {
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -80,7 +82,7 @@ public class signInController {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Error: Cannot create user!");
+            Status.setText("Username existed");
         }
     }
 
@@ -105,6 +107,7 @@ public class signInController {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: green;");
             Status.setText("Login successful!");
+            SessionManager.getInstance().setCurrentUser(loginUser);
 
             PauseTransition pause = new PauseTransition(Duration.seconds(2));
             pause.setOnFinished(e -> {
