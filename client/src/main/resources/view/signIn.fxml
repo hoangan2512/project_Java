@@ -45,7 +45,7 @@
       </Label>
       <Line fx:id="line1" endX="31.79998779296875" layoutX="153.0" layoutY="497.0" startX="-78.5999755859375" stroke="WHITE" />
       <Line fx:id="line2" endX="31.79998779296875" layoutX="305.0" layoutY="497.0" startX="-78.5999755859375" stroke="WHITE" />
-      <Button fx:id="SignInBtn" layoutX="152.0" layoutY="530.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="102.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="SignIn" visible="false">
+      <Button fx:id="SignInBtn" layoutX="152.0" layoutY="530.0" mnemonicParsing="false" onAction="#signIn" prefHeight="27.0" prefWidth="102.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="SignIn" visible="false">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>
