@@ -12,7 +12,7 @@ abstract class entity implements Serializable {
         this.id = id;
         this.name = name;
     }
-    public entity(){}
+    public Entity(){}
 
     public int getId() {
         return id;

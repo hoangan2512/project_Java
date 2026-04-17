@@ -72,6 +72,8 @@ public class User extends entity implements Serializable {
         public Seller(int id, String username, String password) {
             super(id, username, password, "Seller");
         }
+        // Giả sử phương thức này nằm trong class Seller hoặc ProductManager
+
     }
 
     // Lớp Admin: Quản lý hệ thống
