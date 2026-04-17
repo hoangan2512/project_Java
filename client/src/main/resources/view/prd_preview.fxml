@@ -24,7 +24,7 @@
          </font>
       </Label>
       <Button fx:id="Bid" layoutX="193.0" layoutY="160.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="26.0" prefWidth="131.0" style="-fx-background-color: #ffa31a; -fx-text-fill: ffffff; -fx-font-weight: bold; -fx-background-radius: 30; -fx-cursor: hand;" text="Start Bidding" />
-      <Label fx:id="auctionStatus" layoutX="190.0" layoutY="130.0" prefHeight="22.0" prefWidth="83.0" text="Auction Status" textFill="WHITE">
+      <Label fx:id="auctionStatus" layoutX="190.0" layoutY="130.0" prefHeight="22.0" prefWidth="83.0" text="Auction Status" textFill="#07ff00">
          <font>
             <Font name="System Bold" size="10.0" />
          </font>

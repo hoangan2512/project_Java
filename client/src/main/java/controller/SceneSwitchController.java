@@ -31,7 +31,7 @@ public class SceneSwitchController {
     }
 
     // Mở Sign In dưới dạng Popup
-    public void openSignInPopup() throws IOException {
+    public void openSignInPopup(Runnable callback) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/signIn.fxml"));
         Parent root = loader.load();
 
@@ -46,6 +46,10 @@ public class SceneSwitchController {
 
         // Hiển thị và đợi người dùng đóng cửa sổ này mới thực hiện code tiếp theo (nếu có)
         popupStage.showAndWait();
+
+        if (callback != null) {
+            callback.run();
+        }
     }
 
     public void switchToSellerHub(Event e) throws IOException {
