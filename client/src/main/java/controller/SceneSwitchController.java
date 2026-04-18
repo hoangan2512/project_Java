@@ -47,6 +47,10 @@ public class SceneSwitchController {
         // Hiển thị và đợi người dùng đóng cửa sổ này mới thực hiện code tiếp theo (nếu có)
         popupStage.showAndWait();
 
+        if (mainPageController.getInstance() != null) {
+            mainPageController.getInstance().updateAvatarUI();
+        }
+
         if (callback != null) {
             callback.run();
         }

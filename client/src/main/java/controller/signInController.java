@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -29,25 +30,43 @@ public class signInController {
     @FXML
     private Button LoginBtn;
     @FXML
-    private Button SignInBtn, SignInOpt, LoginOpt, backBtn;
+    private Button SignInBtn, SignInOpt, LoginOpt, backBtn, LogoutBtn;
     @FXML
     private Line line1, line2;
 
     @FXML
     public void initialize() {
-        Status.setAlignment(javafx.geometry.Pos.CENTER);
-        Status.setMaxWidth(Double.MAX_VALUE);
-        UsrNameField.setVisible(false);
-        PassField.setVisible(false);
-        LoginBtn.setVisible(false);
-        backBtn.setVisible(false);
-        SignInBtn.setVisible(false);
+        if (SessionManager.getInstance().isBidder()) {
+            Status.setAlignment(javafx.geometry.Pos.CENTER);
+            Status.setMaxWidth(Double.MAX_VALUE);
+            UsrNameField.setVisible(false);
+            PassField.setVisible(false);
+            LoginBtn.setVisible(false);
+            backBtn.setVisible(false);
+            SignInBtn.setVisible(false);
+            SignInOpt.setVisible(false);
+            LoginOpt.setVisible(false);
+            line1.setVisible(false);
+            line2.setVisible(false);
+            OR.setVisible(false);
 
-        SignInOpt.setVisible(true);
-        LoginOpt.setVisible(true);
-        line1.setVisible(true);
-        line2.setVisible(true);
-        OR.setVisible(true);
+            LogoutBtn.setVisible(true);
+        } else {
+            Status.setAlignment(javafx.geometry.Pos.CENTER);
+            Status.setMaxWidth(Double.MAX_VALUE);
+            UsrNameField.setVisible(false);
+            PassField.setVisible(false);
+            LoginBtn.setVisible(false);
+            backBtn.setVisible(false);
+            SignInBtn.setVisible(false);
+            LogoutBtn.setVisible(false);
+
+            SignInOpt.setVisible(true);
+            LoginOpt.setVisible(true);
+            line1.setVisible(true);
+            line2.setVisible(true);
+            OR.setVisible(true);
+        }
     }
 
     public void signIn(ActionEvent event) {
@@ -62,6 +81,7 @@ public class signInController {
         User newUser = new User();
         newUser.setName(username);
         newUser.setPassword(password);
+        newUser.setRole("BIDDER");
 
         Request req = new Request(newUser, ActionType.REGISTER);
 
@@ -104,18 +124,27 @@ public class signInController {
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            Status.setVisible(true);
-            Status.setStyle("-fx-text-fill: green;");
-            Status.setText("Login successful!");
-            SessionManager.getInstance().setCurrentUser(loginUser);
+            User userFromServer = (User) res.getData();
 
-            PauseTransition pause = new PauseTransition(Duration.seconds(2));
-            pause.setOnFinished(e -> {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.close();
-            });
-            pause.play();
+            if ("BIDDER".equalsIgnoreCase(userFromServer.getRole())) {
+                SessionManager.getInstance().setCurrentUser(userFromServer);
+                Status.setVisible(true);
+                Status.setStyle("-fx-text-fill: green;");
+                Status.setText("Login successful!");
 
+                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+                pause.setOnFinished(e -> {
+                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    stage.close();
+                });
+                pause.play();
+
+            } else {
+                Status.setVisible(true);
+                Status.setStyle("-fx-text-fill: red;");
+                Status.setText("This is not a bidder account");
+                SessionManager.getInstance().logout();
+            }
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
@@ -164,4 +193,24 @@ public class signInController {
         OR.setVisible(true);
     }
 
+    public void handleLogout(ActionEvent event) {
+        SessionManager.getInstance().logout();
+
+        if (SessionManager.getInstance().isBidder()) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Error logging out, try again!");
+        } else {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: white;");
+            Status.setText("Logged Out. See you later!");
+
+            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            pause.setOnFinished(e -> {
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.close();
+            });
+            pause.play();
+        }
+    }
 }
