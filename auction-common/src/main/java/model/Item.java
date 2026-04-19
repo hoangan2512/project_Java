@@ -7,11 +7,12 @@ import java.time.LocalDateTime;
 
 // Bỏ abstract nếu bạn muốn dùng 'new Item()' trong Repository
 public class Item extends entity {
+    private final String open = "OPEN";
     private String description;
     private double starting_price;
     private int seller_id;
     private LocalDateTime created_at;
-    private String status = "OPEN";
+    private String status = open;
     private double currentPrice;
     private LocalDateTime endTime;
     private int highestBidderId = -1;
@@ -30,25 +31,69 @@ public class Item extends entity {
     }
 
     // --- CÁC HÀM SETTER (Để fix lỗi đỏ ở Repository và Service) ---
-    public void setDescription(String description) { this.description = description; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public void setStarting_price(double starting_price) {
         this.starting_price = starting_price;
         this.currentPrice = starting_price; // Mặc định giá hiện tại = giá khởi điểm
     }
-    public void setSeller_id(int seller_id) { this.seller_id = seller_id; }
-    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
-    public void setStatus(String status) { this.status = status; }
-    public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
-    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
-    public void setHighestBidderId(int highestBidderId) { this.highestBidderId = highestBidderId; }
+
+    public void setSeller_id(int seller_id) {
+        this.seller_id = seller_id;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setCurrentPrice(double currentPrice) {
+        this.currentPrice = currentPrice;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setHighestBidderId(int highestBidderId) {
+        this.highestBidderId = highestBidderId;
+    }
 
     // --- CÁC HÀM GETTER ---
-    public String getDescription() { return description; }
-    public double getStarting_price() { return starting_price; }
-    public int getSeller_id() { return seller_id; }
-    public LocalDateTime getCreated_at() { return created_at; }
-    public String getStatus() { return status; }
-    public double getCurrentPrice() { return currentPrice; }
-    public LocalDateTime getEndTime() { return endTime; }
-    public int getHighestBidderId() { return highestBidderId; }
+    public String getDescription() {
+        return description;
+    }
+
+    public double getStarting_price() {
+        return starting_price;
+    }
+
+    public int getSeller_id() {
+        return seller_id;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public int getHighestBidderId() {
+        return highestBidderId;
+    }
 }

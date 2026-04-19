@@ -14,7 +14,7 @@ public class User extends entity implements Serializable {
         this.role = role;
     }
 
-    public User(){
+    public User() {
         super(0, "");
     }
 
