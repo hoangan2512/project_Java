@@ -6,8 +6,8 @@ public class Response implements Serializable {
     private String status;
     private Object data;
     private String message;
-
-    public void responeAction(String status, Object data, String message) {
+    public Response() {} //để UserController không bị lỗi
+    public Response(String status, Object data, String message) {
         this.status = status;
         this.message = message;
         this.data = data;
@@ -31,4 +31,4 @@ public class Response implements Serializable {
     public String getMessage(){
      return message;
     }
-}
+    }

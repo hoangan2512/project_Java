@@ -70,35 +70,28 @@ public class ClientHandler implements Runnable {
         switch (type) {
             case LOGIN:
                 return userController.handleLogin(request);
-
             case REGISTER:
                 return userController.handleRegister(request);
-
             case LOGOUT:
-                Response logoutRes = new Response();
-                logoutRes.setStatus("SUCCESS");
-                return logoutRes;
-
+                Response logoutRes = new Response("SUCCESS", null, "Đăng xuất thành công.");
+            case CHECK_BALANCE:
+                return userController.handleBalance(request);
+            case DEPOSIT:
+                return userController.handleDeposit(request);
             case CREATE_ITEM:
                 return itemController.handleCreateItem(request);
-
             case BID:
                 return bidController.handleBid(request);
-
+            case GET_BID_HISTORY:
+                return bidController.handleGetBidHistory(request);
             case GET_LIST:
                 return auctionController.handleGetList(request);
-
             case GET_ITEM_DETAIL:
                 return auctionController.handleGetItemDetail(request);
-
             case AUCTION_END:
                 return auctionController.handleAuctionEnd(request);
-
             default:
-                Response errRes = new Response();
-                errRes.setStatus("ERROR");
-                errRes.setMessage("Hành động không xác định: " + type);
-                return errRes;
+               return new Response("ERROR",null,"hành động không xác định: " +type);
         }
     }
 
