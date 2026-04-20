@@ -1,1 +1,0 @@
-Package com.uet.server.controller: Tiếp nhận gói tin JSON từ Client, điều hướng đến các dịch vụ tương ứng.

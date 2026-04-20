@@ -144,8 +144,11 @@ public class sellerHubController_signin {
 
                 PauseTransition pause = new PauseTransition(Duration.seconds(1));
                 pause.setOnFinished(e -> {
-                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                    stage.close();
+                    try {
+                        sceneSwitcher.switchToSellerHub(event);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 });
                 pause.play();
 

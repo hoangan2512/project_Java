@@ -10,7 +10,7 @@ public class ClientSocket {
     // 1. Cấu hình thông tin Server
     // Nên để private static final vì IP và Port của Server thường cố định
     private static final String SERVER_IP = "localhost";
-    private static final int SERVER_PORT = 12345;
+    private static final int SERVER_PORT = 2810;
 
     /**
      * Hàm cốt lõi: Gửi Request lên Server và đợi nhận Response

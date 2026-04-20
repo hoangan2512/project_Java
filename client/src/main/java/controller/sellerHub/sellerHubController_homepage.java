@@ -2,9 +2,7 @@ package controller.sellerHub;
 
 import controller.SceneSwitchController;
 import controller.SessionManager;
-import controller.sellerHub.new_item_page.auctionInfo;
-import controller.sellerHub.new_item_page.basicInfo;
-import controller.sellerHub.new_item_page.graphicInfo;
+import controller.sellerHub.new_item_page.*;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -96,6 +94,11 @@ public class sellerHubController_homepage {
                 return;
             }
 
+            currentDraft.setName(name);
+            currentDraft.setId(id);
+            currentDraft.setDescription(description);
+            currentDraft.setCategories(categories);
+
             // fxml loader
             loadChildFXML("/view/sellerHub/new_item_page/graphicInfo.fxml");
             Status.setVisible(false);
@@ -110,12 +113,61 @@ public class sellerHubController_homepage {
                 return;
             }
 
+            currentDraft.setImage(gic.getImg());
+
             // Nếu ok, load trang tiếp theo
             loadChildFXML("/view/sellerHub/new_item_page/auctionInfo.fxml");
             Status.setVisible(false);
             Status.setManaged(false);
+        } else if (currentSubController instanceof auctionInfo) {
+            auctionInfo aic = (auctionInfo) currentSubController;
+
+            String prdPrice = aic.getPrice();
+            String startTime = aic.getTime();
+            String auction_choice = aic.getChoice();
+
+            if (prdPrice.isBlank() || startTime.isBlank() || auction_choice == null) {
+                Status.setVisible(true);
+                Status.setManaged(true);
+                Status.setText("Infomation missing");
+                return;
+            }
+
+            currentDraft.setPrice(prdPrice);
+            currentDraft.setStartTime(startTime);
+            currentDraft.setAuctionChoice(auction_choice);
+
+            boolean isSaved = pushToDatabase(currentDraft);
+
+            if (isSaved) {
+                loadChildFXML("/view/sellerHub/new_item_page/prdOverview.fxml");
+                // Truyền dữ liệu sang trang Overview để hiển thị (tùy chọn)
+                if (currentSubController instanceof prdOverview) { // (Tên class bạn đã sửa)
+                    // ((PrdOverviewController) currentSubController).setData(currentDraft);
+                }
+
+                NextBtn.setText("Back to product list");
+                Status.setVisible(false);
+                Status.setManaged(false);
+
+                // Xóa draft để chuẩn bị cho sản phẩm tiếp theo
+                currentDraft.clear();
+            } else {
+                Status.setVisible(true);
+                Status.setManaged(true);
+                Status.setText("Lỗi kết nối cơ sở dữ liệu!");
+            }
+        } else if (currentSubController instanceof prdOverview) {
+            loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
         }
     }
+
+    private boolean pushToDatabase(ProductDraftDTO currentDraft) {
+        return true;
+    }
+
+    // Nơi chứa các biến toàn cục của Parent Controller
+    private ProductDraftDTO currentDraft = new ProductDraftDTO();
 
     public void handleBackBtn(MouseEvent event) {
         if (currentSubController instanceof graphicInfo) {

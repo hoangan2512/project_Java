@@ -17,7 +17,7 @@
    <children>
       <AnchorPane prefHeight="90.0" prefWidth="1280.0" style="-fx-background-color: #1E1E1E;">
          <children>
-            <ImageView fitHeight="44.0" fitWidth="115.0" layoutX="60.0" layoutY="23.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="bidHub" fitHeight="44.0" fitWidth="115.0" layoutX="60.0" layoutY="23.0" onMouseClicked="#handleBidHub" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
                <image>
                   <Image url="@../image/project_logo.jpg" />
                </image>
