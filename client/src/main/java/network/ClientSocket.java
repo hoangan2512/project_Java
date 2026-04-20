@@ -1,46 +1,28 @@
 package network;
-
+import java.io.*;
 import message.Request;
 import message.Response;
-
-import java.io.*;
 import java.net.Socket;
-
 public class ClientSocket {
-    // 1. Cấu hình thông tin Server
-    // Nên để private static final vì IP và Port của Server thường cố định
-    private static final String SERVER_IP = "localhost";
-    private static final int SERVER_PORT = 2810;
-
-    /**
-     * Hàm cốt lõi: Gửi Request lên Server và đợi nhận Response
-     */
-    public static Response sendRequest(Request request) {
-
-        // 2. Sử dụng try-with-resources để tự động đóng kết nối khi xong việc
-        // Điều này giúp tránh kẹt cổng (port leak) hoặc treo ứng dụng
-        try (Socket socket = new Socket(SERVER_IP, SERVER_PORT);
-             // LƯU Ý CỰC KỲ QUAN TRỌNG: Luôn khởi tạo ObjectOutputStream TRƯỚC ObjectInputStream
-             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-
-            // 3. Gửi gói tin đi
-            out.writeObject(request);
-            out.flush(); // Lệnh này bắt buộc phải có để "đẩy" dữ liệu đi ngay lập tức
-
-            // 4. Lắng nghe và nhận phản hồi từ Server
-            Response response = (Response) in.readObject();
-            return response;
-
-        } catch (IOException e) {
-            System.err.println("Lỗi kết nối: Không thể kết nối tới Server. Hãy kiểm tra xem Server đã chạy chưa!");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.err.println("Lỗi dữ liệu: Không nhận diện được Class trả về từ Server.");
-            e.printStackTrace();
+    private static final String SERVER_IP="localhost"; //tạo IP
+    private static final Integer SERVER_PORT=2810;  //tạo port (giống với port thuộc auctionserver)
+    public static Response sendRequest(Request request){ // tạo sendrequest trả về response
+        try ( Socket socket= new Socket(SERVER_IP,SERVER_PORT)){ //tạo socket kết nối tới server
+            ObjectOutputStream out= new ObjectOutputStream(socket.getOutputStream());   //out first tránh dreadlock
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            out.writeObject(request);   //gửi request
+            out.flush();    //đẩy request tới server ngay lập tức
+            Response res = (Response) in.readObject();
+            return res;
         }
-
-        // 5. Trả về null nếu quá trình trên thất bại
-        return null;
+        catch (IOException ioException){
+            System.err.println("Không thể kết nối tới hệ thống!");
+            ioException.printStackTrace();
+        }
+        catch (ClassNotFoundException classNotFoundException){
+            System.err.println("Không thể nhận diện được lớp trả về!");
+            classNotFoundException.printStackTrace();
+        }
+        return null; //trả về null nếu không nằm trong các trường hợp trên
     }
 }
