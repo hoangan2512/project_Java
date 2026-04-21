@@ -18,6 +18,7 @@ import javafx.scene.shape.Circle;
 import message.Request;
 import message.Response;
 import model.ActionType;
+import model.Auction;
 import model.Item;
 import model.User;
 import network.ClientSocket;
@@ -44,6 +45,11 @@ public class sellerHubController_homepage {
     private Object currentSubController;
     private ProductDraftDTO currentDraft = new ProductDraftDTO();
 
+    // --- BIẾN GHI NHỚ ĐỂ BYPASS CẢNH BÁO ---
+    private String lastWarnedName = "";
+    private String lastWarnedId = "";
+    private String lastWarnedCategory = "";
+
     @FXML
     public void initialize() {
         try {
@@ -57,7 +63,6 @@ public class sellerHubController_homepage {
         }
 
         loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
-
         Status.setVisible(false);
         Status.setManaged(false);
 
@@ -74,7 +79,6 @@ public class sellerHubController_homepage {
             contentArea.getChildren().setAll(node);
             currentSubController = loader.getController();
 
-            // --- THÊM LOGIC PHỤC HỒI DỮ LIỆU TỪ BẢN NHÁP ---
             if (currentSubController instanceof basicInfo) {
                 ((basicInfo) currentSubController).setDraftData(currentDraft);
             } else if (currentSubController instanceof graphicInfo) {
@@ -98,15 +102,68 @@ public class sellerHubController_homepage {
             String description = bic.getDescription();
             String categories = bic.getCategories();
 
-            if (name.isBlank() || id.isBlank() || categories == null) {
+            if (name.isBlank() || categories == null) {
                 Status.setVisible(true);
                 Status.setManaged(true);
-                Status.setText("Information missing");
+                Status.setTextFill(Color.RED);
+                Status.setText("Vui lòng nhập tên và chọn danh mục!");
                 return;
             }
 
+            String currentId = (id == null) ? "" : id.trim();
+
+            // Cập nhật điều kiện Bypass: Phải giống y hệt Tên, ID VÀ Danh mục đã bị cảnh báo
+            boolean shouldBypassWarning = name.equals(lastWarnedName) &&
+                    categories.equals(lastWarnedCategory) &&
+                    currentId.equals(lastWarnedId);
+
+            if (!shouldBypassWarning) {
+                User currentUser = SessionManager.getInstance().getCurrentUser();
+                Item checkItem = new Item();
+                checkItem.setName(name);
+                checkItem.setCategories(categories); // Gửi thêm category để check
+                checkItem.setUser_prdID(currentId);
+                checkItem.setSeller_id(currentUser.getId());
+
+                Request checkReq = new Request(checkItem, ActionType.CHECK_DUPLICATE_NAME);
+                Response checkRes = ClientSocket.sendRequest(checkReq);
+
+                if (checkRes != null) {
+                    if ("DUPLICATE_ID".equals(checkRes.getStatus())) {
+                        // LUẬT 1: TRÙNG ID -> CHẶN MỌI TRƯỜNG HỢP
+                        Status.setVisible(true);
+                        Status.setManaged(true);
+                        Status.setTextFill(Color.RED);
+                        Status.setText("Mã sản phẩm (ID) này đã được sử dụng! Vui lòng nhập mã khác.");
+
+                        // Reset biến nhớ để không cho Bypass
+                        lastWarnedName = ""; lastWarnedId = ""; lastWarnedCategory = "";
+                        return;
+
+                    } else if ("DUPLICATE_NAME_CAT".equals(checkRes.getStatus())) {
+                        // LUẬT 2: TRÙNG TÊN VÀ DANH MỤC -> CẢNH BÁO CHO BYPASS
+                        String existingId = (checkRes.getData() != null) ? (String) checkRes.getData() : "Chưa xác định";
+
+                        Status.setVisible(true);
+                        Status.setManaged(true);
+                        Status.setTextFill(Color.web("#FFA500")); // Màu cam
+                        Status.setText("Đã có sản phẩm cùng tên và danh mục (ID: " + existingId + "). Bấm Next để bỏ qua cảnh báo.");
+
+                        // Ghi nhớ để lần bấm Next sau sẽ cho qua
+                        lastWarnedName = name;
+                        lastWarnedId = currentId;
+                        lastWarnedCategory = categories;
+                        return;
+                    }
+                    // LUẬT 3: Nếu Trùng Tên nhưng Khác Danh mục -> Server trả về OK -> Đi tiếp bình thường
+                }
+            }
+
+            // Nếu đi tiếp thành công, xóa bộ nhớ
+            lastWarnedName = ""; lastWarnedId = ""; lastWarnedCategory = "";
+
             currentDraft.setName(name);
-            currentDraft.setId(id);
+            currentDraft.setId(currentId);
             currentDraft.setDescription(description);
             currentDraft.setCategories(categories);
 
@@ -120,6 +177,7 @@ public class sellerHubController_homepage {
             if (gic.getImgPath() == null || gic.getImgPath().isBlank()) {
                 Status.setVisible(true);
                 Status.setManaged(true);
+                Status.setTextFill(Color.RED);
                 Status.setText("Vui lòng tải lên ít nhất 1 ảnh sản phẩm");
                 return;
             }
@@ -146,6 +204,7 @@ public class sellerHubController_homepage {
             if (prdPrice.isBlank() || startTime.isBlank() || auction_choice == null) {
                 Status.setVisible(true);
                 Status.setManaged(true);
+                Status.setTextFill(Color.RED);
                 Status.setText("Information missing");
                 return;
             }
@@ -165,6 +224,7 @@ public class sellerHubController_homepage {
             } else {
                 Status.setVisible(true);
                 Status.setManaged(true);
+                Status.setTextFill(Color.RED);
                 Status.setText("Lỗi kết nối cơ sở dữ liệu!");
             }
         } else if (currentSubController instanceof prdOverview) {
@@ -177,6 +237,8 @@ public class sellerHubController_homepage {
             Item newItem = new Item();
             newItem.setName(draft.getName());
             newItem.setDescription(draft.getDescription());
+            newItem.setUser_prdID(draft.getId());
+            newItem.setCategories(draft.getCategories());
 
             try {
                 newItem.setStarting_price(Double.parseDouble(draft.getPrice()));
@@ -189,7 +251,6 @@ public class sellerHubController_homepage {
             if (currentUser != null) {
                 newItem.setSeller_id(currentUser.getId());
             } else {
-                System.err.println("Lỗi: Người dùng chưa đăng nhập!");
                 return false;
             }
 
@@ -201,16 +262,20 @@ public class sellerHubController_homepage {
             newItem.setImgPath5(draft.getImgPath5());
             newItem.setImgPath6(draft.getImgPath6());
 
-            Request req = new Request(newItem, ActionType.CREATE_ITEM);
+            Auction newAuction = new Auction();
+            newAuction.setCurrent_price(newItem.getStarting_price());
+            newAuction.setStatus("RUNNING");
+            newAuction.setHighest_bidder_id(0);
+
+            newAuction.setStart_time(java.time.LocalDateTime.now());
+            newAuction.setEnd_time(java.time.LocalDateTime.now().plusDays(3));
+
+            Object[] payload = new Object[]{ newItem, newAuction };
+
+            Request req = new Request(payload, ActionType.CREATE_ITEM);
             Response res = ClientSocket.sendRequest(req);
 
-            if (res != null && "SUCCESS".equals(res.getStatus())) {
-                System.out.println("Lưu sản phẩm thành công!");
-                return true;
-            } else {
-                System.out.println("Server báo lỗi: " + (res != null ? res.getMessage() : "Không nhận được phản hồi"));
-                return false;
-            }
+            return res != null && "SUCCESS".equals(res.getStatus());
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -239,7 +304,6 @@ public class sellerHubController_homepage {
             sceneSwitcher.switchToMainPage(event);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Lỗi chuyển cảnh");
         }
     }
 }

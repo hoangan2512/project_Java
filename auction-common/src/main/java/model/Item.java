@@ -12,6 +12,10 @@ public class Item extends entity implements Serializable {
     private double starting_price;
     private int seller_id;
     private double currentPrice;
+    private String categories;
+
+    // --- BỔ SUNG BIẾN MÃ SẢN PHẨM CỦA NGƯỜI DÙNG ---
+    private String user_prdID;
 
     // --- BỔ SUNG KHAI BÁO CÁC BIẾN LƯU ĐƯỜNG DẪN ẢNH ---
     private String imgPath;
@@ -22,15 +26,17 @@ public class Item extends entity implements Serializable {
     private String imgPath5;
     private String imgPath6;
 
-    // Constructor có tham số
-    public Item(int id, String name, String description, double starting_price, int seller_id,
+    // Constructor có tham số (Đã bổ sung user_prdID)
+    public Item(int id, String user_prdID, String name, String description, double starting_price, int seller_id, String categories,
                 String imgPath, String imgPath1, String imgPath2, String imgPath3,
                 String imgPath4, String imgPath5, String imgPath6) {
         super(id, name);
+        this.user_prdID = user_prdID;
         this.description = description;
         this.starting_price = starting_price;
         this.currentPrice = starting_price;
         this.seller_id = seller_id;
+        this.categories = categories;
 
         // --- BỔ SUNG GÁN GIÁ TRỊ VÀO BIẾN ---
         this.imgPath = imgPath;
@@ -47,6 +53,20 @@ public class Item extends entity implements Serializable {
         super(0, "");
     }
 
+    // ==========================================
+    // GETTER & SETTER CHO USER_PRDID (MỚI)
+    // ==========================================
+    public String getUser_prdID() {
+        return user_prdID;
+    }
+
+    public void setUser_prdID(String user_prdID) {
+        this.user_prdID = user_prdID;
+    }
+
+    // ==========================================
+    // CÁC GETTER & SETTER KHÁC (GIỮ NGUYÊN)
+    // ==========================================
     public void setDescription(String description) {
         this.description = description;
     }
@@ -62,6 +82,10 @@ public class Item extends entity implements Serializable {
 
     public void setCurrentPrice(double currentPrice) {
         this.currentPrice = currentPrice;
+    }
+
+    public void setCategories(String categories) {
+        this.categories = categories;
     }
 
     public void setImgPath(String imgPath) {
@@ -107,6 +131,11 @@ public class Item extends entity implements Serializable {
     public double getCurrentPrice() {
         return currentPrice;
     }
+
+    public String getCategories() {
+        return categories;
+    }
+
     public String getImgPath() {
         return imgPath;
     }
