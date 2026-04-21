@@ -70,7 +70,7 @@
             <Font name="System Bold" size="12.0" />
          </font>
       </Button>
-      <Label fx:id="Status" layoutX="280.0" layoutY="100.0" prefHeight="25.0" prefWidth="359.0" text="Status" textFill="RED" visible="false">
+      <Label fx:id="Status" layoutX="280.0" layoutY="100.0" prefHeight="25.0" prefWidth="923.0" text="Status" textFill="RED" visible="false">
          <font>
             <Font name="System Bold" size="14.0" />
          </font>

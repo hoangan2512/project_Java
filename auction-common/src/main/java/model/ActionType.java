@@ -13,4 +13,5 @@ public enum ActionType {
     NOTIFY_NEW_PRICE,
     AUCTION_END,
     CREATE_ITEM,
+    CHECK_DUPLICATE_NAME,
 }

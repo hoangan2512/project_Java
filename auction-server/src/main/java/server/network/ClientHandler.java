@@ -88,6 +88,8 @@ public class ClientHandler implements Runnable {
                 return auctionController.handleGetList(request);
             case GET_ITEM_DETAIL:
                 return auctionController.handleGetItemDetail(request);
+            case CHECK_DUPLICATE_NAME:
+                return itemController.handleCheckDuplicateName(request);
             case AUCTION_END:
                 return auctionController.handleAuctionEnd(request);
             default:

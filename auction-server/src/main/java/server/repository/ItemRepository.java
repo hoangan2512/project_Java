@@ -11,34 +11,45 @@ import java.util.List;
 
 public class ItemRepository {
 
-    public boolean addItem(Item item) {
-        // Đã xóa created_at và điều chỉnh còn đúng 11 dấu ?
-        String sql = "INSERT INTO items (name, description, starting_price, seller_id, imgpath, imgpath1, imgpath2, imgpath3, imgpath4, imgpath5, imgpath6) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public int addItem(Item item) {
+        // 1. Thêm user_prdID vào câu lệnh SQL và tăng lên 12 dấu chấm hỏi (?)
+        String sql = "INSERT INTO items (user_prdID, name, description, starting_price, seller_id, imgpath, imgpath1, imgpath2, imgpath3, imgpath4, imgpath5, imgpath6, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
         Connection conn = DatabaseConnection.getInstance().getConnection();
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            // Set 4 giá trị cơ bản
-            pstmt.setString(1, item.getName());
-            pstmt.setString(2, item.getDescription());
-            pstmt.setDouble(3, item.getStarting_price());
-            pstmt.setInt(4, item.getSeller_id());
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-            // Đôn số thứ tự của các ảnh lên bắt đầu từ số 5
-            pstmt.setString(5, item.getImgPath());
-            pstmt.setString(6, item.getImgPath1());
-            pstmt.setString(7, item.getImgPath2());
-            pstmt.setString(8, item.getImgPath3());
-            pstmt.setString(9, item.getImgPath4());
-            pstmt.setString(10, item.getImgPath5());
-            pstmt.setString(11, item.getImgPath6());
+            // 2. Set giá trị mã sản phẩm vào vị trí số 1
+            pstmt.setString(1, item.getUser_prdID());
+
+            // 3. Các giá trị khác bị đẩy lùi xuống 1 số so với code cũ
+            pstmt.setString(2, item.getName());
+            pstmt.setString(3, item.getDescription());
+            pstmt.setDouble(4, item.getStarting_price());
+            pstmt.setInt(5, item.getSeller_id());
+
+            pstmt.setString(6, item.getImgPath());
+            pstmt.setString(7, item.getImgPath1());
+            pstmt.setString(8, item.getImgPath2());
+            pstmt.setString(9, item.getImgPath3());
+            pstmt.setString(10, item.getImgPath4());
+            pstmt.setString(11, item.getImgPath5());
+            pstmt.setString(12, item.getImgPath6());
+            pstmt.setString(13, item.getCategories());
 
             int rows = pstmt.executeUpdate();
-            return rows > 0;
+            if (rows > 0) {
+                // Lấy ID tự động tăng (Primary Key) của Database
+                ResultSet rs = pstmt.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+            return -1;
 
         } catch (Exception e) {
             System.err.println("Lỗi khi thêm sản phẩm: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            return -1;
         }
     }
 
@@ -67,6 +78,7 @@ public class ItemRepository {
                 currentItem.setImgPath4(rs.getString("imgpath4"));
                 currentItem.setImgPath5(rs.getString("imgpath5"));
                 currentItem.setImgPath6(rs.getString("imgpath6"));
+                currentItem.setCategories(rs.getString("categories"));
 
                 itemList.add(currentItem);
             }
@@ -75,5 +87,37 @@ public class ItemRepository {
             e.printStackTrace();
         }
         return itemList;
+    }
+
+    public String checkProductConflicts(String name, String categories, String userPrdId, int sellerId) {
+        Connection conn = DatabaseConnection.getInstance().getConnection();
+
+        // 1. KIỂM TRA TRÙNG ID (Chặn cứng trong mọi trường hợp)
+        if (userPrdId != null && !userPrdId.trim().isEmpty()) {
+            String sqlId = "SELECT id FROM items WHERE user_prdID = ? AND seller_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlId)) {
+                ps.setString(1, userPrdId.trim());
+                ps.setInt(2, sellerId);
+                if (ps.executeQuery().next()) {
+                    return "DUPLICATE_ID"; // Trả về lỗi trùng ID
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
+        // 2. KIỂM TRA TRÙNG TÊN + DANH MỤC (Cảnh báo mềm)
+        String sqlNameCat = "SELECT user_prdID FROM items WHERE LOWER(name) = LOWER(?) AND categories = ? AND seller_id = ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sqlNameCat)) {
+            ps.setString(1, name);
+            ps.setString(2, categories);
+            ps.setInt(3, sellerId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String existingId = rs.getString("user_prdID");
+                if (existingId == null) existingId = "Không có mã";
+                return "DUPLICATE_NAME_CAT:" + existingId; // Trả về lỗi kèm ID đang bị trùng
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        return "OK"; // Không trùng gì cả
     }
 }
