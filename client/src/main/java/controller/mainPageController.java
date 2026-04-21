@@ -1,11 +1,13 @@
 package controller;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -32,6 +34,8 @@ public class mainPageController {
     private StackPane prd1, prd2, prd3, prd4, prd5, prd6;
     @FXML
     private StackPane prdPagePane;
+    @FXML
+    private ImageView bidHub;
 
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
@@ -159,5 +163,9 @@ public class mainPageController {
             System.out.println("Status: Waiting for login");
             userAvatar.setStroke(Color.RED);
         }
+    }
+
+    public void handleBidHub(MouseEvent event) {
+        prdPagePane.setVisible(false);
     }
 }

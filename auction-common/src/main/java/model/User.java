@@ -45,6 +45,7 @@ public class User extends entity implements Serializable {
     public void setRole(String role) {
         this.role = role;
     }
+    public long getID() {return id; }
 
     public boolean authenticate(String inputPassword) {
         return this.password.equals(inputPassword);
