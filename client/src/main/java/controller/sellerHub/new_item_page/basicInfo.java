@@ -27,4 +27,14 @@ public class basicInfo {
     public String getPrdId() { return ID.getText(); }
     public String getCategories() { return categories.getValue(); }
     public String getDescription() { return discription.getText(); }
+
+    public void setDraftData(ProductDraftDTO draft) {
+        if (draft == null) return;
+
+        // Gán lại dữ liệu vào các ô text (thay tên biến field cho đúng với code của bạn)
+        if (draft.getName() != null) prdName.setText(draft.getName());
+        if (draft.getId() != null) ID.setText(draft.getId());
+        if (draft.getDescription() != null) discription.setText(draft.getDescription());
+        if (draft.getCategories() != null) categories.setValue(draft.getCategories());
+    }
 }

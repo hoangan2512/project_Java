@@ -9,7 +9,7 @@ import server.network.ClientHandler;
 import server.repository.DatabaseConnection;
 
 public class ServerApplication {
-    private static final int PORT = 2810;
+    private static final int PORT = 12345;
 
     // Danh sách lưu các client đang online để sau này gọi hàm broadcast
     public static List<ClientHandler> clients = new ArrayList<>();

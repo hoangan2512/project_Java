@@ -7,7 +7,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -44,7 +43,6 @@ public class graphicInfo {
         prd_previewImage.setPreserveRatio(true);
         prd_previewImage.setSmooth(true);
         imageViews = Arrays.asList(prd_previewImage, prdImage1, prdImage2, prdImage3, prdImage4, prdImage5, prdImage6);
-
     }
 
     @FXML
@@ -56,24 +54,22 @@ public class graphicInfo {
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
         );
 
-        // Hiển thị cửa sổ chọn file
-        // Get window từ bất kỳ node nào đang hiển thị (ví dụ productImageView)
         Stage stage = (Stage) prd_previewImage.getScene().getWindow();
         File selectedFile = fileChooser.showOpenDialog(stage);
 
         if (selectedFile != null) {
-            // 1. Lấy đường dẫn file (để sau này lưu vào Database)
+            // Lấy đường dẫn file dạng URI để JavaFX có thể đọc được
             String imagePath = selectedFile.toURI().toString();
             boolean assigned = false;
 
-            // 2. Hiển thị ảnh preview lên ImageView
+            // Hiển thị ảnh preview lên ImageView
             Image image = new Image(imagePath);
             for (ImageView iv : imageViews) {
                 if (iv.getImage() == null) {
                     iv.setImage(image);
                     assigned = true;
                     Status.setVisible(true);
-                    Status.setText("Đã thêm ảnh: " + imagePath);
+                    Status.setText("Đã thêm ảnh: " + selectedFile.getName()); // Hiển thị tên file cho gọn
                     break;
                 }
             }
@@ -82,14 +78,10 @@ public class graphicInfo {
                 Status.setVisible(true);
                 Status.setText("Uploaded 7/7 pictures");
             }
-            // 3. (Tùy chọn) Lưu đường dẫn vào Model để dùng cho Phase 3
-            // currentProduct.setImagePath(selectedFile.getAbsolutePath());
         } else {
             System.out.println("Image uploading canceled.");
         }
     }
-
-    public Image getImg() { return prd_previewImage.getImage(); }
 
     @FXML
     private void handleDeleteImage(ActionEvent event) {
@@ -108,5 +100,70 @@ public class graphicInfo {
                 break;
             }
         }
+    }
+
+    // ==========================================
+    // CÁC HÀM GETTER LẤY ĐƯỜNG DẪN ẢNH ĐỂ LƯU DB
+    // ==========================================
+
+    public String getImgPath() {
+        if (prd_previewImage.getImage() != null) {
+            return prd_previewImage.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public String getImgPath1() {
+        if (prdImage1.getImage() != null) {
+            return prdImage1.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public String getImgPath2() {
+        if (prdImage2.getImage() != null) {
+            return prdImage2.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public String getImgPath3() {
+        if (prdImage3.getImage() != null) {
+            return prdImage3.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public String getImgPath4() {
+        if (prdImage4.getImage() != null) {
+            return prdImage4.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public String getImgPath5() {
+        if (prdImage5.getImage() != null) {
+            return prdImage5.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public String getImgPath6() {
+        if (prdImage6.getImage() != null) {
+            return prdImage6.getImage().getUrl();
+        }
+        return null;
+    }
+
+    public void setDraftData(ProductDraftDTO draft) {
+        if (draft == null) return;
+
+        if (draft.getImgPath() != null) prd_previewImage.setImage(new Image(draft.getImgPath()));
+        if (draft.getImgPath1() != null) prdImage1.setImage(new Image(draft.getImgPath1()));
+        if (draft.getImgPath2() != null) prdImage2.setImage(new Image(draft.getImgPath2()));
+        if (draft.getImgPath3() != null) prdImage3.setImage(new Image(draft.getImgPath3()));
+        if (draft.getImgPath4() != null) prdImage4.setImage(new Image(draft.getImgPath4()));
+        if (draft.getImgPath5() != null) prdImage5.setImage(new Image(draft.getImgPath5()));
+        if (draft.getImgPath6() != null) prdImage6.setImage(new Image(draft.getImgPath6()));
     }
 }

@@ -73,7 +73,7 @@ public class ClientHandler implements Runnable {
             case REGISTER:
                 return userController.handleRegister(request);
             case LOGOUT:
-                Response logoutRes = new Response("SUCCESS", null, "Đăng xuất thành công.");
+                return new Response("SUCCESS", null, "Đăng xuất thành công.");
             case CHECK_BALANCE:
                 return userController.handleBalance(request);
             case DEPOSIT:

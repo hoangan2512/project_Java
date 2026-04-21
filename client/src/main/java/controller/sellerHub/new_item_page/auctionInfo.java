@@ -20,4 +20,12 @@ public class auctionInfo {
     public String getPrice() { return prdPrice.getText(); }
     public String getTime() { return startTime.getText(); }
     public String getChoice() { return auction_choice.getValue(); }
+
+    public void setDraftData(ProductDraftDTO draft) {
+        if (draft == null) return;
+
+        if (draft.getPrice() != null) prdPrice.setText(draft.getPrice());
+        if (draft.getStartTime() != null) startTime.setText(draft.getStartTime());
+        if (draft.getAuctionChoice() != null) auction_choice.setValue(draft.getAuctionChoice());
+    }
 }
