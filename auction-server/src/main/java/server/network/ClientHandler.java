@@ -93,7 +93,7 @@ public class ClientHandler implements Runnable {
             case AUCTION_END:
                 return auctionController.handleAuctionEnd(request);
             default:
-               return new Response("ERROR",null,"hành động không xác định: " +type);
+                return new Response("ERROR",null,"hành động không xác định: " +type);
         }
     }
 
