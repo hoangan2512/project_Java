@@ -1,16 +1,17 @@
-.btn_main {
-    -fx-border-color: #ff9800;
-    -fx-border-width: 0 0 3 0;
+.btn-bid {
+    -fx-background-color: #ff8e1f;
+    -fx-background-radius: 30px;
     -fx-cursor: hand;
-}
-.btn {
-    -fx-border-color: transparent;
-    -fx-border-width: 0 0 3 0;
-    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
 }
 
-.btn:hover {
-    -fx-border-color: #ffffff;
+.btn-bid:hover {
+    -fx-background-color: #ffa447;
+    -fx-background-radius: 30px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
 }
 
 .context-menu {
@@ -31,7 +32,7 @@
 
 .prd_img {
     -fx-border-width: 3 3 3 3;
-    -fx-border-color: #ff9800
+    -fx-border-color: transparent;
 }
 
 .priceField {

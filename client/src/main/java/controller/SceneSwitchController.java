@@ -56,6 +56,40 @@ public class SceneSwitchController {
         }
     }
 
+    public void openFilter() throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/filter.fxml"));
+        Parent root = loader.load();
+
+        Stage popupStage = new Stage();
+        popupStage.setTitle("BidHub: Search Engine");
+
+        // KHÓA cửa sổ chính bên dưới, bắt buộc tương tác với Popup trước
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+
+        Scene scene = new Scene(root);
+        popupStage.setScene(scene);
+
+        // Hiển thị và đợi người dùng đóng cửa sổ này mới thực hiện code tiếp theo (nếu có)
+        popupStage.showAndWait();
+    }
+
+    public void openBidded() throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/bidded.fxml"));
+        Parent root = loader.load();
+
+        Stage popupStage = new Stage();
+        popupStage.setTitle("BidHub: Bid successful");
+
+        // KHÓA cửa sổ chính bên dưới, bắt buộc tương tác với Popup trước
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+
+        Scene scene = new Scene(root);
+        popupStage.setScene(scene);
+
+        // Hiển thị và đợi người dùng đóng cửa sổ này mới thực hiện code tiếp theo (nếu có)
+        popupStage.showAndWait();
+    }
+
     public void switchToSellerHub(Event e) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/sellerHub/sellerHub_homepage.fxml"));
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();

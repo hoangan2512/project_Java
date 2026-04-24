@@ -29,3 +29,46 @@
 .btn-signin:armed {
     -fx-background-color: #e68200; /* Cam tối hơn khi nhấn */
 }
+
+/* Trong file style.css */
+
+.my-custom-scroll {
+    -fx-background-color: transparent;
+}
+
+.my-custom-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Ẩn mũi tên */
+.my-custom-scroll .scroll-bar:vertical .increment-button,
+.my-custom-scroll .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.my-custom-scroll .scroll-bar:vertical .increment-arrow,
+.my-custom-scroll .scroll-bar:vertical .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+
+/* Rãnh trượt */
+.my-custom-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 10px;
+}
+
+/* Cục trượt */
+.my-custom-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #bfbfbf;
+    -fx-background-radius: 10px;
+}
+
+/* Hover & Pressed */
+.my-custom-scroll .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #8a8a8a;
+}
+.my-custom-scroll .scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: #555555;
+}

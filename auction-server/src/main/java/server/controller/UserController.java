@@ -48,45 +48,4 @@ public class UserController {
         }
         return response;
     }
-
-    // 3. XỬ LÝ KIỂM TRA SỐ DƯ
-    public Response handleBalance(Request request) {
-        Response response = new Response();
-        // Kiểm tra payload để tránh crash (NullPointerException)
-        if (request.getPayload() instanceof Integer) {
-            int userId = (Integer) request.getPayload();
-            double balance = userRepo.getBalance(userId);
-
-            response.setStatus("SUCCESS");
-            response.setData(balance); // Gửi số dư về
-            response.setMessage("Lấy số dư thành công");
-        } else {
-            response.setStatus("FAIL");
-            response.setMessage("Dữ liệu yêu cầu không hợp lệ.");
-        }
-        return response;
-    }
-
-    // 4. XỬ LÝ NẠP TIỀN
-    public Response handleDeposit(Request request) {
-        Response response = new Response();
-        // Giả sử Client gửi mảng [userId, amount]
-        if (request.getPayload() instanceof Object[]) {
-            Object[] payloadData = (Object[]) request.getPayload();
-            int userId = (Integer) payloadData[0];
-            double amount = (double) payloadData[1];
-
-            boolean success = userRepo.updateBalance(userId, amount);
-            if (success) {
-                response.setStatus("SUCCESS");
-                // Sau khi nạp, trả về số dư mới nhất luôn cho tiện hiển thị
-                response.setData(userRepo.getBalance(userId));
-                response.setMessage("Nạp tiền thành công!");
-            } else {
-                response.setStatus("FAIL");
-                response.setMessage("Lỗi khi cập nhật số dư!");
-            }
-        }
-        return response;
-    }
 }

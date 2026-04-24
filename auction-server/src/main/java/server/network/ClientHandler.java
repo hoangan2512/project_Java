@@ -74,10 +74,6 @@ public class ClientHandler implements Runnable {
                 return userController.handleRegister(request);
             case LOGOUT:
                 return new Response("SUCCESS", null, "Đăng xuất thành công.");
-            case CHECK_BALANCE:
-                return userController.handleBalance(request);
-            case DEPOSIT:
-                return userController.handleDeposit(request);
             case CREATE_ITEM:
                 return itemController.handleCreateItem(request);
             case BID:

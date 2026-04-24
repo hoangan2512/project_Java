@@ -168,4 +168,13 @@ public class mainPageController {
     public void handleBidHub(MouseEvent event) {
         prdPagePane.setVisible(false);
     }
+
+    public void handleCustomSearch(ActionEvent event) {
+        try {
+            sceneSwitcher.openFilter();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Lỗi chuyển cảnh");
+        }
+    }
 }

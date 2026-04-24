@@ -23,3 +23,18 @@
 .menu-item:focused, .menu-item:hover {
     -fx-background-color: #4A4A4A;
 }
+
+.action-btn-search {
+    -fx-background-color: #ff8e1f;
+    -fx-text-fill: #1e1e1e;
+    -fx-background-radius: 30px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-border-color: #ff8e1f;
+    -fx-border-radius: 30px;
+}
+
+.action-btn-search:hover {
+    -fx-background-color: #ffa447;
+    -fx-border-color: #ffa447;
+}
