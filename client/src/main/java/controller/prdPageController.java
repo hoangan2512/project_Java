@@ -51,7 +51,7 @@ public class prdPageController {
 
     public void initialize() {
         // Tải ảnh sp (default)
-        String ImgPath = "/image/prd/qualophihanhgia.jpg";
+        String ImgPath = "/image/prd/vinfast.jpg";
         Image prdImg = new Image(getClass().getResourceAsStream(ImgPath));
         prdImage.setPreserveRatio(true);
         prdImage.setSmooth(true);
