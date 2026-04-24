@@ -14,7 +14,7 @@ public class BidRepository {
     public boolean placeBid(Bid bid) {
         String sql = "INSERT INTO bids (auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, ?)";
 
-        // BƯỚC QUAN TRỌNG: Lấy kết nối ĐỂ BÊN NGOÀI để tránh bị đóng ngầm
+        // Lấy kết nối ĐỂ BÊN NGOÀI để tránh bị đóng ngầm
         Connection conn = DatabaseConnection.getInstance().getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -35,7 +35,7 @@ public class BidRepository {
         }
     }
 
-    // 2. TÌM NGƯỜI ĐANG TRẢ GIÁ CAO NHẤT HIỆN TẠI (Để kiểm tra lúc đấu giá)
+    // TÌM NGƯỜI ĐANG TRẢ GIÁ CAO NHẤT HIỆN TẠI (Để kiểm tra lúc đấu giá)
     public Bid getHighestBid(int auctionId) {
         // Tuyệt chiêu SQL: Sắp xếp giá giảm dần (DESC) và chỉ lấy 1 dòng đầu tiên (LIMIT 1)
         String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_amount DESC LIMIT 1";
