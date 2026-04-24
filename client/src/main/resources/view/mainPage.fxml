@@ -29,12 +29,12 @@
                </padding>
             </TextField>
             <Circle fx:id="searchBtn" fill="#ff8e1f" layoutX="347.0" layoutY="45.0" onMouseClicked="#handleSearchBtnClick" radius="16.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
-            <Button fx:id="CustomSearch" layoutX="830.0" layoutY="29.0" mnemonicParsing="false" prefHeight="32.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Custom Search">
+            <Button fx:id="CustomSearch" layoutX="830.0" layoutY="29.0" mnemonicParsing="false" onAction="#handleCustomSearch" prefHeight="32.0" prefWidth="126.0" styleClass="action-btn-search" text="Custom Search">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-            <Button fx:id="SellerHub" layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" onMouseClicked="#handleSellerHub" prefHeight="31.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Go to SellerHub">
+            <Button fx:id="SellerHub" layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" onMouseClicked="#handleSellerHub" prefHeight="31.0" prefWidth="126.0" styleClass="action-btn-search" text="Go to SellerHub">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
@@ -51,6 +51,7 @@
                 <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Art" />
                 <MenuItem mnemonicParsing="false" text="Electronics" />
                   <MenuItem mnemonicParsing="false" text="Vehicle" />
+                  <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Real estate" />
               </items>
                <font>
                   <Font name="System Bold" size="12.0" />
