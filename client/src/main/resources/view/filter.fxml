@@ -35,8 +35,8 @@
             <Font size="14.0" />
          </font>
       </Label>
-      <TextField fx:id="lowest" layoutX="244.0" layoutY="235.0" promptText="Lowest price" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 7; -fx-border-radius: 7;" styleClass="text-field" stylesheets="@filter.css" />
-      <TextField fx:id="highest" layoutX="439.0" layoutY="235.0" promptText="Highest price" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 7; -fx-border-radius: 7;" styleClass="text-field" />
+      <TextField fx:id="lowest" layoutX="244.0" layoutY="235.0" promptText="Lowest price (VNĐ)" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 7; -fx-border-radius: 7;" styleClass="text-field" stylesheets="@filter.css" />
+      <TextField fx:id="highest" layoutX="439.0" layoutY="235.0" promptText="Highest price (VNĐ)" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 7; -fx-border-radius: 7;" styleClass="text-field" />
       <Line endX="-26.0" endY="0.5" layoutX="465.0" layoutY="248.0" startX="-70.0" startY="0.5" stroke="#ff8e1f" />
 
       <Label layoutX="25.0" layoutY="288.0" prefHeight="25.0" prefWidth="190.0" text="Auction Status" textFill="WHITE">
@@ -57,16 +57,16 @@
       </Label>
       <TextField fx:id="auctionID" layoutX="25.0" layoutY="415.0" prefHeight="27.0" prefWidth="285.0" promptText="Insert auction ID" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 7; -fx-border-radius: 7;" styleClass="text-field" />
 
-      <Label layoutX="25.0" layoutY="510.0" prefHeight="25.0" prefWidth="275.0" text="Select or insert at least one of the search options." textFill="#ffffffb2" />
+      <Label fx:id="status" layoutX="25.0" layoutY="510.0" prefHeight="25.0" prefWidth="378.0" text="Select or insert at least one of the search options." textFill="#ffffffb2" />
 
       <AnchorPane layoutY="540.0" prefHeight="60.0" prefWidth="1000.0" style="-fx-background-color: #000000;">
          <children>
-            <Button fx:id="searchBtn" layoutX="508.0" layoutY="15.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="125.0" styleClass="action-btn-search" text="Custom Search">
+            <Button fx:id="searchBtn" layoutX="508.0" layoutY="15.0" mnemonicParsing="false" onAction="#handleCustomSearch" prefHeight="30.0" prefWidth="125.0" styleClass="action-btn-search" text="Custom Search">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-            <Button fx:id="backBtn" alignment="CENTER" layoutX="365.0" layoutY="15.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="125.0" styleClass="action-btn-back" text="Back" textFill="WHITE">
+            <Button fx:id="backBtn" alignment="CENTER" layoutX="365.0" layoutY="15.0" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="30.0" prefWidth="125.0" styleClass="action-btn-back" text="Back" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>

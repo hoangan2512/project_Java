@@ -32,7 +32,7 @@
             <Font name="System Bold" size="28.0" />
          </font>
       </Label>
-      <Button fx:id="Bid" layoutX="660.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="10.0" prefWidth="231.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px;" text="Place a bid">
+      <Button fx:id="Bid" layoutX="660.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="35.0" prefWidth="231.0" styleClass="btn-bid" text="Place a bid">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>

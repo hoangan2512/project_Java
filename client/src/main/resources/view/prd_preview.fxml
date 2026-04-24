@@ -9,21 +9,21 @@
 
 <AnchorPane prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #1E1E1E;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prd_previewController">
    <children>
-      <Label fx:id="prdName" layoutX="190.0" layoutY="10.0" onMouseClicked="#handleBidBtn" prefHeight="26.0" prefWidth="120.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE">
+      <Label fx:id="prdName" layoutX="190.0" layoutY="10.0" onMouseClicked="#handleBidBtn" prefHeight="54.0" prefWidth="140.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
       </Label>
-      <Label layoutX="190.0" layoutY="39.0" prefHeight="17.0" prefWidth="71.0" text="Current Price" textFill="#ffa31a">
+      <Label layoutX="190.0" layoutY="60.0" prefHeight="17.0" prefWidth="71.0" text="Current Price" textFill="#ffa31a">
          <font>
             <Font size="10.0" />
          </font></Label>
-      <Label fx:id="currentPrice" layoutX="190.0" layoutY="53.0" prefHeight="0.0" prefWidth="107.0" text="150.00 USD" textFill="#07ff00">
+      <Label fx:id="currentPrice" layoutX="190.0" layoutY="72.0" prefHeight="21.0" prefWidth="142.0" text="150.00 USD" textFill="#07ff00">
          <font>
             <Font name="System Bold" size="15.0" />
          </font>
       </Label>
-      <Button fx:id="Bid" layoutX="193.0" layoutY="160.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="26.0" prefWidth="131.0" style="-fx-background-color: #ffa31a; -fx-text-fill: ffffff; -fx-font-weight: bold; -fx-background-radius: 30; -fx-cursor: hand;" text="Start Bidding" />
+      <Button fx:id="Bid" layoutX="193.0" layoutY="160.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="26.0" prefWidth="131.0" styleClass="action-btn-search" stylesheets="@filter.css" text="Start Bidding" />
       <Label fx:id="auctionStatus" layoutX="190.0" layoutY="130.0" prefHeight="22.0" prefWidth="83.0" text="Auction Status" textFill="#07ff00">
          <font>
             <Font name="System Bold" size="10.0" />
