@@ -14,6 +14,7 @@ public class Auction implements Serializable {
     private LocalDateTime start_time;
     private LocalDateTime end_time;
     private String status;
+    private Item item;
 
     // --- BỔ SUNG 2 TRƯỜNG MỚI ---
     private double current_price;
@@ -45,6 +46,9 @@ public class Auction implements Serializable {
     public int getId() {
         return id;
     }
+
+    public Item getItem() { return item; }
+    public void setItem(Item item) { this.item = item; }
 
     public void setId(int id) {
         this.id = id;

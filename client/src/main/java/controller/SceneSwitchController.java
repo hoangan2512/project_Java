@@ -56,6 +56,8 @@ public class SceneSwitchController {
         }
     }
 
+
+
     public void openFilter() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/filter.fxml"));
         Parent root = loader.load();
@@ -108,6 +110,14 @@ public class SceneSwitchController {
 
     public void switchToPrdPage(Event e) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/productPage.fxml"));
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public void switchToCustomSearch(Event e) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/view/customSearch.fxml"));
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
         Scene scene = new Scene(root);
         stage.setScene(scene);

@@ -2,14 +2,36 @@ package server.controller;
 
 import message.Request;
 import message.Response;
+import model.Auction;
+import model.SearchCriteria;
 import server.ServerApplication;
+import server.repository.AuctionRepository;
+
+import java.util.List;
 // import server.repository.AuctionRepository;
 
 public class AuctionController {
     // private AuctionRepository auctionRepo;
 
-    public AuctionController() {
-        // this.auctionRepo = new AuctionRepository();
+    private final AuctionRepository auctionRepo = new AuctionRepository();
+
+    public Response handleCustomSearch(Request request) {
+        Response response = new Response();
+
+        if (request.getPayload() instanceof SearchCriteria) {
+            SearchCriteria criteria = (SearchCriteria) request.getPayload();
+
+            // Gọi xuống AuctionRepo
+            List<Auction> results = auctionRepo.searchAdvanced(criteria);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Tìm kiếm thành công");
+            response.setData(results); // Bây giờ trả về List<Auction> thay vì Item
+        } else {
+            response.setStatus("FAIL");
+            response.setMessage("Dữ liệu tìm kiếm không hợp lệ.");
+        }
+        return response;
     }
 
     public Response handleGetList(Request request) {

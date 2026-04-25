@@ -4,9 +4,11 @@ import message.Request;
 import message.Response;
 import model.Auction;
 import model.Item;
+import model.SearchCriteria;
 import server.repository.AuctionRepository;
 import server.repository.ItemRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 public class ItemController {
