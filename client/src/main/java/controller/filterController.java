@@ -10,10 +10,17 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import javafx.application.Platform;
+
+// NHỚ IMPORT MODEL NÀY VÀO NHÉ
+import model.SearchCriteria;
 
 public class filterController {
     // categories
@@ -62,6 +69,8 @@ public class filterController {
     @FXML
     private Label status;
 
+    private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+
     @FXML
     public void initialize() {
         // Gắn hiệu ứng format tiền Việt cho 2 ô nhập giá
@@ -70,42 +79,28 @@ public class filterController {
     }
 
     private void addCurrencyFormat(TextField textField) {
-        // Cấu hình format số kiểu Việt Nam (dấu chấm phân cách hàng nghìn)
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
         symbols.setGroupingSeparator('.');
         DecimalFormat formatter = new DecimalFormat("#,###", symbols);
 
-        // Lắng nghe mọi sự thay đổi text trong ô nhập
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
-            // Nếu ô trống thì bỏ qua
-            if (newValue == null || newValue.isEmpty()) {
-                return;
-            }
+            if (newValue == null || newValue.isEmpty()) return;
 
-            // 1. Xóa bỏ tất cả các ký tự không phải là số (bảo vệ khỏi việc nhập chữ)
             String numericString = newValue.replaceAll("[^\\d]", "");
-
             if (numericString.isEmpty()) {
                 textField.setText("");
                 return;
             }
 
             try {
-                // 2. Ép kiểu thành số Long (Dùng Long để chứa được tiền Tỷ)
                 long value = Long.parseLong(numericString);
-
-                // 3. Format lại thành chuỗi có dấu chấm (VD: 1000000 -> 1.000.000)
                 String formattedString = formatter.format(value);
 
-                // 4. Nếu text mới khác với text đang hiển thị thì cập nhật lại
                 if (!newValue.equals(formattedString)) {
                     textField.setText(formattedString);
-
-                    // 5. Đẩy con trỏ chuột về cuối cùng để gõ liên tục không bị ngược
                     Platform.runLater(() -> textField.positionCaret(formattedString.length()));
                 }
             } catch (NumberFormatException e) {
-                // Nếu nhập số quá lớn (vượt quá giới hạn Long), chặn lại bằng cách giữ giá trị cũ
                 textField.setText(oldValue);
             }
         });
@@ -113,21 +108,14 @@ public class filterController {
 
     private long getRealPrice(TextField textField) {
         String text = textField.getText();
+        if (text == null || text.trim().isEmpty()) return 0;
 
-        // Nếu ô trống thì mặc định trả về 0
-        if (text == null || text.trim().isEmpty()) {
-            return 0;
-        }
-
-        // Xóa toàn bộ dấu chấm
         String cleanString = text.replaceAll("\\.", "");
-
         try {
-            // Ép thành kiểu Long (Dùng Long thay vì Int để chứa được tiền Tỷ)
             return Long.parseLong(cleanString);
         } catch (NumberFormatException e) {
             System.err.println("Lỗi ép kiểu số: " + cleanString);
-            return 0; // Trả về 0 nếu có lỗi bất ngờ
+            return 0;
         }
     }
 
@@ -161,51 +149,49 @@ public class filterController {
         // 3. XỬ LÝ NẾU KHÔNG CÓ GÌ ĐƯỢC CHỌN (BÁO LỖI)
         // ==========================================
         if (!hasAnySelection) {
-            // Lấy lại màu cũ (trong trường hợp bạn có style CSS mặc định)
             String oldStyle = status.getStyle();
-
-            // Chuyển sang bold đỏ
             status.setStyle("-fx-text-fill: #ff4d4d; -fx-font-weight: bold;");
 
-            // Tạo đếm ngược 2 giây để trả về màu cũ
             PauseTransition pause = new PauseTransition(Duration.seconds(2));
-            pause.setOnFinished(e -> status.setStyle(oldStyle)); // Đổi lại style cũ khi hết 2s
+            pause.setOnFinished(e -> status.setStyle(oldStyle));
             pause.play();
 
-            return; // Ngắt luôn hàm ở đây, không in ấn hay đóng cửa sổ gì cả
+            return;
         }
 
         // ==========================================
-        // 4. XỬ LÝ NẾU ĐÃ CHỌN (IN RA & ĐÓNG POPUP)
+        // 4. XỬ LÝ ĐÓNG GÓI DỮ LIỆU & CHUYỂN CẢNH
         // ==========================================
         System.out.println("\n========= KẾT QUẢ BỘ LỌC =========");
-
         printGroupSelection("Danh mục (Categories)", categoryBtns);
         printGroupSelection("Mức giá (Price Range)", priceBtns);
         printGroupSelection("Trạng thái (Status)", statusBtns);
-
-        if (hasManualPrice) {
-            String from = lowPrice.isEmpty() ? "0" : lowPrice;
-            String to = highPrice.isEmpty() ? "Không giới hạn" : highPrice;
-            System.out.println("[+] Giá nhập tay: Từ " + from + " -> " + to);
-        }
-
-        if (hasId) {
-            System.out.println("[+] Tìm theo ID Phiên đấu giá: " + id);
-        }
-
         System.out.println("==================================\n");
 
-        // ĐÓNG POPUP SAU KHI IN XONG
+        // TẠO DTO ĐÓNG GÓI DỮ LIỆU TÌM KIẾM
+        SearchCriteria criteria = new SearchCriteria();
+        criteria.setCategories(getSelectedNames(categoryBtns));
+        criteria.setMinPrice(getRealPrice(lowest));
+        criteria.setMaxPrice(getRealPrice(highest));
+        criteria.setStatuses(getSelectedNames(statusBtns));
+        criteria.setAuctionId(id);
+
+        // ĐÓNG POPUP
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.close();
+
+        // GỌI MAIN PAGE VÀ TRUYỀN DỮ LIỆU SANG
+        if (mainPageController.getInstance() != null) {
+            mainPageController.getInstance().loadCustomSearchPane(criteria);
+        } else {
+            System.err.println("Lỗi: mainPageController chưa được khởi tạo!");
+        }
     }
 
     // ========================================================
     // CÁC HÀM HỖ TRỢ (HELPERS)
     // ========================================================
 
-    // Hàm mới: Kiểm tra xem mảng nút có nút nào đang được bấm không
     private boolean isAnySelected(ToggleButton[] buttons) {
         for (ToggleButton btn : buttons) {
             if (btn != null && btn.isSelected()) {
@@ -215,7 +201,20 @@ public class filterController {
         return false;
     }
 
-    // Hàm in kết quả (Giữ nguyên như cũ)
+    // Hàm mới: Trích xuất tên (text) của các nút đang được chọn để nhét vào List
+    private List<String> getSelectedNames(ToggleButton[] buttons) {
+        List<String> selected = new ArrayList<>();
+        for (ToggleButton btn : buttons) {
+            if (btn != null && btn.isSelected()) {
+                // ==========================================
+                // ĐÃ THÊM .trim() VÀO ĐÂY ĐỂ XÓA KHOẢNG TRẮNG
+                // ==========================================
+                selected.add(btn.getText().trim());
+            }
+        }
+        return selected;
+    }
+
     private void printGroupSelection(String groupName, ToggleButton[] buttons) {
         System.out.print("[+] " + groupName + ": ");
         boolean hasSelection = false;

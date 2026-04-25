@@ -14,4 +14,5 @@ public enum ActionType {
     AUCTION_END,
     CREATE_ITEM,
     CHECK_DUPLICATE_NAME,
+    CUSTOM_SEARCH,
 }

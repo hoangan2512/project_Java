@@ -13,6 +13,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import model.SearchCriteria;
 import model.User;
 import controller.prdPageController;
 
@@ -89,6 +90,31 @@ public class mainPageController {
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
+        }
+    }
+
+    // Hàm mới: Load giao diện kết quả tìm kiếm vào prdPagePane
+    // Thêm tham số SearchCriteria vào hàm
+    public void loadCustomSearchPane(SearchCriteria criteria) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
+            Parent customSearchNode = loader.load();
+
+            // Lấy controller của trang customSearch
+            customSearchController controller = loader.getController();
+
+            // TRUYỀN DỮ LIỆU SANG TRANG CUSTOM SEARCH
+            if (controller != null && criteria != null) {
+                controller.setSearchCriteria(criteria);
+            }
+
+            // Nhét giao diện vào StackPane và hiển thị
+            prdPagePane.getChildren().setAll(customSearchNode);
+            prdPagePane.setVisible(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi: Không load được file customSearch.fxml");
         }
     }
 

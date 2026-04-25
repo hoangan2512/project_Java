@@ -88,6 +88,8 @@ public class ClientHandler implements Runnable {
                 return itemController.handleCheckDuplicateName(request);
             case AUCTION_END:
                 return auctionController.handleAuctionEnd(request);
+            case CUSTOM_SEARCH:
+                return auctionController.handleCustomSearch(request);
             default:
                 return new Response("ERROR",null,"hành động không xác định: " +type);
         }

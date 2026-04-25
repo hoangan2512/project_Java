@@ -1,12 +1,15 @@
 package server.repository;
 
 import model.Item;
+import model.SearchCriteria;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ItemRepository {
@@ -51,6 +54,75 @@ public class ItemRepository {
             e.printStackTrace();
             return -1;
         }
+    }
+
+    public List<Item> searchAdvanced(SearchCriteria criteria) {
+        List<Item> resultList = new ArrayList<>();
+
+        // Mẹo 1=1 giúp nối chuỗi AND dễ dàng
+        StringBuilder sql = new StringBuilder("SELECT * FROM items WHERE 1=1 ");
+        List<Object> parameters = new ArrayList<>();
+
+        // 1. Lọc theo ID
+        if (criteria.getAuctionId() != null && !criteria.getAuctionId().isEmpty()) {
+            sql.append(" AND id = ? "); // Sửa chữ 'id' thành tên cột ID trong bảng của bạn
+            parameters.add(criteria.getAuctionId());
+        }
+
+        // 2. Lọc theo Danh mục (Categories)
+        if (criteria.getCategories() != null && !criteria.getCategories().isEmpty()) {
+            String inSql = String.join(",", Collections.nCopies(criteria.getCategories().size(), "?"));
+            sql.append(" AND categories IN (").append(inSql).append(") ");
+            parameters.addAll(criteria.getCategories());
+        }
+
+        // 3. Lọc theo Trạng thái (Statuses)
+        if (criteria.getStatuses() != null && !criteria.getStatuses().isEmpty()) {
+            String inSql = String.join(",", Collections.nCopies(criteria.getStatuses().size(), "?"));
+            sql.append(" AND status IN (").append(inSql).append(") ");
+            parameters.addAll(criteria.getStatuses());
+        }
+
+        // 4. Lọc theo Khoảng giá
+        if (criteria.getMinPrice() > 0) {
+            sql.append(" AND current_price >= ? "); // Thay 'current_price' bằng tên cột giá
+            parameters.add(criteria.getMinPrice());
+        }
+        if (criteria.getMaxPrice() > 0) {
+            sql.append(" AND current_price <= ? ");
+            parameters.add(criteria.getMaxPrice());
+        }
+
+        System.out.println("SQL đang thực thi: " + sql.toString());
+
+        // 1. RÚT CONNECTION RA NGOÀI ĐỂ KHÔNG BỊ AUTO-CLOSE
+        Connection conn = DatabaseConnection.getConnection();
+
+        // 2. CHỈ ĐỂ PREPARED STATEMENT Ở TRONG TRY
+        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < parameters.size(); i++) {
+                pstmt.setObject(i + 1, parameters.get(i));
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Item item = new Item();
+
+                    item.setId(rs.getInt("id"));
+                    item.setName(rs.getString("name"));
+                    item.setCurrentPrice(rs.getDouble("starting_price"));
+                    item.setCategories(rs.getString("categories"));
+                    item.setImgPath(rs.getString("imgPath"));
+
+                    resultList.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi truy vấn tìm kiếm nâng cao: " + e.getMessage());
+        }
+
+        return resultList;
     }
 
     public List<Item> getAllItems() {

@@ -9,7 +9,7 @@
 
 <AnchorPane prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #1E1E1E;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prd_previewController">
    <children>
-      <Label fx:id="prdName" layoutX="190.0" layoutY="10.0" onMouseClicked="#handleBidBtn" prefHeight="54.0" prefWidth="140.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
+      <Label fx:id="prdName" alignment="TOP_LEFT" layoutX="190.0" layoutY="10.0" onMouseClicked="#handleBidBtn" prefHeight="54.0" prefWidth="140.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>

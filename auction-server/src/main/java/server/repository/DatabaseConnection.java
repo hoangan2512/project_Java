@@ -6,7 +6,7 @@ import java.sql.DriverManager;
 
 public class DatabaseConnection {
     private static DatabaseConnection instance;
-    private Connection conn;
+    private static Connection conn;
     private String url = "jdbc:sqlite:auction_db.db";
 
     private DatabaseConnection() {
@@ -31,7 +31,7 @@ public class DatabaseConnection {
         return instance;
     }
 
-    public Connection getConnection() {
+    public static Connection getConnection() {
         return conn;
     }
 }
