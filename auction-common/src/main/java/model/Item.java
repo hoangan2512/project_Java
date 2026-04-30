@@ -163,4 +163,35 @@ public class Item extends entity implements Serializable {
     public String getImgPath6() {
         return imgPath6;
     }
+
+    // --- BỔ SUNG CÁC MẢNG BYTE ĐỂ CHỨA DỮ LIỆU ẢNH THỰC TẾ ---
+    private byte[] imageBytes;
+    private byte[] imageBytes1;
+    private byte[] imageBytes2;
+    private byte[] imageBytes3;
+    private byte[] imageBytes4;
+    private byte[] imageBytes5;
+    private byte[] imageBytes6;
+
+    // --- BỔ SUNG GETTER VÀ SETTER CHO CÁC MẢNG BYTE NÀY ---
+    public byte[] getImageBytes() { return imageBytes; }
+    public void setImageBytes(byte[] imageBytes) { this.imageBytes = imageBytes; }
+
+    public byte[] getImageBytes1() { return imageBytes1; }
+    public void setImageBytes1(byte[] imageBytes1) { this.imageBytes1 = imageBytes1; }
+
+    public byte[] getImageBytes2() { return imageBytes2; }
+    public void setImageBytes2(byte[] imageBytes2) { this.imageBytes2 = imageBytes2; }
+
+    public byte[] getImageBytes3() { return imageBytes3; }
+    public void setImageBytes3(byte[] imageBytes3) { this.imageBytes3 = imageBytes3; }
+
+    public byte[] getImageBytes4() { return imageBytes4; }
+    public void setImageBytes4(byte[] imageBytes4) { this.imageBytes4 = imageBytes4; }
+
+    public byte[] getImageBytes5() { return imageBytes5; }
+    public void setImageBytes5(byte[] imageBytes5) { this.imageBytes5 = imageBytes5; }
+
+    public byte[] getImageBytes6() { return imageBytes6; }
+    public void setImageBytes6(byte[] imageBytes6) { this.imageBytes6 = imageBytes6; }
 }

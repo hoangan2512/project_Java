@@ -4,16 +4,20 @@ import message.Request;
 import message.Response;
 import model.Auction;
 import model.Item;
-import model.SearchCriteria;
 import server.repository.AuctionRepository;
 import server.repository.ItemRepository;
 
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 public class ItemController {
     private ItemRepository itemRepo;
-    private AuctionRepository auctionRepo; // Khai báo thêm Repo của Auction
+    private AuctionRepository auctionRepo;
 
     public ItemController() {
         this.itemRepo = new ItemRepository();
@@ -28,6 +32,18 @@ public class ItemController {
             Object[] payload = (Object[]) request.getPayload();
             Item newItem = (Item) payload[0];
             Auction newAuction = (Auction) payload[1];
+
+            // ========================================================
+            // BƯỚC QUAN TRỌNG: XỬ LÝ LƯU 7 BỨC ẢNH VÀO THƯ MỤC PROJECT
+            // Chuyển đổi đường dẫn tuyệt đối (từ máy khách) thành đường dẫn tương đối (lưu DB)
+            // ========================================================
+            newItem.setImgPath(processAndSaveImage(newItem.getImgPath()));
+            newItem.setImgPath1(processAndSaveImage(newItem.getImgPath1()));
+            newItem.setImgPath2(processAndSaveImage(newItem.getImgPath2()));
+            newItem.setImgPath3(processAndSaveImage(newItem.getImgPath3()));
+            newItem.setImgPath4(processAndSaveImage(newItem.getImgPath4()));
+            newItem.setImgPath5(processAndSaveImage(newItem.getImgPath5()));
+            newItem.setImgPath6(processAndSaveImage(newItem.getImgPath6()));
 
             // 2. Kiểm tra và tự động sinh mã user_prdID nếu người dùng để trống
             String currentPrdID = newItem.getUser_prdID();
@@ -89,5 +105,50 @@ public class ItemController {
         }
 
         return new Response("OK", null, "Hợp lệ.");
+    }
+
+    // ==========================================
+    // CÁC HÀM HỖ TRỢ XỬ LÝ ẢNH
+    // ==========================================
+
+    /**
+     * Hàm hỗ trợ kiểm tra xem đường dẫn có thực sự trỏ tới một file ảnh tồn tại không.
+     * Nếu có, gọi hàm copy file. Nếu không, trả về nguyên trạng.
+     */
+    private String processAndSaveImage(String originalPath) {
+        if (originalPath != null && !originalPath.trim().isEmpty()) {
+            File file = new File(originalPath);
+            // Kiểm tra xem file có tồn tại trên máy tính Client không
+            if (file.exists()) {
+                return saveImageToProject(file);
+            }
+        }
+        return originalPath; // Trả về null hoặc đường dẫn cũ nếu không có file thực
+    }
+
+    /**
+     * Copy ảnh từ máy tính vào thư mục của project và trả về đường dẫn tương đối.
+     */
+    public String saveImageToProject(File selectedFile) {
+        try {
+            // 1. Xác định thư mục đích trong project
+            String uploadDir = "auction-server/src/main/resources/images/products/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs(); // Tạo thư mục nếu chưa có
+
+            // 2. Đổi tên file để tránh trùng lặp (dùng System.currentTimeMillis)
+            String fileName = System.currentTimeMillis() + "_" + selectedFile.getName();
+            Path targetPath = Paths.get(uploadDir + fileName);
+
+            // 3. Copy file từ máy tính vào thư mục project
+            Files.copy(selectedFile.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 4. Trả về đường dẫn tương đối để lưu vào DB
+            return "/images/products/" + fileName;
+        } catch (IOException e) {
+            System.err.println("Lỗi khi lưu file ảnh: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 }

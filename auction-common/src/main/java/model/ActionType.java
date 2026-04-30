@@ -1,7 +1,8 @@
 package model;
 
 public enum ActionType {
-    LOGIN,
+    LOGIN_BIDDER,
+    LOGIN_SELLER,
     LOGOUT,
     REGISTER,
     BID,

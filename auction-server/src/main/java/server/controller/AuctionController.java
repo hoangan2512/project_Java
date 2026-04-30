@@ -4,14 +4,12 @@ import message.Request;
 import message.Response;
 import model.Auction;
 import model.SearchCriteria;
-import server.ServerApplication;
+import server.network.AuctionServer;
 import server.repository.AuctionRepository;
 
 import java.util.List;
-// import server.repository.AuctionRepository;
 
 public class AuctionController {
-    // private AuctionRepository auctionRepo;
 
     private final AuctionRepository auctionRepo = new AuctionRepository();
 
@@ -71,7 +69,7 @@ public class AuctionController {
         Response notifyEnd = new Response();
         notifyEnd.setStatus("AUCTION_END");
         notifyEnd.setMessage("Phiên đấu giá kết thúc, người thắng: " + winnerData);
-        ServerApplication.broadcast(notifyEnd);
+        AuctionServer.broadcast(notifyEnd);
 
         return response;
     }

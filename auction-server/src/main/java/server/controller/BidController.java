@@ -3,7 +3,7 @@ package server.controller;
 import message.Request;
 import message.Response;
 import model.Bid;
-import server.ServerApplication;
+import server.network.AuctionServer;
 import server.repository.BidRepository;
 import java.util.*;
 
@@ -28,7 +28,7 @@ public class BidController {
 
         // BROADCAST: Gửi thông báo cho toàn bộ Client đang online
         Response notifyPrice = new Response("NOTIFY_NEW_PRICE", bidData, "Có người vừa đặt giá mới!");
-        ServerApplication.broadcast(notifyPrice);
+        AuctionServer.broadcast(notifyPrice);
 
         return response;
     }
