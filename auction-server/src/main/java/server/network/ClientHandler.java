@@ -8,7 +8,6 @@ import java.net.Socket;
 import message.Request;
 import message.Response;
 import model.ActionType;
-import server.ServerApplication;
 import server.controller.AuctionController;
 import server.controller.BidController;
 import server.controller.ItemController;
@@ -30,7 +29,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void closeEverything() {
-        ServerApplication.clients.remove(this);
+        AuctionServer.clients.remove(this);
         try {
             if (in != null) in.close();
             if (out != null) out.close();
@@ -68,7 +67,8 @@ public class ClientHandler implements Runnable {
         ActionType type = request.getAction();
 
         switch (type) {
-            case LOGIN:
+            case LOGIN_BIDDER:
+            case LOGIN_SELLER:
                 return userController.handleLogin(request);
             case REGISTER:
                 return userController.handleRegister(request);

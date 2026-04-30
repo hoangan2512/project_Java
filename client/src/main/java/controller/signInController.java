@@ -39,6 +39,7 @@ public class signInController {
         if (SessionManager.getInstance().isBidder()) {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
+            Status.setVisible(false);
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
             LoginBtn.setVisible(false);
@@ -54,6 +55,7 @@ public class signInController {
         } else {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
+            Status.setVisible(false);
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
             LoginBtn.setVisible(false);
@@ -119,13 +121,14 @@ public class signInController {
         loginUser.setName(username);
         loginUser.setPassword(password);
 
-        Request req = new Request(loginUser, ActionType.LOGIN);
+        Request req = new Request(loginUser, ActionType.LOGIN_BIDDER);
 
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
 
+            // The client-side check is still useful for immediate feedback
             if ("BIDDER".equalsIgnoreCase(userFromServer.getRole())) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
@@ -148,7 +151,7 @@ public class signInController {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Error: Invalid username or password!");
+            Status.setText("This is not a bidder account");
         }
 
     }

@@ -44,6 +44,7 @@ public class sellerHubController_signin {
         if (SessionManager.getInstance().isSeller()) {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
+            Status.setVisible(false);
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
             LoginBtn.setVisible(false);
@@ -60,6 +61,7 @@ public class sellerHubController_signin {
         } else {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
+            Status.setVisible(false);
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
             LoginBtn.setVisible(false);
@@ -130,7 +132,7 @@ public class sellerHubController_signin {
         loginUser.setName(username);
         loginUser.setPassword(password);
 
-        Request req = new Request(loginUser, ActionType.LOGIN);
+        Request req = new Request(loginUser, ActionType.LOGIN_SELLER);
 
         Response res = ClientSocket.sendRequest(req);
 
@@ -155,13 +157,13 @@ public class sellerHubController_signin {
             } else {
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: red;");
-                Status.setText("This is not a bidder account");
+                Status.setText("This is not a seller account");
                 SessionManager.getInstance().logout();
             }
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Error: Invalid username or password!");
+            Status.setText("This is not a seller account");
         }
 
     }

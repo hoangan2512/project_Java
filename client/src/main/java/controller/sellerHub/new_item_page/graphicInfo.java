@@ -13,7 +13,12 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+// Nhớ import class ProductDraftDTO của bạn nếu nó nằm ở package khác
+// import model.ProductDraftDTO;
 
 public class graphicInfo {
 
@@ -38,8 +43,11 @@ public class graphicInfo {
 
     private List<ImageView> imageViews;
 
+    // Map lưu trữ đường dẫn chuẩn (Tuyệt đối) của file ảnh để gửi lên Server
+    private final Map<ImageView, String> imagePathMap = new HashMap<>();
+
     public void initialize() {
-        // Tải ảnh sp
+        // Tải cấu hình ảnh
         prd_previewImage.setPreserveRatio(true);
         prd_previewImage.setSmooth(true);
         imageViews = Arrays.asList(prd_previewImage, prdImage1, prdImage2, prdImage3, prdImage4, prdImage5, prdImage6);
@@ -58,18 +66,23 @@ public class graphicInfo {
         File selectedFile = fileChooser.showOpenDialog(stage);
 
         if (selectedFile != null) {
-            // Lấy đường dẫn file dạng URI để JavaFX có thể đọc được
-            String imagePath = selectedFile.toURI().toString();
+            // Lấy đường dẫn chuẩn của hệ điều hành (VD: C:\Users\anh.jpg)
+            String absolutePath = selectedFile.getAbsolutePath();
             boolean assigned = false;
 
-            // Hiển thị ảnh preview lên ImageView
-            Image image = new Image(imagePath);
+            // Cần toURI().toString() để JavaFX có thể vẽ ảnh lên màn hình
+            Image image = new Image(selectedFile.toURI().toString());
+
             for (ImageView iv : imageViews) {
                 if (iv.getImage() == null) {
                     iv.setImage(image);
+
+                    // Lưu đường dẫn chuẩn vào Map
+                    imagePathMap.put(iv, absolutePath);
+
                     assigned = true;
                     Status.setVisible(true);
-                    Status.setText("Đã thêm ảnh: " + selectedFile.getName()); // Hiển thị tên file cho gọn
+                    Status.setText("Đã thêm ảnh: " + selectedFile.getName());
                     break;
                 }
             }
@@ -94,7 +107,12 @@ public class graphicInfo {
         // Tìm thằng con nào là ImageView trong cái StackPane đó và xóa ảnh
         for (Node node : parent.getChildren()) {
             if (node instanceof ImageView) {
-                ((ImageView) node).setImage(null);
+                ImageView iv = (ImageView) node;
+                iv.setImage(null);
+
+                // Đồng thời xóa đường dẫn ảnh tương ứng trong Map
+                imagePathMap.remove(iv);
+
                 Status.setVisible(true);
                 Status.setText("Image deleted");
                 break;
@@ -106,64 +124,45 @@ public class graphicInfo {
     // CÁC HÀM GETTER LẤY ĐƯỜNG DẪN ẢNH ĐỂ LƯU DB
     // ==========================================
 
-    public String getImgPath() {
-        if (prd_previewImage.getImage() != null) {
-            return prd_previewImage.getImage().getUrl();
-        }
-        return null;
-    }
+    public String getImgPath() { return imagePathMap.get(prd_previewImage); }
+    public String getImgPath1() { return imagePathMap.get(prdImage1); }
+    public String getImgPath2() { return imagePathMap.get(prdImage2); }
+    public String getImgPath3() { return imagePathMap.get(prdImage3); }
+    public String getImgPath4() { return imagePathMap.get(prdImage4); }
+    public String getImgPath5() { return imagePathMap.get(prdImage5); }
+    public String getImgPath6() { return imagePathMap.get(prdImage6); }
 
-    public String getImgPath1() {
-        if (prdImage1.getImage() != null) {
-            return prdImage1.getImage().getUrl();
-        }
-        return null;
-    }
-
-    public String getImgPath2() {
-        if (prdImage2.getImage() != null) {
-            return prdImage2.getImage().getUrl();
-        }
-        return null;
-    }
-
-    public String getImgPath3() {
-        if (prdImage3.getImage() != null) {
-            return prdImage3.getImage().getUrl();
-        }
-        return null;
-    }
-
-    public String getImgPath4() {
-        if (prdImage4.getImage() != null) {
-            return prdImage4.getImage().getUrl();
-        }
-        return null;
-    }
-
-    public String getImgPath5() {
-        if (prdImage5.getImage() != null) {
-            return prdImage5.getImage().getUrl();
-        }
-        return null;
-    }
-
-    public String getImgPath6() {
-        if (prdImage6.getImage() != null) {
-            return prdImage6.getImage().getUrl();
-        }
-        return null;
-    }
-
+    // ==========================================
+    // LOAD DỮ LIỆU BẢN NHÁP (DRAFT)
+    // ==========================================
     public void setDraftData(ProductDraftDTO draft) {
         if (draft == null) return;
 
-        if (draft.getImgPath() != null) prd_previewImage.setImage(new Image(draft.getImgPath()));
-        if (draft.getImgPath1() != null) prdImage1.setImage(new Image(draft.getImgPath1()));
-        if (draft.getImgPath2() != null) prdImage2.setImage(new Image(draft.getImgPath2()));
-        if (draft.getImgPath3() != null) prdImage3.setImage(new Image(draft.getImgPath3()));
-        if (draft.getImgPath4() != null) prdImage4.setImage(new Image(draft.getImgPath4()));
-        if (draft.getImgPath5() != null) prdImage5.setImage(new Image(draft.getImgPath5()));
-        if (draft.getImgPath6() != null) prdImage6.setImage(new Image(draft.getImgPath6()));
+        loadDraftImage(prd_previewImage, draft.getImgPath());
+        loadDraftImage(prdImage1, draft.getImgPath1());
+        loadDraftImage(prdImage2, draft.getImgPath2());
+        loadDraftImage(prdImage3, draft.getImgPath3());
+        loadDraftImage(prdImage4, draft.getImgPath4());
+        loadDraftImage(prdImage5, draft.getImgPath5());
+        loadDraftImage(prdImage6, draft.getImgPath6());
+    }
+
+    // Hàm hỗ trợ load ảnh từ Draft và lưu ngược lại vào Map
+    private void loadDraftImage(ImageView iv, String path) {
+        if (path != null && !path.trim().isEmpty()) {
+            try {
+                File file = new File(path);
+                if (file.exists()) {
+                    iv.setImage(new Image(file.toURI().toString()));
+                    imagePathMap.put(iv, file.getAbsolutePath());
+                } else {
+                    // Nếu là đường dẫn project tương đối
+                    iv.setImage(new Image(path));
+                    imagePathMap.put(iv, path);
+                }
+            } catch (Exception e) {
+                System.err.println("Không thể load ảnh từ Draft: " + path);
+            }
+        }
     }
 }
