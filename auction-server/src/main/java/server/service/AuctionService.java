@@ -1,103 +1,89 @@
 package server.service;
 
+import message.Response;
 import model.Auction;
+import model.Bid;
+import server.network.AuctionServer;
 import server.repository.AuctionRepository;
+import server.repository.BidRepository;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import java.time.LocalDateTime;
 
 public class AuctionService {
 
-    // Lưu trữ các phiên đấu giá đang chạy trên RAM
-    private ConcurrentHashMap<Integer, Auction> activeAuctions = new ConcurrentHashMap<>();
-
     // Mỗi phiên đấu giá (Auction) sẽ có một cái "khóa" riêng để tránh tranh chấp giá
+    // Điều này đảm bảo trong 1 mili-giây, chỉ có 1 luồng được phép xử lý giá cho 1 sản phẩm
     private final ConcurrentHashMap<Integer, ReentrantLock> auctionLocks = new ConcurrentHashMap<>();
 
-    // Tiêm Repository vào để lưu Database
-    private AuctionRepository auctionRepository = new AuctionRepository();
+    // Tiêm Repository vào để tương tác với Database
+    private final AuctionRepository auctionRepository = new AuctionRepository();
+    private final BidRepository bidRepository = new BidRepository();
 
-    // --- LOGIC TẠO PHIÊN ĐẤU GIÁ ---
-    public String createAuction(Auction auction) {
-        // Lưu vào bộ nhớ tạm
-        activeAuctions.put(auction.getId(), auction);
-        // Tạo khóa Lock cho phiên đấu giá này
-        auctionLocks.put(auction.getId(), new ReentrantLock());
-
-        return "SUCCESS: Phiên đấu giá ID " + auction.getId() + " đã lên sàn.";
+    /**
+     * Hàm lấy khóa Lock cho một phiên đấu giá cụ thể.
+     */
+    private ReentrantLock getLock(int auctionId) {
+        return auctionLocks.computeIfAbsent(auctionId, k -> new ReentrantLock());
     }
 
-    // --- LOGIC ĐẶT GIÁ ĐỒNG BỘ CHẶT CHẼ ---
-    public String placeBid(int auctionId, int bidderId, double bidAmount) {
-        Auction auction = activeAuctions.get(auctionId);
-        if (auction == null) return "ERROR: Phiên đấu giá không tồn tại hoặc đã kết thúc.";
-
-        // Lấy khóa cho riêng phiên đấu giá này
-        ReentrantLock lock = auctionLocks.get(auctionId);
-        lock.lock(); // Bắt đầu chặn các luồng khác truy cập vào phiên này
+    /**
+     * --- LOGIC ĐẶT GIÁ (CORE BUSINESS LOGIC) ---
+     * Đây là nơi chứa bộ não của chức năng đấu giá.
+     */
+    public Response placeBid(Bid bid) {
+        int auctionId = bid.getAuction_id();
+        ReentrantLock lock = getLock(auctionId);
+        
+        lock.lock(); // Bắt đầu chặn tất cả các Request khác truy cập vào cùng phiên đấu giá này
 
         try {
-            // 1. Kiểm tra trạng thái (Phải đang RUNNING)
+            // 1. Lấy thông tin mới nhất của phiên đấu giá trực tiếp từ Database
+            Auction auction = auctionRepository.getAuctionById(auctionId);
+            if (auction == null) {
+                return new Response("FAIL", null, "Lỗi: Phiên đấu giá không tồn tại.");
+            }
+
+            // 2. Kiểm tra trạng thái (Phải đang RUNNING)
             if (!"RUNNING".equals(auction.getStatus())) {
-                return "ERROR: Phiên đấu giá đang " + auction.getStatus();
+                return new Response("FAIL", null, "Lỗi: Phiên đấu giá đang ở trạng thái " + auction.getStatus() + ".");
             }
 
-            // 2. Kiểm tra thời gian (Đề phòng trường hợp hết giờ mà processAutoEnd chưa chạy kịp)
+            // 3. Kiểm tra thời gian (Đề phòng TimeManager chưa kịp quét)
             if (LocalDateTime.now().isAfter(auction.getEnd_time())) {
-                auction.setStatus("FINISHED");
-                return "ERROR: Phiên đấu giá đã kết thúc theo thời gian.";
+                return new Response("FAIL", null, "Lỗi: Phiên đấu giá đã kết thúc.");
             }
 
-            // 3. Kiểm tra giá
-            if (bidAmount <= auction.getCurrent_price()) {
-                return "ERROR: Giá đặt phải cao hơn giá hiện tại (" + auction.getCurrent_price() + ")";
+            // 4. Kiểm tra giá trị (Giá đặt phải cao hơn giá hiện tại)
+            if (bid.getAmount() <= auction.getCurrent_price()) {
+                return new Response("FAIL", null, "Lỗi: Giá đặt phải cao hơn giá hiện tại (" + auction.getCurrent_price() + ").");
             }
 
-            // 4. CẬP NHẬT DỮ LIỆU TRONG BỘ NHỚ
-            auction.setCurrent_price(bidAmount);
-            auction.setHighest_bidder_id(bidderId);
+            // ==========================================
+            // MỌI ĐIỀU KIỆN ĐỀU HỢP LỆ -> TIẾN HÀNH LƯU
+            // ==========================================
+            
+            // 5. Cập nhật bảng `auctions` (giá mới và người dẫn đầu mới)
+            boolean isUpdated = auctionRepository.updateBid(auctionId, bid.getAmount(), bid.getBidder_id());
+            
+            if (isUpdated) {
+                // 6. Ghi nhận vào lịch sử bảng `bids`
+                bidRepository.placeBid(bid);
+                
+                System.out.println("Đã ghi nhận mức giá mới: " + bid.getAmount() + " từ User " + bid.getBidder_id() + " cho Auction " + auctionId);
 
-            // 5. CẬP NHẬT XUỐNG DATABASE (Quan trọng để đồng bộ)
-            // Bạn sẽ cần viết hàm updateBid(...) trong AuctionRepository
-            // auctionRepository.updateBid(auctionId, bidAmount, bidderId);
+                // 7. Gửi thông báo (Broadcast) cho toàn bộ Client đang online biết giá mới
+                Response notifyPrice = new Response("NOTIFY_NEW_PRICE", bid, "Có người vừa đặt giá mới!");
+                AuctionServer.broadcast(notifyPrice);
 
-            return "SUCCESS: Bạn đang dẫn đầu phiên đấu giá!";
+                return new Response("SUCCESS", bid, "Đặt giá thành công! Bạn đang dẫn đầu.");
+            } else {
+                return new Response("FAIL", null, "Lỗi hệ thống khi lưu giá mới.");
+            }
+
         } finally {
-            lock.unlock(); // Luôn giải phóng khóa dù có lỗi xảy ra
-        }
-    }
-
-    // --- LOGIC KẾT THÚC PHIÊN (Chạy ngầm) ---
-    public void processAutoEnd() {
-        LocalDateTime now = LocalDateTime.now();
-
-        for (Auction auction : activeAuctions.values()) {
-            if ("RUNNING".equals(auction.getStatus()) && now.isAfter(auction.getEnd_time())) {
-
-                ReentrantLock lock = auctionLocks.get(auction.getId());
-                if (lock.tryLock()) { // Thử khóa, nếu không có ai đang click đặt giá thì mới khóa
-                    try {
-                        auction.setStatus("FINISHED");
-
-                        // Cập nhật xuống DB
-                        // auctionRepository.updateStatus(auction.getId(), "FINISHED");
-
-                        System.out.println("Phiên đấu giá " + auction.getId() + " đã tự động kết thúc.");
-                    } finally {
-                        lock.unlock();
-                    }
-                }
-            }
-        }
-    }
-
-    // --- LOGIC THAY ĐỔI TRẠNG THÁI THỦ CÔNG ---
-    public void changeStatus(int auctionId, String status) {
-        Auction auction = activeAuctions.get(auctionId);
-        if (auction != null) {
-            auction.setStatus(status);
-            // auctionRepository.updateStatus(auctionId, status);
+            lock.unlock(); // Luôn giải phóng khóa dù có lỗi xảy ra hay không
         }
     }
 }

@@ -29,7 +29,7 @@
             <Font name="System Bold" size="10.0" />
          </font>
       </Label>
-      <StackPane layoutX="12.0" layoutY="13.0" prefHeight="170.0" prefWidth="170.0" style="-fx-background-color: #ffffff;">
+      <StackPane layoutX="12.0" layoutY="13.0" prefHeight="170.0" prefWidth="170.0" style="-fx-background-color: #1E1E1E;">
          <children>
             <ImageView fx:id="prdImage" fitHeight="170.0" fitWidth="170.0" pickOnBounds="true" preserveRatio="true" />
          </children>

@@ -7,6 +7,8 @@ import javafx.scene.Node;
 import javafx.scene.layout.TilePane;
 import java.io.IOException;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.time.Duration;
 
 import model.SearchCriteria;
 import model.Auction;
@@ -35,14 +37,14 @@ public class customSearchController {
     private void fetchProductsFromDatabase() {
         productGrid.getChildren().clear();
 
-        // 1. Tạo Request với ActionType.CUSTOM_SEARCH [cite: 53]
+        // 1. Tạo Request với ActionType.CUSTOM_SEARCH
         Request req = new Request(currentCriteria, ActionType.CUSTOM_SEARCH);
 
-        // 2. Gửi request qua ClientSocket [cite: 1, 12]
+        // 2. Gửi request qua ClientSocket
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            // Ép kiểu về List<Auction> vì Server đã đổi sang dùng AuctionRepository [cite: 13, 47]
+            // Ép kiểu về List<Auction> vì Server đã đổi sang dùng AuctionRepository
             List<Auction> resultList = (List<Auction>) res.getData();
 
             if (resultList != null && !resultList.isEmpty()) {
@@ -52,18 +54,41 @@ public class customSearchController {
                         Node productCard = loader.load();
                         prd_previewController cardController = loader.getController();
 
-                        // ==========================================
-                        // TẠM THỜI BỎ QUA TIMELEFT
-                        // ==========================================
-                        // Lấy tên và ảnh từ Item nằm trong Auction (kết quả của lệnh JOIN) [cite: 47, 50]
+                        // Lấy tên, ảnh và mô tả từ Item nằm trong Auction
                         String name = (auc.getItem() != null) ? auc.getItem().getName() : "Không tên";
                         String imgPath = (auc.getItem() != null) ? auc.getItem().getImgPath() : null;
+                        String description = (auc.getItem() != null && auc.getItem().getDescription() != null) 
+                                                ? auc.getItem().getDescription() : "Chưa có mô tả cho sản phẩm này.";
 
-                        // Lấy giá hiện tại từ Auction [cite: 22, 48]
+                        // Lấy giá hiện tại từ Auction
                         long currentPrice = (long) auc.getCurrent_price();
 
-                        // Truyền 0 vào vị trí timeLeft để UI vẫn hiển thị nhưng không đếm ngược
-                        cardController.setData(name, currentPrice, 0, imgPath);
+                        // --- TÍNH TOÁN THỜI GIAN CÒN LẠI THỰC TẾ ---
+                        long timeLeftSeconds = 0;
+                        if ("RUNNING".equals(auc.getStatus()) && auc.getEnd_time() != null) {
+                            LocalDateTime now = LocalDateTime.now();
+                            if (now.isBefore(auc.getEnd_time())) {
+                                timeLeftSeconds = Duration.between(now, auc.getEnd_time()).getSeconds();
+                            }
+                        }
+                        
+                        // Cập nhật card với số giây còn lại thực tế để đếm ngược
+                        cardController.setData(name, currentPrice, timeLeftSeconds, imgPath);
+
+                        // Thêm hành động khi click vào card sẽ mở trang chi tiết sản phẩm
+                        cardController.setOnBidAction(() -> {
+                            if (mainPageController.getInstance() != null) {
+                                // Tính lại lần nữa khi click để đảm bảo thời gian cập nhật nhất
+                                long currentRemaining = 0;
+                                if ("RUNNING".equals(auc.getStatus()) && auc.getEnd_time() != null) {
+                                    LocalDateTime nowClick = LocalDateTime.now();
+                                    if (nowClick.isBefore(auc.getEnd_time())) {
+                                        currentRemaining = Duration.between(nowClick, auc.getEnd_time()).getSeconds();
+                                    }
+                                }
+                                mainPageController.getInstance().fillProductPage(name, currentPrice, currentRemaining, imgPath, description);
+                            }
+                        });
 
                         productGrid.getChildren().add(productCard);
 

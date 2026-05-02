@@ -1,17 +1,17 @@
 package controller;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import controller.mainPageController;
+import javafx.util.Duration;
 
-import java.io.IOException;
+import java.io.File;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -29,29 +29,95 @@ public class prd_previewController {
     private Label auctionStatus;
 
     private Runnable toPrdPage;
-
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+    
+    private Timeline countdownTimer;
+    private long remainingSeconds;
 
     public void setData(String name, long price, long time, String imagePath) {
-        prdName.setText(name);
+        if (prdName != null) {
+            prdName.setText(name);
+        }
 
         // --- BẮT ĐẦU ĐỊNH DẠNG TIỀN TỆ ---
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
-        symbols.setGroupingSeparator('.'); // Thiết lập dấu phân cách là dấu chấm
+        if (currentPrice != null) {
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
+            symbols.setGroupingSeparator('.'); // Thiết lập dấu phân cách là dấu chấm
 
-        // Mẫu định dạng: ###,### (ngăn cách mỗi 3 chữ số)
-        DecimalFormat formatter = new DecimalFormat("###,###", symbols);
-        String formattedPrice = formatter.format(price);
+            // Mẫu định dạng: ###,### (ngăn cách mỗi 3 chữ số)
+            DecimalFormat formatter = new DecimalFormat("###,###", symbols);
+            String formattedPrice = formatter.format(price);
 
-        currentPrice.setText(formattedPrice + " VNĐ");
+            currentPrice.setText(formattedPrice + " VNĐ");
+        }
         // --- KẾT THÚC ĐỊNH DẠNG ---
 
-        if (auctionStatus != null) {
-            long hours = time / 3600;
-            long minutes = (time % 3600) / 60;
-            long seconds = time % 60;
+        // --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN (COUNTDOWN) ---
+        this.remainingSeconds = time;
+        
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        updateTimeLabel(); // Cập nhật hiển thị ngay lập tức
+
+        if (remainingSeconds > 0) {
+            countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                remainingSeconds--;
+                updateTimeLabel();
+                
+                if (remainingSeconds <= 0) {
+                    countdownTimer.stop();
+                    handleAuctionEnd();
+                }
+            }));
+            countdownTimer.setCycleCount(Timeline.INDEFINITE);
+            countdownTimer.play();
+        } else {
+            handleAuctionEnd();
+        }
+        // --- KẾT THÚC BỘ ĐẾM THỜI GIAN ---
+
+        // --- BẮT ĐẦU LOAD ẢNH TỪ ITEM ---
+        if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
+            try {
+                // Vì Client và Server chạy trên cùng một máy tính (Local) trong quá trình dev, 
+                // chúng ta có thể load thẳng từ thư mục tài nguyên của Server.
+                // Đường dẫn trong DB có dạng "/images/products/..."
+                File imgFile = new File("auction-server/src/main/resources" + imagePath);
+                
+                if (imgFile.exists()) {
+                    Image image = new Image(imgFile.toURI().toString());
+                    prdImage.setImage(image);
+                } else {
+                    // Nếu không tìm thấy file thực tế, thử tìm trong resources của client (dự phòng)
+                    java.io.InputStream is = getClass().getResourceAsStream(imagePath);
+                    if (is != null) {
+                        prdImage.setImage(new Image(is));
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Không thể hiển thị ảnh từ: " + imagePath);
+            }
+        }
+    }
+    
+    private void updateTimeLabel() {
+        if (auctionStatus != null && remainingSeconds > 0) {
+            long hours = remainingSeconds / 3600;
+            long minutes = (remainingSeconds % 3600) / 60;
+            long seconds = remainingSeconds % 60;
             String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
             auctionStatus.setText(timeString);
+        }
+    }
+    
+    private void handleAuctionEnd() {
+        if (auctionStatus != null) {
+            auctionStatus.setText("ĐÃ KẾT THÚC");
+        }
+        if (Bid != null) {
+            Bid.setDisable(true); // Khóa nút đấu giá nếu đã kết thúc
         }
     }
 

@@ -3,8 +3,11 @@ package controller;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
+import java.io.File;
 
+import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
@@ -33,7 +36,7 @@ public class prdPageController {
     @FXML
     private ImageView prdImage;
     @FXML
-    private Label prdName;
+    private Label prdName, prd_description;
     @FXML
     private TextField bidAmount;
     @FXML
@@ -52,19 +55,10 @@ public class prdPageController {
     private NumberAxis yAxis;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+    private Timeline countdownTimer;
+    private long remainingSeconds;
 
     public void initialize() {
-        // Tải ảnh sp (default)
-        String ImgPath = "/image/prd/vinfast.jpg";
-        try {
-            Image prdImg = new Image(getClass().getResourceAsStream(ImgPath));
-            prdImage.setPreserveRatio(true);
-            prdImage.setSmooth(true);
-            prdImage.setImage(prdImg);
-        } catch (Exception e) {
-            System.err.println("Không tìm thấy ảnh tại đường dẫn: " + ImgPath);
-        }
-
         addCurrencyFormat(bidAmount);
         // price_chart
     }
@@ -168,7 +162,7 @@ public class prdPageController {
         });
     }
 
-    public void setData(String name, long price, long time, String imagePath) {
+    public void setData(String name, long price, long time, String imagePath, String description) {
         // 1. Set tên sản phẩm
         if (prdName != null) {
             prdName.setText(name);
@@ -182,15 +176,83 @@ public class prdPageController {
             currentPrice.setText(formatter.format(price) + " VNĐ");
         }
 
-        // 3. Định dạng và set thời gian còn lại
-        if (timeLeft != null) {
-            long hours = time / 3600;
-            long minutes = (time % 3600) / 60;
-            long seconds = time % 60;
-            String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-            timeLeft.setText(timeString);
+        // 3. --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN (COUNTDOWN) ---
+        this.remainingSeconds = time;
+        
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        updateTimeLabel(); // Cập nhật hiển thị ngay lập tức
+
+        if (remainingSeconds > 0) {
+            countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                remainingSeconds--;
+                updateTimeLabel();
+                
+                if (remainingSeconds <= 0) {
+                    countdownTimer.stop();
+                    handleAuctionEnd();
+                }
+            }));
+            countdownTimer.setCycleCount(Timeline.INDEFINITE);
+            countdownTimer.play();
+        } else {
+            handleAuctionEnd();
+        }
+
+        // 4. Tải ảnh sản phẩm từ DB (thông qua đường dẫn lưu ở server)
+        if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
+            try {
+                File imgFile = new File("auction-server/src/main/resources" + imagePath);
+                
+                if (imgFile.exists()) {
+                    Image img = new Image(imgFile.toURI().toString());
+                    prdImage.setPreserveRatio(true);
+                    prdImage.setSmooth(true);
+                    prdImage.setImage(img);
+                } else {
+                    // Dự phòng nếu ảnh ở trong resource client (các ảnh test cứng)
+                    java.io.InputStream is = getClass().getResourceAsStream(imagePath);
+                    if (is != null) {
+                        prdImage.setPreserveRatio(true);
+                        prdImage.setSmooth(true);
+                        prdImage.setImage(new Image(is));
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Không thể hiển thị ảnh chi tiết từ: " + imagePath);
+            }
+        }
+        
+        // 5. Hiển thị mô tả sản phẩm
+        if (prd_description != null && description != null) {
+            prd_description.setText(description);
         }
 
         System.out.println("Đã hiển thị chi tiết sản phẩm: " + name);
+    }
+    
+    private void updateTimeLabel() {
+        if (timeLeft != null && remainingSeconds > 0) {
+            long hours = remainingSeconds / 3600;
+            long minutes = (remainingSeconds % 3600) / 60;
+            long seconds = remainingSeconds % 60;
+            String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+            timeLeft.setText(timeString);
+        }
+    }
+    
+    private void handleAuctionEnd() {
+        if (timeLeft != null) {
+            timeLeft.setText("This auction has ended.");
+        }
+        if (Bid != null) {
+            Bid.setDisable(true); // Khóa nút đấu giá nếu đã kết thúc
+            Bid.setText("Ended");
+        }
+        if (bidAmount != null) {
+            bidAmount.setDisable(true); // Khóa ô nhập giá
+        }
     }
 }
