@@ -67,6 +67,35 @@ public class AuctionRepository {
         }
         return activeAuctions;
     }
+    
+    public List<Auction> getWaitingAuctions(){
+        List<Auction> waitingAuctions = new ArrayList<>();
+        String sql = "SELECT * FROM auctions WHERE status = 'WAITING'";
+        Connection conn = DatabaseConnection.getInstance().getConnection();
+
+        try (PreparedStatement psmt = conn.prepareStatement(sql)) {
+            ResultSet rs = psmt.executeQuery();
+
+            while(rs.next()){
+                Auction auction = new Auction();
+
+                auction.setId(rs.getInt("id"));
+                auction.setItem_id(rs.getInt("item_id"));
+                auction.setStart_time((rs.getTimestamp("start_time").toLocalDateTime()));
+                auction.setEnd_time((rs.getTimestamp("end_time").toLocalDateTime()));
+                auction.setStatus(rs.getString("status"));
+                auction.setCurrent_price(rs.getDouble("current_price"));
+                auction.setHighest_bidder_id(rs.getInt("highest_bidder_id"));
+
+                waitingAuctions.add(auction);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách đấu giá đang chờ: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return waitingAuctions;
+    }
 
     // ==========================================
     // CÁC HÀM UPDATE ĐỂ PHỤC VỤ CHO AUCTION SERVICE

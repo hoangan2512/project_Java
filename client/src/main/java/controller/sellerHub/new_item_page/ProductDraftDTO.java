@@ -24,7 +24,7 @@ public class ProductDraftDTO implements Serializable {
     // Auction Info
     private String price;
     private String startTime;
-    private String auctionChoice;
+    private String duration; // Thêm duration
 
     // ==========================================
     // GETTERS & SETTERS - BASIC INFO
@@ -106,6 +106,9 @@ public class ProductDraftDTO implements Serializable {
         this.imgPath6 = imgPath6;
     }
 
+    // ==========================================
+    // GETTERS & SETTERS - AUCTION INFO
+    // ==========================================
     public String getPrice() {
         return price;
     }
@@ -121,13 +124,13 @@ public class ProductDraftDTO implements Serializable {
     public void setStartTime(String startTime) {
         this.startTime = startTime;
     }
-
-    public String getAuctionChoice() {
-        return auctionChoice;
+    
+    public String getDuration() {
+        return duration;
     }
-
-    public void setAuctionChoice(String auctionChoice) {
-        this.auctionChoice = auctionChoice;
+    
+    public void setDuration(String duration) {
+        this.duration = duration;
     }
 
     // ==========================================
@@ -151,6 +154,6 @@ public class ProductDraftDTO implements Serializable {
 
         this.price = null;
         this.startTime = null;
-        this.auctionChoice = null;
+        this.duration = null;
     }
 }
