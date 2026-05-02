@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.new_item_page.auctionInfo">
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.new_item_page.auctionInfo">
    <children>
       <Label fx:id="InfoType" layoutX="49.0" layoutY="35.0" prefHeight="43.0" prefWidth="264.0" text="Auction Information" textFill="WHITE">
          <font>

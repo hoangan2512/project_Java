@@ -209,6 +209,10 @@ public class sellerHubController_signin {
     }
 
     public void handleLogout(ActionEvent event) {
+        // Gửi yêu cầu LOGOUT đến Server trước khi xóa session ở Client
+        Request logoutReq = new Request(null, ActionType.LOGOUT);
+        ClientSocket.sendRequest(logoutReq);
+
         SessionManager.getInstance().logout();
 
         if (SessionManager.getInstance().isSeller()) {
