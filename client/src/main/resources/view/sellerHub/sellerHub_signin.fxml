@@ -10,7 +10,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="600.0" prefWidth="300.0" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.sellerHubController_signin">
+<AnchorPane prefHeight="600.0" prefWidth="300.0" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.sellerHubController_signin">
     <children>
         <Button fx:id="SignInOpt" layoutX="44.0" layoutY="428.0" mnemonicParsing="false" onAction="#handleSigninOpt" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="Register new account">
             <font>

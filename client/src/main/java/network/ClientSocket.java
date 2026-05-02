@@ -1,28 +1,108 @@
 package network;
+
 import java.io.*;
+import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import javafx.application.Platform;
+
 import message.Request;
 import message.Response;
-import java.net.Socket;
+
 public class ClientSocket {
-    private static final String SERVER_IP="localhost"; //tạo IP
-    private static final Integer SERVER_PORT=2810;  //tạo port (giống với port thuộc auctionserver)
-    public static Response sendRequest(Request request){ // tạo sendrequest trả về response
-        try ( Socket socket= new Socket(SERVER_IP,SERVER_PORT)){ //tạo socket kết nối tới server
-            ObjectOutputStream out= new ObjectOutputStream(socket.getOutputStream());   //out first tránh dreadlock
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            out.writeObject(request);   //gửi request
-            out.flush();    //đẩy request tới server ngay lập tức
-            Response res = (Response) in.readObject();
-            return res;
+    private static final String SERVER_IP = "localhost"; // tạo IP
+    private static final Integer SERVER_PORT = 2810;     // tạo port
+
+    private static Socket socket;
+    private static ObjectOutputStream out;
+    private static ObjectInputStream in;
+
+    // Hàng đợi để giao tiếp giữa luồng đọc (Listener) và luồng chính gọi sendRequest
+    private static final BlockingQueue<Response> responseQueue = new LinkedBlockingQueue<>();
+
+    // --- HÀM KIỂM TRA KẾT NỐI BAN ĐẦU ---
+    public static boolean tryConnect() {
+        if (socket != null && !socket.isClosed()) {
+            return true; // Đã kết nối rồi
         }
-        catch (IOException ioException){
-            System.err.println("Không thể kết nối tới hệ thống!");
-            ioException.printStackTrace();
+        try {
+            // Thử tạo một kết nối mới
+            socket = new Socket(SERVER_IP, SERVER_PORT);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // Nếu thành công, khởi chạy luồng Listener
+            startListenerThread();
+            System.out.println("INFO: Kết nối tới Server thành công!");
+            return true;
+
+        } catch (IOException e) {
+            System.out.println("WARNING: Kết nối tới Server không thành công! Vui lòng kiểm tra lại Server.");
+            // Đảm bảo các biến đều null nếu kết nối thất bại
+            socket = null;
+            out = null;
+            in = null;
+            return false;
         }
-        catch (ClassNotFoundException classNotFoundException){
-            System.err.println("Không thể nhận diện được lớp trả về!");
-            classNotFoundException.printStackTrace();
+    }
+
+    private static void startListenerThread() {
+        Thread listenerThread = new Thread(() -> {
+            try {
+                while (true) {
+                    Response res = (Response) in.readObject();
+
+                    String status = res.getStatus();
+                    if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status)) {
+                        Platform.runLater(() -> handleBroadcast(res));
+                    } else {
+                        responseQueue.put(res);
+                    }
+                }
+            } catch (EOFException e) {
+                System.out.println("INFO: Server đã đóng kết nối.");
+            } catch (Exception e) {
+                // Không in stack trace nếu socket đã bị đóng chủ động
+                if (socket != null && !socket.isClosed()) {
+                    System.out.println("ERROR: Mất kết nối tới Server hoặc lỗi đọc dữ liệu!");
+                    e.printStackTrace();
+                }
+            }
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
+    }
+
+    public static synchronized Response sendRequest(Request request) {
+        // Nếu chưa kết nối, thử kết nối lại. Nếu vẫn thất bại thì trả về null.
+        if (socket == null || socket.isClosed()) {
+            if (!tryConnect()) {
+                return null;
+            }
         }
-        return null; //trả về null nếu không nằm trong các trường hợp trên
+
+        try {
+            out.writeObject(request);
+            out.flush();
+            return responseQueue.take();
+        } catch (Exception e) {
+            System.out.println("ERROR: Lỗi khi gửi/nhận Request: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static void handleBroadcast(Response res) {
+        System.out.println("🔔 [BROADCAST TỪ SERVER]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
+    }
+
+    public static void disconnect() {
+        try {
+            if (socket != null) socket.close();
+            if (in != null) in.close();
+            if (out != null) out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

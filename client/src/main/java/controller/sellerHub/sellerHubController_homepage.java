@@ -68,7 +68,9 @@ public class sellerHubController_homepage {
 
         userAvatar.setStroke(Color.GREEN);
         User user = SessionManager.getInstance().getCurrentUser();
-        System.out.println("Logged In: " + user.getUsername());
+        if (user != null) {
+            System.out.println("Logged In: " + user.getUsername());
+        }
     }
 
     public void loadChildFXML(String fxmlPath) {
@@ -123,7 +125,9 @@ public class sellerHubController_homepage {
                 checkItem.setName(name);
                 checkItem.setCategories(categories); // Gửi thêm category để check
                 checkItem.setUser_prdID(currentId);
-                checkItem.setSeller_id(currentUser.getId());
+                if (currentUser != null) {
+                    checkItem.setSeller_id(currentUser.getId());
+                }
 
                 Request checkReq = new Request(checkItem, ActionType.CHECK_DUPLICATE_NAME);
                 Response checkRes = ClientSocket.sendRequest(checkReq);
@@ -300,6 +304,15 @@ public class sellerHubController_homepage {
     }
 
     public void handleBidHub(MouseEvent event) {
+        // --- THỰC HIỆN ĐĂNG XUẤT ---
+        // 1. Gửi request LOGOUT lên Server
+        Request logoutReq = new Request(null, ActionType.LOGOUT);
+        ClientSocket.sendRequest(logoutReq); // Không cần chờ Response
+        
+        // 2. Xóa session ở phía Client
+        SessionManager.getInstance().logout();
+
+        // 3. Chuyển cảnh về trang chủ (BidHub)
         try {
             sceneSwitcher.switchToMainPage(event);
         } catch (IOException e) {
