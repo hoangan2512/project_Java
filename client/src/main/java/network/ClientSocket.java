@@ -33,12 +33,9 @@ public class ClientSocket {
 
             // Nếu thành công, khởi chạy luồng Listener
             startListenerThread();
-            System.out.println("INFO: Kết nối tới Server thành công!");
             return true;
 
         } catch (IOException e) {
-            System.out.println("WARNING: Kết nối tới Server không thành công! Vui lòng kiểm tra lại Server.");
-            // Đảm bảo các biến đều null nếu kết nối thất bại
             socket = null;
             out = null;
             in = null;
@@ -93,7 +90,7 @@ public class ClientSocket {
     }
 
     private static void handleBroadcast(Response res) {
-        System.out.println("🔔 [BROADCAST TỪ SERVER]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
+        System.out.println("[BROADCAST TỪ SERVER]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
     }
 
     public static void disconnect() {

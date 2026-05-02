@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 public class AuctionTimeManager implements AutoCloseable {
     private static final Logger LOGGER = Logger.getLogger(AuctionTimeManager.class.getName());
     private static final String FINISHED_STATUS = "FINISHED";
+    private static final String RUNNING_STATUS = "RUNNING";
     private static final long DEFAULT_CHECK_INTERVAL_SECONDS = 5;
 
     private final AuctionRepository auctionRepository;
@@ -52,7 +53,7 @@ public class AuctionTimeManager implements AutoCloseable {
         }
 
         scheduler.scheduleAtFixedRate(
-                this::closeExpiredAuctionsSafely,
+                this::manageAuctionSchedulesSafely,
                 0,
                 checkIntervalSeconds,
                 TimeUnit.SECONDS
@@ -86,26 +87,30 @@ public class AuctionTimeManager implements AutoCloseable {
                 || !LocalDateTime.now().isBefore(auction.getEnd_time());
     }
 
-    public long getRemainingSeconds(Auction auction) {
-        if (auction == null || auction.getEnd_time() == null) {
-            return 0;
-        }
-
-        long seconds = Duration.between(LocalDateTime.now(), auction.getEnd_time()).getSeconds();
-        return Math.max(seconds, 0);
-    }
-
-    private void closeExpiredAuctionsSafely() {
+    private void manageAuctionSchedulesSafely() {
         try {
-            closeExpiredAuctions();
+            manageAuctionSchedules();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error while checking expired auctions", e);
+            LOGGER.log(Level.SEVERE, "Error while managing auction schedules", e);
         }
     }
 
-    private void closeExpiredAuctions() {
-        List<Auction> activeAuctions = auctionRepository.getActiveAuctions();
+    private void manageAuctionSchedules() {
+        // 1. Kiểm tra và mở các phiên đấu giá đã đến giờ (Từ WAITING -> RUNNING)
+        List<Auction> waitingAuctions = auctionRepository.getWaitingAuctions();
+        for (Auction auction : waitingAuctions) {
+            if (auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
+                boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
+                if (updated) {
+                    auction.setStatus(RUNNING_STATUS);
+                    LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
+                    // Nếu cần, có thể broadcast "AUCTION_START" tương tự như "AUCTION_END"
+                }
+            }
+        }
 
+        // 2. Kiểm tra và đóng các phiên đấu giá đã hết hạn (Từ RUNNING -> FINISHED)
+        List<Auction> activeAuctions = auctionRepository.getActiveAuctions();
         for (Auction auction : activeAuctions) {
             if (!isExpired(auction)) {
                 continue;

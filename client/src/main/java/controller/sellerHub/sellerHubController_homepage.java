@@ -24,6 +24,7 @@ import model.User;
 import network.ClientSocket;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 public class sellerHubController_homepage {
     @FXML
@@ -203,19 +204,29 @@ public class sellerHubController_homepage {
 
             String prdPrice = aic.getPrice();
             String startTime = aic.getTime();
-            String auction_choice = aic.getChoice();
+            String duration = aic.getDuration();
 
-            if (prdPrice.isBlank() || startTime.isBlank() || auction_choice == null) {
+            // Kiểm tra các trường trống (Đặc biệt là startTime do DatePicker có thể null)
+            if (prdPrice == null || prdPrice.isBlank() || startTime == null || startTime.isBlank() || duration == null) {
                 Status.setVisible(true);
                 Status.setManaged(true);
                 Status.setTextFill(Color.RED);
-                Status.setText("Information missing");
+                Status.setText("Vui lòng điền đầy đủ giá khởi điểm và thời gian bắt đầu!");
+                return;
+            }
+            
+            // Kiểm tra xem thời lượng có hợp lệ không (phải lớn hơn 0)
+            if (aic.isDurationZero()) {
+                Status.setVisible(true);
+                Status.setManaged(true);
+                Status.setTextFill(Color.RED);
+                Status.setText("Vui lòng chọn thời lượng đấu giá lớn hơn 0!");
                 return;
             }
 
             currentDraft.setPrice(prdPrice);
             currentDraft.setStartTime(startTime);
-            currentDraft.setAuctionChoice(auction_choice);
+            currentDraft.setDuration(duration);
 
             boolean isSaved = pushToDatabase(currentDraft);
 
@@ -229,7 +240,7 @@ public class sellerHubController_homepage {
                 Status.setVisible(true);
                 Status.setManaged(true);
                 Status.setTextFill(Color.RED);
-                Status.setText("Lỗi kết nối cơ sở dữ liệu!");
+                Status.setText("Lỗi: Không thể kết nối cơ sở dữ liệu hoặc thời gian không hợp lệ!");
             }
         } else if (currentSubController instanceof prdOverview) {
             loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
@@ -268,11 +279,48 @@ public class sellerHubController_homepage {
 
             Auction newAuction = new Auction();
             newAuction.setCurrent_price(newItem.getStarting_price());
-            newAuction.setStatus("RUNNING");
             newAuction.setHighest_bidder_id(0);
 
-            newAuction.setStart_time(java.time.LocalDateTime.now());
-            newAuction.setEnd_time(java.time.LocalDateTime.now().plusDays(3));
+            // =========================================================
+            // CHUYỂN ĐỔI CHUỖI THỜI GIAN TỪ CLIENT THÀNH LOCALDATETIME
+            // =========================================================
+            LocalDateTime startDateTime = null;
+            LocalDateTime endDateTime = null;
+
+            try {
+                // Parse startTime (Ví dụ: "2024-05-03 14:30")
+                String[] parts = draft.getStartTime().split(" ");
+                String[] dateParts = parts[0].split("-");
+                String[] timeParts = parts[1].split(":");
+                
+                int sYear = Integer.parseInt(dateParts[0]);
+                int sMonth = Integer.parseInt(dateParts[1]);
+                int sDay = Integer.parseInt(dateParts[2]);
+                int sHour = Integer.parseInt(timeParts[0]);
+                int sMinute = Integer.parseInt(timeParts[1]);
+                
+                startDateTime = LocalDateTime.of(sYear, sMonth, sDay, sHour, sMinute);
+
+                // Parse duration (Ví dụ: "3 hours 30 mins")
+                String[] durParts = draft.getDuration().split(" ");
+                int dHour = Integer.parseInt(durParts[0]);
+                int dMinute = Integer.parseInt(durParts[2]);
+                
+                endDateTime = startDateTime.plusHours(dHour).plusMinutes(dMinute);
+            } catch (Exception ex) {
+                System.err.println("Lỗi khi parse thời gian: " + ex.getMessage());
+                return false; // Hủy lưu nếu parse thời gian bị lỗi
+            }
+
+            newAuction.setStart_time(startDateTime);
+            newAuction.setEnd_time(endDateTime);
+
+            // Gán trạng thái ban đầu dựa vào thời gian bắt đầu
+            if (startDateTime.isAfter(LocalDateTime.now())) {
+                newAuction.setStatus("WAITING"); // Phiên chưa tới giờ
+            } else {
+                newAuction.setStatus("RUNNING"); // Phiên bắt đầu ngay lập tức
+            }
 
             Object[] payload = new Object[]{ newItem, newAuction };
 
