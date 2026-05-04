@@ -67,3 +67,14 @@
     -fx-tick-mark-visible: false;
     -fx-tick-labels-visible: false;
 }
+
+.btn {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #ff8e1f;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-border-width: 1px;
+}
+.btn:hover {
+    -fx-background-color: #2e2e2e;
+}
