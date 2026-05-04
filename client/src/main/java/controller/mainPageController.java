@@ -38,9 +38,13 @@ public class mainPageController {
     @FXML
     private ImageView bidHub;
 
-
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
     private static mainPageController instance;
+    
+    // Lưu lại controller đang được hiển thị để gọi hàm refresh khi có broadcast
+    private customSearchController currentCustomSearchController;
+    private prdPageController currentPrdPageController;
+
     public static mainPageController getInstance() {
         return instance;
     }
@@ -58,19 +62,40 @@ public class mainPageController {
         }
         instance = this;
         updateAvatarUI();
-        prdPagePane.setVisible(false);
 
-        //load prd_card
-        String fxmlPath = "/view/prd_preview.fxml";
-        fillProductCard(prd1, fxmlPath, "iPhone 15 Pro Max", 1000000, 3666);
-        fillProductCard(prd2, fxmlPath, "Bàn phím cơ Custom", 1000000,  3665);
-        fillProductCard(prd3, fxmlPath, "Chuột Logitech G Pro", 1000000, 3665);
-        fillProductCard(prd4, fxmlPath, "Màn hình Dell Ultrasharp", 1000000, 3665);
-        fillProductCard(prd5, fxmlPath, "Tai nghe Sony WH-1000XM5", 1000000, 3665);
-        fillProductCard(prd6, fxmlPath, "Card đồ họa RTX 4090", 1000000, 3665);
+        // --------------------------------------------------------
+        // LOAD GIAO DIỆN TÌM KIẾM MẶC ĐỊNH VÀO prdPagePane
+        // VÀ ẨN NÚT FILTER
+        // --------------------------------------------------------
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
+            Parent customSearchNode = loader.load();
+
+            currentCustomSearchController = loader.getController();
+            if (currentCustomSearchController != null) {
+                currentCustomSearchController.hideFilterButton(); // Ẩn nút filter theo yêu cầu
+                // Load dữ liệu mặc định (tất cả sản phẩm) từ Database
+                currentCustomSearchController.setSearchCriteria(null); 
+            }
+
+            // Đánh dấu là đang mở bảng tìm kiếm
+            currentPrdPageController = null; 
+
+            prdPagePane.getChildren().setAll(customSearchNode);
+            prdPagePane.setVisible(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi: Không load được file customSearch.fxml làm mặc định");
+        }
+
+        // --------------------------------------------------------
+        // Đã bỏ việc load các sản phẩm fix cứng vào prd1, prd2... 
+        // Vì giờ đây danh sách sẽ được load tự động từ Database vào prdPagePane.
+        // --------------------------------------------------------
     }
 
-    public void fillProductCard(StackPane container, String fxmlPath, String name, long price, long time) {
+    public void fillProductCard(StackPane container, String fxmlPath, String name, long price, long time, String imgPath, String description, String status) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent node = loader.load();
@@ -78,10 +103,10 @@ public class mainPageController {
             prd_previewController controller = loader.getController();
 
             if (controller != null) {
-                controller.setData(name, price, time, null);
+                controller.setData(name, price, time, imgPath, status);
 
                 controller.setOnBidAction(() -> {
-                    fillProductPage(name, price, time);
+                    fillProductPage(name, price, time, imgPath, description, status);
                 });
             }
 
@@ -101,11 +126,12 @@ public class mainPageController {
             Parent customSearchNode = loader.load();
 
             // Lấy controller của trang customSearch
-            customSearchController controller = loader.getController();
+            currentCustomSearchController = loader.getController();
+            currentPrdPageController = null; // Đánh dấu không ở trang chi tiết
 
             // TRUYỀN DỮ LIỆU SANG TRANG CUSTOM SEARCH
-            if (controller != null && criteria != null) {
-                controller.setSearchCriteria(criteria);
+            if (currentCustomSearchController != null && criteria != null) {
+                currentCustomSearchController.setSearchCriteria(criteria);
             }
 
             // Nhét giao diện vào StackPane và hiển thị
@@ -118,26 +144,38 @@ public class mainPageController {
         }
     }
 
-    public void fillProductPage(String name, long price, long time) {
+    public void fillProductPage(String name, long price, long time, String imgPath, String description, String status) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
             Parent prdPageNode = loader.load();
 
             // Lấy controller của trang chi tiết
-            prdPageController controller = loader.getController();
+            currentPrdPageController = loader.getController();
+            currentCustomSearchController = null; // Đánh dấu không ở trang tìm kiếm
 
-            if (controller != null) {
-                // Đẩy dữ liệu sang trang chi tiết
-                controller.setData(name, price, time, null);
+            if (currentPrdPageController != null) {
+                // Đẩy dữ liệu sang trang chi tiết (kèm theo ảnh, mô tả và trạng thái)
+                currentPrdPageController.setData(name, price, time, imgPath, description, status);
             }
 
             // Hiển thị trang chi tiết lên (đè lên hoặc thay thế nội dung)
-            // Giả sử bạn muốn dùng chính cái prd1 để hiển thị hoặc một vùng lớn hơn
             prdPagePane.getChildren().setAll(prdPageNode);
             prdPagePane.setVisible(true);
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    // Hàm gọi khi nhận được tín hiệu Broadcast từ mạng (tự động load lại dữ liệu)
+    public void refreshData() {
+        if (currentCustomSearchController != null) {
+            currentCustomSearchController.refresh();
+        } else if (currentPrdPageController != null) {
+            // Tương lai: có thể thiết kế để lấy lại thông tin 1 sản phẩm cụ thể
+            System.out.println("Đang làm mới trang chi tiết sản phẩm...");
+            // Về cơ bản cần ID sản phẩm để kéo lại từ Server, hiện tại ta có thể quay lại trang search
+            handleBidHub(null);
         }
     }
 
@@ -180,7 +218,6 @@ public class mainPageController {
         // Hỏi "bộ nhớ" xem hiện tại có ai đang đăng nhập không?
         if (SessionManager.getInstance().isBidder()) {
             // Đã đăng nhập: Viền xanh lá
-            // Hoặc nếu bạn dùng CSS: avatarBorder.setStyle("-fx-border-color: green;");
             userAvatar.setStroke(Color.GREEN);
             User user = SessionManager.getInstance().getCurrentUser();
             System.out.println("Logged In: " + user.getUsername());
@@ -192,7 +229,25 @@ public class mainPageController {
     }
 
     public void handleBidHub(MouseEvent event) {
-        prdPagePane.setVisible(false);
+        // Thay vì ẩn prdPagePane như cũ, ta load lại danh sách mặc định
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
+            Parent customSearchNode = loader.load();
+
+            currentCustomSearchController = loader.getController();
+            currentPrdPageController = null;
+
+            if (currentCustomSearchController != null) {
+                currentCustomSearchController.hideFilterButton();
+                currentCustomSearchController.setSearchCriteria(null);
+            }
+
+            prdPagePane.getChildren().setAll(customSearchNode);
+            prdPagePane.setVisible(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void handleCustomSearch(ActionEvent event) {

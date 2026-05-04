@@ -136,38 +136,6 @@ public class filterController {
         String highPrice = highest.getText().trim();
         String id = auctionID.getText().trim();
 
-        // 2. KIỂM TRA TÌNH TRẠNG CHỌN
-        boolean hasCategory = isAnySelected(categoryBtns);
-        boolean hasPrice = isAnySelected(priceBtns);
-        boolean hasStatus = isAnySelected(statusBtns);
-        boolean hasManualPrice = !lowPrice.isEmpty() || !highPrice.isEmpty();
-        boolean hasId = !id.isEmpty();
-
-        boolean hasAnySelection = hasCategory || hasPrice || hasStatus || hasManualPrice || hasId;
-
-        // ==========================================
-        // 3. XỬ LÝ NẾU KHÔNG CÓ GÌ ĐƯỢC CHỌN (BÁO LỖI)
-        // ==========================================
-        if (!hasAnySelection) {
-            String oldStyle = status.getStyle();
-            status.setStyle("-fx-text-fill: #ff4d4d; -fx-font-weight: bold;");
-
-            PauseTransition pause = new PauseTransition(Duration.seconds(2));
-            pause.setOnFinished(e -> status.setStyle(oldStyle));
-            pause.play();
-
-            return;
-        }
-
-        // ==========================================
-        // 4. XỬ LÝ ĐÓNG GÓI DỮ LIỆU & CHUYỂN CẢNH
-        // ==========================================
-        System.out.println("\n========= KẾT QUẢ BỘ LỌC =========");
-        printGroupSelection("Danh mục (Categories)", categoryBtns);
-        printGroupSelection("Mức giá (Price Range)", priceBtns);
-        printGroupSelection("Trạng thái (Status)", statusBtns);
-        System.out.println("==================================\n");
-
         // TẠO DTO ĐÓNG GÓI DỮ LIỆU TÌM KIẾM
         SearchCriteria criteria = new SearchCriteria();
         criteria.setCategories(getSelectedNames(categoryBtns));
@@ -213,22 +181,5 @@ public class filterController {
             }
         }
         return selected;
-    }
-
-    private void printGroupSelection(String groupName, ToggleButton[] buttons) {
-        System.out.print("[+] " + groupName + ": ");
-        boolean hasSelection = false;
-
-        for (ToggleButton btn : buttons) {
-            if (btn != null && btn.isSelected()) {
-                System.out.print("[" + btn.getText() + "] ");
-                hasSelection = true;
-            }
-        }
-
-        if (!hasSelection) {
-            System.out.print("(Bỏ qua / Chọn tất cả)");
-        }
-        System.out.println();
     }
 }

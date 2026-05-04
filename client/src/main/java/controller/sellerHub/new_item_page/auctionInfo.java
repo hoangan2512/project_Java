@@ -1,10 +1,14 @@
 package controller.sellerHub.new_item_page;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
+import java.util.Locale;
 
 public class auctionInfo {
     @FXML
@@ -25,9 +29,46 @@ public class auctionInfo {
         duration_m.setValue("0");
         start_h.setValue("0");
         start_m.setValue("0");
+
+        // Gắn hiệu ứng định dạng tiền tệ cho ô nhập giá
+        addCurrencyFormat(prdPrice);
     }
 
-    public String getPrice() { return prdPrice.getText(); }
+    private void addCurrencyFormat(TextField textField) {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
+        symbols.setGroupingSeparator('.');
+        DecimalFormat formatter = new DecimalFormat("#,###", symbols);
+
+        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null || newValue.isEmpty()) return;
+
+            // Xóa bỏ tất cả các ký tự không phải là số
+            String numericString = newValue.replaceAll("[^\\d]", "");
+            if (numericString.isEmpty()) {
+                textField.setText("");
+                return;
+            }
+
+            try {
+                long value = Long.parseLong(numericString);
+                String formattedString = formatter.format(value);
+
+                if (!newValue.equals(formattedString)) {
+                    textField.setText(formattedString);
+                    Platform.runLater(() -> textField.positionCaret(formattedString.length()));
+                }
+            } catch (NumberFormatException e) {
+                textField.setText(oldValue);
+            }
+        });
+    }
+
+    // Trả về chuỗi số nguyên chất (đã loại bỏ dấu chấm) để hệ thống xử lý logic
+    public String getPrice() { 
+        String text = prdPrice.getText();
+        if (text == null) return "";
+        return text.replaceAll("\\.", "");
+    }
     
     // Gộp ngày và giờ bắt đầu thành 1 chuỗi
     public String getTime() { 
@@ -49,6 +90,17 @@ public class auctionInfo {
     public void setDraftData(ProductDraftDTO draft) {
         if (draft == null) return;
 
-        if (draft.getPrice() != null) prdPrice.setText(draft.getPrice());
+        if (draft.getPrice() != null) {
+            // Khi load lại draft, ta cũng format lại giá tiền
+            try {
+                long value = Long.parseLong(draft.getPrice().replaceAll("\\.", ""));
+                DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
+                symbols.setGroupingSeparator('.');
+                DecimalFormat formatter = new DecimalFormat("#,###", symbols);
+                prdPrice.setText(formatter.format(value));
+            } catch (NumberFormatException e) {
+                prdPrice.setText(draft.getPrice());
+            }
+        }
     }
 }

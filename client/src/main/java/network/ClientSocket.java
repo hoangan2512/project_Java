@@ -8,6 +8,7 @@ import javafx.application.Platform;
 
 import message.Request;
 import message.Response;
+import controller.mainPageController;
 
 public class ClientSocket {
     private static final String SERVER_IP = "localhost"; // tạo IP
@@ -50,7 +51,7 @@ public class ClientSocket {
                     Response res = (Response) in.readObject();
 
                     String status = res.getStatus();
-                    if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status)) {
+                    if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status) || "AUCTION_START".equals(status)) {
                         Platform.runLater(() -> handleBroadcast(res));
                     } else {
                         responseQueue.put(res);
@@ -90,7 +91,12 @@ public class ClientSocket {
     }
 
     private static void handleBroadcast(Response res) {
-        System.out.println("[BROADCAST TỪ SERVER]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
+        System.out.println("[Server message]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
+        
+        // Tự động làm mới UI
+        if (mainPageController.getInstance() != null) {
+            mainPageController.getInstance().refreshData();
+        }
     }
 
     public static void disconnect() {
