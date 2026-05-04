@@ -34,7 +34,7 @@ public class prd_previewController {
     private Timeline countdownTimer;
     private long remainingSeconds;
 
-    public void setData(String name, long price, long time, String imagePath) {
+    public void setData(String name, long price, long time, String imagePath, String status) {
         if (prdName != null) {
             prdName.setText(name);
         }
@@ -52,28 +52,64 @@ public class prd_previewController {
         }
         // --- KẾT THÚC ĐỊNH DẠNG ---
 
-        // --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN (COUNTDOWN) ---
+        // --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN & TRẠNG THÁI ---
         this.remainingSeconds = time;
-        
-        if (countdownTimer != null) {
-            countdownTimer.stop();
-        }
+        if (countdownTimer != null) countdownTimer.stop();
 
-        updateTimeLabel(); // Cập nhật hiển thị ngay lập tức
-
-        if (remainingSeconds > 0) {
-            countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-                remainingSeconds--;
-                updateTimeLabel();
-                
-                if (remainingSeconds <= 0) {
-                    countdownTimer.stop();
-                    handleAuctionEnd();
+        if ("WAITING".equals(status) || "UPCOMING".equals(status)) {
+            updateUpcomingTimeLabel();
+            if (remainingSeconds > 0) {
+                countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                    remainingSeconds--;
+                    updateUpcomingTimeLabel();
+                    if (remainingSeconds <= 0) {
+                        countdownTimer.stop();
+                        if (auctionStatus != null) auctionStatus.setText("Started - refreshing...");
+                        if (Bid != null) {
+                            Bid.setDisable(false);
+                            Bid.setText("Bid");
+                        }
+                    }
+                }));
+                countdownTimer.setCycleCount(Timeline.INDEFINITE);
+                countdownTimer.play();
+            } else {
+                if (auctionStatus != null) auctionStatus.setText("ĐÃ BẮT ĐẦU");
+                if (Bid != null) {
+                    Bid.setDisable(false);
+                    Bid.setText("Vào xem");
                 }
-            }));
-            countdownTimer.setCycleCount(Timeline.INDEFINITE);
-            countdownTimer.play();
+            }
+            
+            if (Bid != null) {
+                Bid.setText("Upcoming");
+                // Tùy chọn: có thể khóa nút hoặc vẫn cho người dùng vào xem trang chi tiết
+                // Bid.setDisable(true); 
+            }
+
+        } else if ("RUNNING".equals(status)) {
+            updateTimeLabel();
+            if (Bid != null) {
+                Bid.setDisable(false);
+                Bid.setText("Bắt đầu Bid");
+            }
+
+            if (remainingSeconds > 0) {
+                countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                    remainingSeconds--;
+                    updateTimeLabel();
+                    if (remainingSeconds <= 0) {
+                        countdownTimer.stop();
+                        handleAuctionEnd();
+                    }
+                }));
+                countdownTimer.setCycleCount(Timeline.INDEFINITE);
+                countdownTimer.play();
+            } else {
+                handleAuctionEnd();
+            }
         } else {
+            // FINISHED
             handleAuctionEnd();
         }
         // --- KẾT THÚC BỘ ĐẾM THỜI GIAN ---
@@ -103,7 +139,7 @@ public class prd_previewController {
     }
     
     private void updateTimeLabel() {
-        if (auctionStatus != null && remainingSeconds > 0) {
+        if (auctionStatus != null && remainingSeconds >= 0) {
             long hours = remainingSeconds / 3600;
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
@@ -111,13 +147,24 @@ public class prd_previewController {
             auctionStatus.setText(timeString);
         }
     }
+
+    private void updateUpcomingTimeLabel() {
+        if (auctionStatus != null && remainingSeconds >= 0) {
+            long hours = remainingSeconds / 3600;
+            long minutes = (remainingSeconds % 3600) / 60;
+            long seconds = remainingSeconds % 60;
+            String timeString = String.format("Upcoming: %02d:%02d:%02d", hours, minutes, seconds);
+            auctionStatus.setText(timeString);
+        }
+    }
     
     private void handleAuctionEnd() {
         if (auctionStatus != null) {
-            auctionStatus.setText("ĐÃ KẾT THÚC");
+            auctionStatus.setText("Ended");
         }
         if (Bid != null) {
-            Bid.setDisable(true); // Khóa nút đấu giá nếu đã kết thúc
+            Bid.setText("Ended");
+            // Vẫn cho phép vào xem trang chi tiết để xem ai thắng, nhưng nút Bid ở trong sẽ bị khóa
         }
     }
 

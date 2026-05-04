@@ -162,7 +162,7 @@ public class prdPageController {
         });
     }
 
-    public void setData(String name, long price, long time, String imagePath, String description) {
+    public void setData(String name, long price, long time, String imagePath, String description, String status) {
         // 1. Set tên sản phẩm
         if (prdName != null) {
             prdName.setText(name);
@@ -176,43 +176,81 @@ public class prdPageController {
             currentPrice.setText(formatter.format(price) + " VNĐ");
         }
 
-        // 3. --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN (COUNTDOWN) ---
+        // 3. --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN & TRẠNG THÁI ---
         this.remainingSeconds = time;
-        
-        if (countdownTimer != null) {
-            countdownTimer.stop();
-        }
+        if (countdownTimer != null) countdownTimer.stop();
 
-        updateTimeLabel(); // Cập nhật hiển thị ngay lập tức
-
-        if (remainingSeconds > 0) {
-            countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-                remainingSeconds--;
-                updateTimeLabel();
-                
-                if (remainingSeconds <= 0) {
-                    countdownTimer.stop();
-                    handleAuctionEnd();
+        if ("WAITING".equals(status) || "UPCOMING".equals(status)) {
+            updateUpcomingTimeLabel();
+            if (remainingSeconds > 0) {
+                countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                    remainingSeconds--;
+                    updateUpcomingTimeLabel();
+                    if (remainingSeconds <= 0) {
+                        countdownTimer.stop();
+                        if (timeLeft != null) timeLeft.setText("Started - refreshing...");
+                        if (Bid != null) {
+                            Bid.setDisable(false);
+                            Bid.setText("Bid");
+                        }
+                        if (bidAmount != null) bidAmount.setDisable(false);
+                    }
+                }));
+                countdownTimer.setCycleCount(Timeline.INDEFINITE);
+                countdownTimer.play();
+            } else {
+                if (timeLeft != null) timeLeft.setText("Started - refreshing...");
+                if (Bid != null) {
+                    Bid.setDisable(false);
+                    Bid.setText("Bid");
                 }
-            }));
-            countdownTimer.setCycleCount(Timeline.INDEFINITE);
-            countdownTimer.play();
+                if (bidAmount != null) bidAmount.setDisable(false);
+            }
+            
+            // Khóa nút đặt giá trong lúc chờ
+            if (Bid != null) {
+                Bid.setDisable(true);
+                Bid.setText("Upcoming");
+            }
+            if (bidAmount != null) bidAmount.setDisable(true);
+
+        } else if ("RUNNING".equals(status)) {
+            updateTimeLabel();
+            if (Bid != null) {
+                Bid.setDisable(false);
+                Bid.setText("Bid");
+            }
+            if (bidAmount != null) bidAmount.setDisable(false);
+
+            if (remainingSeconds > 0) {
+                countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                    remainingSeconds--;
+                    updateTimeLabel();
+                    if (remainingSeconds <= 0) {
+                        countdownTimer.stop();
+                        handleAuctionEnd();
+                    }
+                }));
+                countdownTimer.setCycleCount(Timeline.INDEFINITE);
+                countdownTimer.play();
+            } else {
+                handleAuctionEnd();
+            }
         } else {
+            // FINISHED hoặc các trạng thái khác
             handleAuctionEnd();
         }
 
-        // 4. Tải ảnh sản phẩm từ DB (thông qua đường dẫn lưu ở server)
+        // 4. Tải ảnh sản phẩm từ DB
         if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
             try {
                 File imgFile = new File("auction-server/src/main/resources" + imagePath);
-                
                 if (imgFile.exists()) {
                     Image img = new Image(imgFile.toURI().toString());
                     prdImage.setPreserveRatio(true);
                     prdImage.setSmooth(true);
                     prdImage.setImage(img);
                 } else {
-                    // Dự phòng nếu ảnh ở trong resource client (các ảnh test cứng)
                     java.io.InputStream is = getClass().getResourceAsStream(imagePath);
                     if (is != null) {
                         prdImage.setPreserveRatio(true);
@@ -230,11 +268,11 @@ public class prdPageController {
             prd_description.setText(description);
         }
 
-        System.out.println("Đã hiển thị chi tiết sản phẩm: " + name);
+        System.out.println("Đã hiển thị chi tiết sản phẩm: " + name + " - Trạng thái: " + status);
     }
     
     private void updateTimeLabel() {
-        if (timeLeft != null && remainingSeconds > 0) {
+        if (timeLeft != null && remainingSeconds >= 0) {
             long hours = remainingSeconds / 3600;
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
@@ -242,10 +280,20 @@ public class prdPageController {
             timeLeft.setText(timeString);
         }
     }
+
+    private void updateUpcomingTimeLabel() {
+        if (timeLeft != null && remainingSeconds >= 0) {
+            long hours = remainingSeconds / 3600;
+            long minutes = (remainingSeconds % 3600) / 60;
+            long seconds = remainingSeconds % 60;
+            String timeString = String.format("Upcoming in: %02d:%02d:%02d", hours, minutes, seconds);
+            timeLeft.setText(timeString);
+        }
+    }
     
     private void handleAuctionEnd() {
         if (timeLeft != null) {
-            timeLeft.setText("This auction has ended.");
+            timeLeft.setText("Ended");
         }
         if (Bid != null) {
             Bid.setDisable(true); // Khóa nút đấu giá nếu đã kết thúc

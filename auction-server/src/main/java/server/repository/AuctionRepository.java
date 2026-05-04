@@ -198,7 +198,8 @@ public class AuctionRepository {
             // Tính toán trước các mốc thời gian để truyền vào SQL an toàn
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
             Timestamp yesterday = Timestamp.valueOf(now.minusDays(1));
-            Timestamp tomorrow = Timestamp.valueOf(now.plusDays(1));
+            Timestamp in30Mins = Timestamp.valueOf(now.plusMinutes(30));
+            Timestamp in1Hour = Timestamp.valueOf(now.plusHours(1));
 
             for (String status : criteria.getStatuses()) {
                 if (!firstStatus) {
@@ -208,16 +209,16 @@ public class AuctionRepository {
                 if ("Bidding".equalsIgnoreCase(status)) {
                     sql.append(" a.status = 'RUNNING' ");
                 } else if ("Newly Listed".equalsIgnoreCase(status)) {
-                    // Mới lên sàn: Đang chạy và bắt đầu trong vòng 24h qua
-                    sql.append(" (a.status = 'RUNNING' AND a.start_time >= ?) ");
-                    parameters.add(yesterday);
-                } else if ("Ending Soon".equalsIgnoreCase(status)) {
-                    // Sắp kết thúc: Đang chạy và sẽ kết thúc trong vòng 24h tới
-                    sql.append(" (a.status = 'RUNNING' AND a.end_time <= ?) ");
-                    parameters.add(tomorrow);
-                } else if ("Upcoming".equalsIgnoreCase(status)) {
-                    // Sắp diễn ra: Trạng thái WAITING
+                    // Yêu cầu mới: "Newly Listed" sẽ liệt kê tất cả auction WAITING
                     sql.append(" a.status = 'WAITING' ");
+                } else if ("Ending Soon".equalsIgnoreCase(status)) {
+                    // Sắp kết thúc: Đang chạy và sẽ kết thúc trong vòng 30 phút tới
+                    sql.append(" (a.status = 'RUNNING' AND a.end_time <= ?) ");
+                    parameters.add(in30Mins);
+                } else if ("Upcoming".equalsIgnoreCase(status)) {
+                    // Sắp diễn ra: Trạng thái WAITING và sẽ mở trong vòng 1 giờ tới
+                    sql.append(" (a.status = 'WAITING' AND a.start_time <= ?) ");
+                    parameters.add(in1Hour);
                 } else if ("Ended".equalsIgnoreCase(status)) {
                     // Đã kết thúc: Trạng thái FINISHED
                     sql.append(" a.status = 'FINISHED' ");
@@ -230,6 +231,9 @@ public class AuctionRepository {
                 firstStatus = false;
             }
             sql.append(") ");
+        } else {
+            // Mặc định khi không chọn status nào: Không hiển thị các phiên đã kết thúc
+            sql.append(" AND a.status != 'FINISHED' ");
         }
 
         // 3. Lọc theo GIÁ HIỆN TẠI (Bảng auctions)
@@ -249,6 +253,13 @@ public class AuctionRepository {
             sql.append(" AND i.categories IN (").append(inSql).append(") ");
             parameters.addAll(criteria.getCategories());
         }
+
+        // 5. Thêm điều kiện sắp xếp
+        // Ưu tiên RUNNING (sắp kết thúc nhất), sau đó đến WAITING (sắp bắt đầu nhất), cuối cùng là các trạng thái khác
+        sql.append(" ORDER BY ");
+        sql.append("CASE a.status WHEN 'RUNNING' THEN 1 WHEN 'WAITING' THEN 2 ELSE 3 END ASC, ");
+        sql.append("CASE a.status WHEN 'RUNNING' THEN a.end_time ELSE a.start_time END ASC");
+
 
         System.out.println("SQL đang thực thi: " + sql.toString());
 

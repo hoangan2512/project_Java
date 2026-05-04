@@ -104,7 +104,7 @@ public class AuctionTimeManager implements AutoCloseable {
                 if (updated) {
                     auction.setStatus(RUNNING_STATUS);
                     LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
-                    // Nếu cần, có thể broadcast "AUCTION_START" tương tự như "AUCTION_END"
+                    notifyAuctionStarted(auction); // Phát Broadcast cho Client biết phiên đã bắt đầu
                 }
             }
         }
@@ -123,6 +123,15 @@ public class AuctionTimeManager implements AutoCloseable {
                 LOGGER.log(Level.INFO, "Auction {0} finished automatically.", auction.getId());
             }
         }
+    }
+
+    private void notifyAuctionStarted(Auction auction) {
+        Response response = new Response(
+                "AUCTION_START",
+                auction,
+                "Auction has started."
+        );
+        AuctionServer.broadcast(response);
     }
 
     private void notifyAuctionFinished(Auction auction) {
