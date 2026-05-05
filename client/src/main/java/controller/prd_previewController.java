@@ -48,7 +48,7 @@ public class prd_previewController {
             DecimalFormat formatter = new DecimalFormat("###,###", symbols);
             String formattedPrice = formatter.format(price);
 
-            currentPrice.setText(formattedPrice + " VNĐ");
+            currentPrice.setText(formattedPrice + " ₫");
         }
         // --- KẾT THÚC ĐỊNH DẠNG ---
 
@@ -64,20 +64,26 @@ public class prd_previewController {
                     updateUpcomingTimeLabel();
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
-                        if (auctionStatus != null) auctionStatus.setText("Started - refreshing...");
+                        if (auctionStatus != null) {
+                            auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+                            auctionStatus.setText("Started - refreshing...");
+                        }
                         if (Bid != null) {
                             Bid.setDisable(false);
-                            Bid.setText("Bid");
+                            Bid.setText("Start Biddding");
                         }
                     }
                 }));
                 countdownTimer.setCycleCount(Timeline.INDEFINITE);
                 countdownTimer.play();
             } else {
-                if (auctionStatus != null) auctionStatus.setText("ĐÃ BẮT ĐẦU");
+                if (auctionStatus != null) {
+                    auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+                    auctionStatus.setText("Started - refreshing...");
+                }
                 if (Bid != null) {
                     Bid.setDisable(false);
-                    Bid.setText("Vào xem");
+                    Bid.setText("Start Biddding");
                 }
             }
             
@@ -91,7 +97,7 @@ public class prd_previewController {
             updateTimeLabel();
             if (Bid != null) {
                 Bid.setDisable(false);
-                Bid.setText("Bắt đầu Bid");
+                Bid.setText("Start Bidding");
             }
 
             if (remainingSeconds > 0) {
@@ -144,6 +150,7 @@ public class prd_previewController {
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
             String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+            auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
             auctionStatus.setText(timeString);
         }
     }
@@ -154,12 +161,14 @@ public class prd_previewController {
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
             String timeString = String.format("Upcoming: %02d:%02d:%02d", hours, minutes, seconds);
+            auctionStatus.setStyle("-fx-background-color: grey; -fx-background-radius: 10px");
             auctionStatus.setText(timeString);
         }
     }
     
     private void handleAuctionEnd() {
         if (auctionStatus != null) {
+            auctionStatus.setStyle("-fx-background-color: black; -fx-background-radius: 10px;  -fx-text-fill: grey;");
             auctionStatus.setText("Ended");
         }
         if (Bid != null) {

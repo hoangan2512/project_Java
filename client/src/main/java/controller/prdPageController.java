@@ -173,7 +173,7 @@ public class prdPageController {
             DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
             symbols.setGroupingSeparator('.');
             DecimalFormat formatter = new DecimalFormat("###,###", symbols);
-            currentPrice.setText(formatter.format(price) + " VNĐ");
+            currentPrice.setText(formatter.format(price) + " ₫");
         }
 
         // 3. --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN & TRẠNG THÁI ---
