@@ -95,11 +95,17 @@ public class ClientHandler implements Runnable {
 
             // --- CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION) ---
             case CREATE_ITEM:
+                if (!checkAuthorization("SELLER")) {
+                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+                }
+                return itemController.handleCreateItem(request);
+                
             case CHECK_DUPLICATE_NAME:
                 if (!checkAuthorization("SELLER")) {
                     return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
                 }
-                return itemController.handleCreateItem(request); // Bạn sẽ cần gọi handleCheckDuplicateName riêng nếu cần
+                // Điều hướng đúng hàm để tránh lỗi ClassCastException
+                return itemController.handleCheckDuplicateName(request);
 
             case BID:
                 if (!checkAuthorization("BIDDER")) {

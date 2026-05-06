@@ -78,3 +78,47 @@
 .btn:hover {
     -fx-background-color: #2e2e2e;
 }
+
+.filter-btn {
+    -fx-background-color: #a15c12;
+    -fx-text-fill: black;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+    -fx-padding: 5px 20px;
+    -fx-font-weight: bold;
+}
+
+.filter-btn:hover {
+    -fx-background-color: #d68518;
+}
+
+.filter-btn:selected {
+    -fx-background-color: #ff8e1f;
+    -fx-text-fill: black;
+}
+
+.filter-btn:selected:hover {
+    -fx-background-color: #ffa447;
+}
+
+.auto-bid-btn {
+    -fx-background-color: grey;
+    -fx-text-fill: black;
+    -fx-background-radius: 20px;
+    -fx-cursor: hand;
+    -fx-padding: 5px 20px;
+    -fx-font-weight: bold;
+}
+
+.auto-bid-btn:hover {
+    -fx-background-color: #979797;
+}
+
+.auto-bid-btn:selected {
+    -fx-background-color: #3dd35b;
+    -fx-text-fill: black;
+}
+
+.auto-bid-btn:selected:hover {
+    -fx-background-color: #5fff00;
+}
