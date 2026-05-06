@@ -15,19 +15,15 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle;
 import javafx.util.Duration;
-import model.User;
 
 import java.io.IOException;
-import java.util.function.UnaryOperator;
 
 public class prdPageController {
 
@@ -53,6 +49,24 @@ public class prdPageController {
     private NumberAxis xAxis;
     @FXML
     private NumberAxis yAxis;
+    
+    // Các nút Toggle chuyển tab
+    @FXML
+    private ToggleButton description_btn;
+    @FXML
+    private ToggleButton price_chart_btn;
+    @FXML
+    private ToggleButton auto_bid_btn;
+    
+    // Nút trạng thái Auto-bid bên trong tab Auto-bid
+    @FXML
+    private ToggleButton auto_bid_status_btn;
+    
+    // Các Pane hiển thị nội dung tương ứng
+    @FXML
+    private AnchorPane priceC;
+    @FXML
+    private AnchorPane auto_bid;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
     private Timeline countdownTimer;
@@ -60,9 +74,73 @@ public class prdPageController {
 
     public void initialize() {
         addCurrencyFormat(bidAmount);
-        // price_chart
+        
+        // --- LOGIC CHUYỂN TAB (MÔ TẢ / BIỂU ĐỒ / AUTO-BID) ---
+        // Thiết lập mặc định ban đầu: Bật tab Mô tả
+        if (description_btn != null) description_btn.setSelected(true);
+        if (price_chart_btn != null) price_chart_btn.setSelected(false);
+        if (auto_bid_btn != null) auto_bid_btn.setSelected(false);
+        updatePanelsVisibility();
+
+        // Gán sự kiện khi click vào các nút tab
+        if (description_btn != null) {
+            description_btn.setOnAction(e -> {
+                description_btn.setSelected(true); // Ép luôn bật nếu bị click
+                if (price_chart_btn != null) price_chart_btn.setSelected(false);
+                if (auto_bid_btn != null) auto_bid_btn.setSelected(false);
+                updatePanelsVisibility();
+            });
+        }
+        
+        if (price_chart_btn != null) {
+            price_chart_btn.setOnAction(e -> {
+                price_chart_btn.setSelected(true);
+                if (description_btn != null) description_btn.setSelected(false);
+                if (auto_bid_btn != null) auto_bid_btn.setSelected(false);
+                updatePanelsVisibility();
+            });
+        }
+        
+        if (auto_bid_btn != null) {
+            auto_bid_btn.setOnAction(e -> {
+                auto_bid_btn.setSelected(true);
+                if (description_btn != null) description_btn.setSelected(false);
+                if (price_chart_btn != null) price_chart_btn.setSelected(false);
+                updatePanelsVisibility();
+            });
+        }
+
+        // --- LOGIC ĐỔI MÀU NÚT TRẠNG THÁI AUTO-BID ---
+        if (auto_bid_status_btn != null) {
+            if (auto_bid_status_btn.isSelected()) {
+                auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: #3dd35b;"); // Xanh lá cây
+                auto_bid_status_btn.setText("Active");
+            } else {
+                auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: grey;"); // Xám
+                auto_bid_status_btn.setText("Inactive");
+            }
+            
+            auto_bid_status_btn.setOnAction(e -> {
+                if (auto_bid_status_btn.isSelected()) {
+                    auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: #3dd35b;"); // Xanh lá cây
+                    auto_bid_status_btn.setText("Active");
+                } else {
+                    auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: grey;"); // Xám
+                    auto_bid_status_btn.setText("Inactive");
+                }
+            });
+        }
     }
 
+    private void updatePanelsVisibility() {
+        boolean showDesc = description_btn != null && description_btn.isSelected();
+        boolean showChart = price_chart_btn != null && price_chart_btn.isSelected();
+        boolean showAutoBid = auto_bid_btn != null && auto_bid_btn.isSelected();
+
+        prd_description.setVisible(showDesc);
+        priceC.setVisible(showChart);
+        auto_bid.setVisible(showAutoBid);
+    }
 
     public void handleBidBtn(MouseEvent event) throws IOException {
         if (SessionManager.getInstance().isBidder()) {
@@ -103,37 +181,30 @@ public class prdPageController {
     private long getRealPrice(TextField textField) {
         String text = textField.getText();
 
-        // Nếu ô trống thì mặc định trả về 0
         if (text == null || text.trim().isEmpty()) {
             return 0;
         }
 
-        // Xóa toàn bộ dấu chấm
         String cleanString = text.replaceAll("\\.", "");
 
         try {
-            // Ép thành kiểu Long (Dùng Long thay vì Int để chứa được tiền Tỷ)
             return Long.parseLong(cleanString);
         } catch (NumberFormatException e) {
             System.err.println("Lỗi ép kiểu số: " + cleanString);
-            return 0; // Trả về 0 nếu có lỗi bất ngờ
+            return 0; 
         }
     }
 
     private void addCurrencyFormat(TextField textField) {
-        // Cấu hình format số kiểu Việt Nam (dấu chấm phân cách hàng nghìn)
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
         symbols.setGroupingSeparator('.');
         DecimalFormat formatter = new DecimalFormat("#,###", symbols);
 
-        // Lắng nghe mọi sự thay đổi text trong ô nhập
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
-            // Nếu ô trống thì bỏ qua
             if (newValue == null || newValue.isEmpty()) {
                 return;
             }
 
-            // 1. Xóa bỏ tất cả các ký tự không phải là số (bảo vệ khỏi việc nhập chữ)
             String numericString = newValue.replaceAll("[^\\d]", "");
 
             if (numericString.isEmpty()) {
@@ -142,33 +213,24 @@ public class prdPageController {
             }
 
             try {
-                // 2. Ép kiểu thành số Long (Dùng Long để chứa được tiền Tỷ)
                 long value = Long.parseLong(numericString);
-
-                // 3. Format lại thành chuỗi có dấu chấm (VD: 1000000 -> 1.000.000)
                 String formattedString = formatter.format(value);
 
-                // 4. Nếu text mới khác với text đang hiển thị thì cập nhật lại
                 if (!newValue.equals(formattedString)) {
                     textField.setText(formattedString);
-
-                    // 5. Đẩy con trỏ chuột về cuối cùng để gõ liên tục không bị ngược
                     Platform.runLater(() -> textField.positionCaret(formattedString.length()));
                 }
             } catch (NumberFormatException e) {
-                // Nếu nhập số quá lớn (vượt quá giới hạn Long), chặn lại bằng cách giữ giá trị cũ
                 textField.setText(oldValue);
             }
         });
     }
 
-    public void setData(String name, long price, long time, String imagePath, String description, String status) {
-        // 1. Set tên sản phẩm
+    public void setData(String name, long price, long time, String imagePath, String descriptionText, String status) {
         if (prdName != null) {
             prdName.setText(name);
         }
 
-        // 2. Định dạng và set giá tiền
         if (currentPrice != null) {
             DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
             symbols.setGroupingSeparator('.');
@@ -176,7 +238,6 @@ public class prdPageController {
             currentPrice.setText(formatter.format(price) + " ₫");
         }
 
-        // 3. --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN & TRẠNG THÁI ---
         this.remainingSeconds = time;
         if (countdownTimer != null) countdownTimer.stop();
 
@@ -188,7 +249,7 @@ public class prdPageController {
                     updateUpcomingTimeLabel();
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
-                        if (timeLeft != null) timeLeft.setText("Started - refreshing...");
+                        if (timeLeft != null) timeLeft.setText("Started - Refreshing...");
                         if (Bid != null) {
                             Bid.setDisable(false);
                             Bid.setText("Bid");
@@ -199,7 +260,7 @@ public class prdPageController {
                 countdownTimer.setCycleCount(Timeline.INDEFINITE);
                 countdownTimer.play();
             } else {
-                if (timeLeft != null) timeLeft.setText("Started - refreshing...");
+                if (timeLeft != null) timeLeft.setText("Started - Refreshing...");
                 if (Bid != null) {
                     Bid.setDisable(false);
                     Bid.setText("Bid");
@@ -207,7 +268,6 @@ public class prdPageController {
                 if (bidAmount != null) bidAmount.setDisable(false);
             }
             
-            // Khóa nút đặt giá trong lúc chờ
             if (Bid != null) {
                 Bid.setDisable(true);
                 Bid.setText("Upcoming");
@@ -237,14 +297,13 @@ public class prdPageController {
                 handleAuctionEnd();
             }
         } else {
-            // FINISHED hoặc các trạng thái khác
             handleAuctionEnd();
         }
 
-        // 4. Tải ảnh sản phẩm từ DB
         if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
             try {
                 File imgFile = new File("auction-server/src/main/resources" + imagePath);
+                
                 if (imgFile.exists()) {
                     Image img = new Image(imgFile.toURI().toString());
                     prdImage.setPreserveRatio(true);
@@ -259,16 +318,15 @@ public class prdPageController {
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Không thể hiển thị ảnh chi tiết từ: " + imagePath);
+                System.out.println("Cannot find image: " + imagePath);
             }
         }
         
-        // 5. Hiển thị mô tả sản phẩm
-        if (prd_description != null && description != null) {
-            prd_description.setText(description);
+        if (prd_description != null && descriptionText != null) {
+            prd_description.setText(descriptionText);
         }
 
-        System.out.println("Đã hiển thị chi tiết sản phẩm: " + name + " - Trạng thái: " + status);
+        System.out.println("Displaying: " + name + " - Auction Status: " + status);
     }
     
     private void updateTimeLabel() {
@@ -296,11 +354,11 @@ public class prdPageController {
             timeLeft.setText("Ended");
         }
         if (Bid != null) {
-            Bid.setDisable(true); // Khóa nút đấu giá nếu đã kết thúc
+            Bid.setDisable(true);
             Bid.setText("Ended");
         }
         if (bidAmount != null) {
-            bidAmount.setDisable(true); // Khóa ô nhập giá
+            bidAmount.setDisable(true);
         }
     }
 }
