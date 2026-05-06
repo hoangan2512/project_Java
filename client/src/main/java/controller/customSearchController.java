@@ -171,7 +171,8 @@ public class customSearchController {
     @FXML
     private void handleFilter(ActionEvent event) {
         try {
-            sceneSwitcher.openFilter();
+            // Truyền bộ lọc hiện tại vào popup Filter để khôi phục trạng thái nút bấm
+            sceneSwitcher.openFilter(currentCriteria);
         } catch (IOException e) {
             e.printStackTrace();
         }
