@@ -97,7 +97,7 @@ public class filterController {
             if (criteria.getStatuses().contains("Newly Listed")) newly_listed.setSelected(true);
             if (criteria.getStatuses().contains("Ending Soon")) ending_soon.setSelected(true);
             if (criteria.getStatuses().contains("Upcoming")) upcoming.setSelected(true);
-            if (criteria.getStatuses().contains("Ended")) ended.setSelected(true);
+            if (criteria.getStatuses().contains("FINISHED")) ended.setSelected(true);
         }
 
         // Khôi phục ID
@@ -231,7 +231,11 @@ public class filterController {
         List<String> selected = new ArrayList<>();
         for (ToggleButton btn : buttons) {
             if (btn != null && btn.isSelected()) {
-                selected.add(btn.getText().trim());
+                if (btn == ended) {
+                    selected.add("FINISHED");
+                } else {
+                    selected.add(btn.getText().trim());
+                }
             }
         }
         return selected;

@@ -99,10 +99,10 @@ public class customSearchController {
                         
                         String finalStatus = status;
 
-                        // Bỏ qua các auction bị ép kết thúc bởi UI NẾU người dùng không chủ động chọn xem "Ended" trong bộ lọc
+                        // Bỏ qua các auction bị ép kết thúc bởi UI NẾU người dùng không chủ động chọn xem "FINISHED" trong bộ lọc
                         if ("FINISHED".equals(finalStatus)) {
                             List<String> selectedStatuses = currentCriteria.getStatuses();
-                            if (selectedStatuses == null || !selectedStatuses.contains("Ended")) {
+                            if (selectedStatuses == null || !selectedStatuses.contains("FINISHED")) {
                                 continue; // Bỏ qua không vẽ thẻ sản phẩm này lên màn hình
                             }
                         }
