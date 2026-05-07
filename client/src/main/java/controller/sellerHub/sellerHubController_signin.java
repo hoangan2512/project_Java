@@ -115,7 +115,7 @@ public class sellerHubController_signin {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Username existed");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Username existed");
         }
     }
 
@@ -138,7 +138,9 @@ public class sellerHubController_signin {
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
-            if ("SELLER".equalsIgnoreCase(userFromServer.getRole())) {
+            
+            // Sửa lỗi: Cập nhật kiểm tra vai trò để cho phép BOTH
+            if ("SELLER".equalsIgnoreCase(userFromServer.getRole()) || "BOTH".equalsIgnoreCase(userFromServer.getRole())) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: green;");
@@ -163,7 +165,7 @@ public class sellerHubController_signin {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("This is not a seller account");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Login Failed");
         }
 
     }

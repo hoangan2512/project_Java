@@ -3,35 +3,43 @@ package server.repository;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class DatabaseConnection {
     private static DatabaseConnection instance;
-    private static Connection conn;
-    private String url = "jdbc:sqlite:auction_db.db";
+
+    // Đảm bảo database được lưu vào một file cố định trong thư mục project
+    private static final String DB_FILE_PATH = "./auction_db.db";
+    private static final String URL = "jdbc:sqlite:" + DB_FILE_PATH;
 
     private DatabaseConnection() {
         try {
             Class.forName("org.sqlite.JDBC");
-            this.conn = DriverManager.getConnection(url);
-
-            // CHUYỂN DÒNG NÀY VÀO ĐÂY
-            File dbFile = new File("auction_db.db");
-            System.out.println("Database khởi tạo tại: " + dbFile.getAbsolutePath());
-
-        } catch (Exception e) {
-            System.err.println("Lỗi kết nối DB trong Constructor!");
+            File dbFile = new File(DB_FILE_PATH);
+            System.out.println("Database is persistent at: " + dbFile.getAbsolutePath());
+        } catch (ClassNotFoundException e) {
+            System.err.println("FATAL: SQLite JDBC driver not found!");
             e.printStackTrace();
+            throw new RuntimeException("Failed to initialize database driver.", e);
         }
     }
 
-    public static DatabaseConnection getInstance() {
+    public static synchronized DatabaseConnection getInstance() {
         if (instance == null) {
             instance = new DatabaseConnection();
         }
         return instance;
     }
 
-    public static Connection getConnection() {
-        return conn;
+    // Quan trọng: Trả về một Connection mới mỗi khi được gọi thay vì dùng chung 1 connection.
+    // Điều này giúp tránh lỗi "Connection closed" khi dùng try-with-resources.
+    public Connection getConnection() {
+        try {
+            return DriverManager.getConnection(URL);
+        } catch (SQLException e) {
+            System.err.println("Failed to establish connection.");
+            e.printStackTrace();
+            throw new RuntimeException("Could not connect to database.", e);
+        }
     }
 }

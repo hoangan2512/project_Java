@@ -104,7 +104,7 @@ public class signInController {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Username existed");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Username existed");
         }
     }
 
@@ -128,8 +128,8 @@ public class signInController {
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
 
-            // The client-side check is still useful for immediate feedback
-            if ("BIDDER".equalsIgnoreCase(userFromServer.getRole())) {
+            // Sửa lỗi: Cập nhật kiểm tra vai trò để cho phép BOTH
+            if ("BIDDER".equalsIgnoreCase(userFromServer.getRole()) || "BOTH".equalsIgnoreCase(userFromServer.getRole())) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: green;");
@@ -151,7 +151,7 @@ public class signInController {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("This is not a bidder account");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Login Failed");
         }
 
     }
