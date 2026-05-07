@@ -12,6 +12,20 @@ import java.util.logging.Logger;
 public class UserRepository {
     private static final Logger LOGGER = Logger.getLogger(UserRepository.class.getName());
 
+    public boolean isUserExists(String username) {
+        String sql = "SELECT 1 FROM users WHERE username = ?";
+        Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng (tức là user đã tồn tại)
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error checking if user exists: " + username, e);
+            return true; // Giả sử tồn tại để tránh tạo mới nếu có lỗi DB
+        }
+    }
+
     public boolean addUser(User user) {
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
         // KHÔNG dùng try-with-resources cho Connection ở đây vì nó sẽ đóng connection chung của DatabaseConnection
