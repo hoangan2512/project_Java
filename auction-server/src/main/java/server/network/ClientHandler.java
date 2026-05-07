@@ -82,13 +82,14 @@ public class ClientHandler implements Runnable {
                 return loginResponse;
 
             case REGISTER:
-            Response registerResponse = userController.handleRegister(request);
-            // Nếu đăng ký thành công, hệ thống tự động đăng nhập (lưu Session) luôn cho User đó
-            if ("SUCCESS".equals(registerResponse.getStatus()) && registerResponse.getData() instanceof User) {
-                this.loggedInUser = (User) registerResponse.getData();
-                System.out.println("=> Đã tự động ghi nhận Session sau khi đăng ký cho user: " + loggedInUser.getName());
-            }
-            return registerResponse;
+                Response registerResponse = userController.handleRegister(request);
+                // Nếu đăng ký thành công, hệ thống tự động đăng nhập (lưu Session) luôn cho User đó
+                if ("SUCCESS".equals(registerResponse.getStatus()) && registerResponse.getData() instanceof User) {
+                    this.loggedInUser = (User) registerResponse.getData();
+                    System.out.println("=> Đã tự động ghi nhận Session sau khi đăng ký cho user: " + loggedInUser.getName());
+                }
+                return registerResponse;
+
             case LOGOUT:
                 if (this.loggedInUser != null) {
                     System.out.println("=> Client ngắt Session (Logout): " + this.loggedInUser.getName());
@@ -109,7 +110,7 @@ public class ClientHandler implements Runnable {
                 if (!checkAuthorization("SELLER")) {
                     return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
                 }
-                // Điều hướng đúng hàm để tránh lỗi ClassCastException
+                // Điều hướng đúng về hàm kiểm tra trùng lặp (tránh lỗi ClassCastException)
                 return itemController.handleCheckDuplicateName(request);
 
             case BID:
@@ -140,7 +141,7 @@ public class ClientHandler implements Runnable {
     /**
      * Hàm phụ trợ để kiểm tra xem Client này đã đăng nhập chưa và có đúng vai trò yêu cầu không.
      */
-    private boolean checkAuthorization(String expectedRole) {   //session manager
+    private boolean checkAuthorization(String expectedRole) {
         if (this.loggedInUser == null) {
             return false; // Chưa đăng nhập
         }
