@@ -195,13 +195,10 @@ public class mainPageController {
         if (searchText == null || searchText.trim().isEmpty()) {
             searchBar.requestFocus();
         } else {
-            System.out.println("searching");
-            try {
-                sceneSwitcher.switchToPrdPage(event);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("Lỗi chuyển cảnh");
-            }
+            System.out.println("searching: " + searchText);
+            SearchCriteria criteria = new SearchCriteria();
+            criteria.setKeyword(searchText.trim());
+            loadCustomSearchPane(criteria);
         }
     }
 

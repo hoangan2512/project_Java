@@ -8,6 +8,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Comparator;
 
 
 public class AuctionRepository {
@@ -253,7 +254,7 @@ public class AuctionRepository {
             sql.append(" AND i.categories IN (").append(inSql).append(") ");
             parameters.addAll(criteria.getCategories());
         }
-
+        
         // 5. Thêm điều kiện sắp xếp
         // Ưu tiên RUNNING (sắp kết thúc nhất), sau đó đến WAITING (sắp bắt đầu nhất), cuối cùng là các trạng thái khác
         sql.append(" ORDER BY ");
@@ -308,6 +309,85 @@ public class AuctionRepository {
             e.printStackTrace();
         }
 
+        // Lọc bằng binary search trên list nếu có keyword
+        if (criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) {
+            return searchByKeywordBinarySearch(resultList, criteria.getKeyword());
+        }
+
         return resultList;
+    }
+
+    private List<Auction> searchByKeywordBinarySearch(List<Auction> sourceList, String keyword) {
+        if (sourceList == null || sourceList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String searchKey = keyword.toLowerCase();
+
+        // 1. Sao chép và sắp xếp list theo tên sản phẩm (bắt buộc cho binary search)
+        List<Auction> sortedList = new ArrayList<>(sourceList);
+        sortedList.sort(Comparator.comparing(a -> a.getItem() != null && a.getItem().getName() != null ? a.getItem().getName().toLowerCase() : ""));
+
+        // 2. Sử dụng Binary Search để tìm index của một phần tử bắt đầu bằng keyword (Prefix Match)
+        int left = 0;
+        int right = sortedList.size() - 1;
+        int foundIndex = -1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            String midName = sortedList.get(mid).getItem() != null && sortedList.get(mid).getItem().getName() != null 
+                    ? sortedList.get(mid).getItem().getName().toLowerCase() 
+                    : "";
+
+            // Kiểm tra xem nó có bắt đầu bằng searchKey không
+            if (midName.startsWith(searchKey)) {
+                foundIndex = mid;
+                // Nếu ta muốn tìm kiếm prefix (starts with), ta nên tiếp tục tìm về bên trái để lấy phần tử đầu tiên
+                right = mid - 1;
+            } else if (midName.compareTo(searchKey) < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        List<Auction> result = new ArrayList<>();
+        
+        // 3. Nếu tìm thấy một phần tử bằng Binary Search (Prefix Match), mở rộng sang phải để lấy tất cả
+        if (foundIndex != -1) {
+            int i = foundIndex;
+            while (i < sortedList.size()) {
+                String name = sortedList.get(i).getItem() != null && sortedList.get(i).getItem().getName() != null 
+                        ? sortedList.get(i).getItem().getName().toLowerCase() : "";
+                if (name.startsWith(searchKey)) {
+                    result.add(sortedList.get(i));
+                } else {
+                    break; // Do đã sort, nếu phần tử tiếp theo không bắt đầu bằng keyword, thì các phần tử sau cũng vậy
+                }
+                i++;
+            }
+        }
+        
+        // 4. Vì yêu cầu thực tế thường là tìm kiếm "chứa" (contains),
+        // và Binary Search CHỈ chạy đúng cho tìm kiếm "bắt đầu bằng" (prefix match) trên mảng đã sắp xếp,
+        // nếu danh sách Prefix rỗng, ta sử dụng Linear Search dự phòng cho "chứa" (contains) để đảm bảo UX không bị lỗi.
+        if (result.isEmpty()) {
+            for (Auction a : sourceList) {
+                String name = a.getItem() != null && a.getItem().getName() != null ? a.getItem().getName().toLowerCase() : "";
+                if (name.contains(searchKey) && !name.startsWith(searchKey)) { // Tránh trùng lặp nếu nó đã được thêm bằng Prefix Match
+                    result.add(a);
+                }
+            }
+        } else {
+             // Kết hợp thêm các kết quả "contains" (không phải prefix) vào cuối list nếu có kết quả Prefix
+             for (Auction a : sourceList) {
+                String name = a.getItem() != null && a.getItem().getName() != null ? a.getItem().getName().toLowerCase() : "";
+                if (name.contains(searchKey) && !name.startsWith(searchKey)) { 
+                    result.add(a);
+                }
+            }
+        }
+
+        return result;
     }
 }

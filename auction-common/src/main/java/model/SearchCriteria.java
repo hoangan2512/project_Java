@@ -9,6 +9,7 @@ public class SearchCriteria implements Serializable {
     private long maxPrice;
     private List<String> statuses;
     private String auctionId;
+    private String keyword; // Thêm keyword cho tìm kiếm
 
     // Constructor mặc định
     public SearchCriteria() {
@@ -56,5 +57,13 @@ public class SearchCriteria implements Serializable {
 
     public void setAuctionId(String auctionId) {
         this.auctionId = auctionId;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
     }
 }
