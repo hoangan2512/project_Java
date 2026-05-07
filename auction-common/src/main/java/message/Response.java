@@ -4,10 +4,10 @@ import java.io.Serializable; //gui du lieu qua Socket
 
 public class Response implements Serializable {
     private String status;
-    private String data;
+    private Object data;
     private String message;
-
-    public void responeAction(String status, String data, String message) {
+    public Response() {} //để UserController không bị lỗi
+    public Response(String status, Object data, String message) {
         this.status = status;
         this.message = message;
         this.data = data;
@@ -19,16 +19,16 @@ public class Response implements Serializable {
     public void setStatus(String status){
     this.status=status;
     }
-    public String getData(){
+    public Object getData(){
         return data;
     }
-    public void setData(){
+    public void setData(Object data){
         this.data=data;
     }
-    public void setMessage(String s){
+    public void setMessage(String message){
         this.message=message;
     }
     public String getMessage(){
      return message;
     }
-}
+    }

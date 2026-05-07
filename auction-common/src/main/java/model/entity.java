@@ -1,9 +1,13 @@
 package model;
 
+import java.io.Serializable;
+
 // lớp cơ sở
-abstract class entity {
+abstract class entity implements Serializable {
+    private static final long serialVersionUID = 1L;
     protected int id;
     protected String name;
+
     public entity(int id, String name){
         this.id = id;
         this.name = name;

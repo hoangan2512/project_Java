@@ -1,16 +1,17 @@
-.btn_main {
-    -fx-border-color: #ff9800;
-    -fx-border-width: 0 0 3 0;
+.btn-bid {
+    -fx-background-color: #ff8e1f;
+    -fx-background-radius: 30px;
     -fx-cursor: hand;
-}
-.btn {
-    -fx-border-color: transparent;
-    -fx-border-width: 0 0 3 0;
-    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
 }
 
-.btn:hover {
-    -fx-border-color: #ffffff;
+.btn-bid:hover {
+    -fx-background-color: #ffa447;
+    -fx-background-radius: 30px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
 }
 
 .context-menu {
@@ -31,7 +32,7 @@
 
 .prd_img {
     -fx-border-width: 3 3 3 3;
-    -fx-border-color: #ff9800
+    -fx-border-color: transparent;
 }
 
 .priceField {
@@ -65,4 +66,59 @@
 .custom-price-chart .axis {
     -fx-tick-mark-visible: false;
     -fx-tick-labels-visible: false;
+}
+
+.btn {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #ff8e1f;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-border-width: 1px;
+}
+.btn:hover {
+    -fx-background-color: #2e2e2e;
+}
+
+.filter-btn {
+    -fx-background-color: #a15c12;
+    -fx-text-fill: black;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+    -fx-padding: 5px 20px;
+    -fx-font-weight: bold;
+}
+
+.filter-btn:hover {
+    -fx-background-color: #d68518;
+}
+
+.filter-btn:selected {
+    -fx-background-color: #ff8e1f;
+    -fx-text-fill: black;
+}
+
+.filter-btn:selected:hover {
+    -fx-background-color: #ffa447;
+}
+
+.auto-bid-btn {
+    -fx-background-color: grey;
+    -fx-text-fill: black;
+    -fx-background-radius: 20px;
+    -fx-cursor: hand;
+    -fx-padding: 5px 20px;
+    -fx-font-weight: bold;
+}
+
+.auto-bid-btn:hover {
+    -fx-background-color: #979797;
+}
+
+.auto-bid-btn:selected {
+    -fx-background-color: #3dd35b;
+    -fx-text-fill: black;
+}
+
+.auto-bid-btn:selected:hover {
+    -fx-background-color: #5fff00;
 }

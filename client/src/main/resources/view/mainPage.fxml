@@ -13,28 +13,28 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@mainpage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.mainPageController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@mainpage.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.mainPageController">
    <children>
       <AnchorPane prefHeight="90.0" prefWidth="1280.0" style="-fx-background-color: #1E1E1E;">
          <children>
-            <ImageView fitHeight="44.0" fitWidth="115.0" layoutX="60.0" layoutY="23.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="bidHub" fitHeight="44.0" fitWidth="115.0" layoutX="60.0" layoutY="23.0" onMouseClicked="#handleBidHub" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
                <image>
                   <Image url="@../image/project_logo.jpg" />
                </image>
             </ImageView>
-            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1227.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="19.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
+            <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1227.0" layoutY="45.0" onMouseClicked="#handleAvatarClick" radius="19.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand; -fx-stroke-width: 2px;" />
             <TextField fx:id="searchBar" layoutX="371.0" layoutY="27.0" prefHeight="37.0" prefWidth="441.0" promptText="Search BidHub" style="-fx-background-radius: 30px; -fx-background-color: #2b2b2b; -fx-text-fill: white;">
                <padding>
                   <Insets left="15.0" />
                </padding>
             </TextField>
             <Circle fx:id="searchBtn" fill="#ff8e1f" layoutX="347.0" layoutY="45.0" onMouseClicked="#handleSearchBtnClick" radius="16.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
-            <Button fx:id="CustomSearch" layoutX="830.0" layoutY="29.0" mnemonicParsing="false" prefHeight="32.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Custom Search">
+            <Button fx:id="CustomSearch" layoutX="830.0" layoutY="29.0" mnemonicParsing="false" onAction="#handleCustomSearch" prefHeight="32.0" prefWidth="126.0" styleClass="action-btn-search" text="Custom Search">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-            <Button fx:id="SellerHub" layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" onMouseClicked="#handleSellerHub" prefHeight="31.0" prefWidth="126.0" style="-fx-background-color: #ff8e1f; -fx-background-radius: 30px; -fx-cursor: hand;" text="Go to SellerHub">
+            <Button fx:id="SellerHub" layoutX="1061.0" layoutY="30.0" mnemonicParsing="false" onMouseClicked="#handleSellerHub" prefHeight="31.0" prefWidth="126.0" styleClass="action-btn-search" text="Go to SellerHub">
                <font>
                   <Font name="System Bold" size="12.0" />
                </font>
@@ -51,6 +51,7 @@
                 <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Art" />
                 <MenuItem mnemonicParsing="false" text="Electronics" />
                   <MenuItem mnemonicParsing="false" text="Vehicle" />
+                  <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Real estate" />
               </items>
                <font>
                   <Font name="System Bold" size="12.0" />
@@ -96,5 +97,6 @@
       <StackPane fx:id="prd4" layoutX="70.0" layoutY="450.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
       <StackPane fx:id="prd5" layoutX="470.0" layoutY="450.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
       <StackPane fx:id="prd6" layoutX="870.0" layoutY="450.0" prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #ffffff;" />
+      <StackPane fx:id="prdPagePane" layoutY="133.0" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #ffffff;" visible="false" />
    </children>
 </AnchorPane>

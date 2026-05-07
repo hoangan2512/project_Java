@@ -1,128 +1,156 @@
-//Tạo lớp quản lí client thuộc mỗi luồng
 package server.network;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import  java.util.*;
-import  message.Request;
+
+import message.Request;
 import message.Response;
 import model.ActionType;
+import model.User;
+import server.controller.AuctionController;
+import server.controller.BidController;
+import server.controller.ItemController;
+import server.controller.UserController;
 
 public class ClientHandler implements Runnable {
     private Socket socket;
-    private ObjectInputStream in;   //Luồng vào
-    private ObjectOutputStream out;  //Luồng ra
-   //Constructor: nhận socket từ auctionserver
-    public ClientHandler(Socket socket){
-        this.socket=socket;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+
+    // --- BIẾN QUẢN LÝ SESSION (PHIÊN ĐĂNG NHẬP) ---
+    private User loggedInUser = null;
+
+    // Gọi các Controller ra để làm việc
+    private UserController userController = new UserController();
+    private ItemController itemController = new ItemController();
+    private BidController bidController = new BidController();
+    private AuctionController auctionController = new AuctionController();
+
+    public ClientHandler(Socket socket) {
+        this.socket = socket;
     }
-    private void closeEverything(){ //Hàm ngắt kết nối với Client không còn kết nối(tắt mạng/app)
-        AuctionServer.clients.remove(this); //loại bỏ ClientHandler ra khỏi danh sách, tránh Server cố gắng gửi thông báo tới kết nối này giảm khả năng bị lỗi hệ thống.
-    try{
-        //Đóng các luồng mạng
-        if (in!=null){
-            in.close();
+
+    private void closeEverything() {
+        AuctionServer.clients.remove(this);
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        if (out!=null){
-            out.close();
-        }
-        if (socket != null){
-            socket.close();
-        }
-    }catch (IOException ioException){
-        ioException.printStackTrace();
     }
-    }
+
     @Override
-    public void run(){
-        try{
-            out=new ObjectOutputStream(socket.getOutputStream());
-            in=new ObjectInputStream(socket.getInputStream());
-            //Vòng lặp vô hạn để duy trì kết nối
-            while (true){
-                //1.Nhận yêu cầu từ người dùng.
-                // Đọc gói tin request từ client. readObject() sẽ tạm dừng luồng cho đến khi có tin nhắn tới.
-            Request request = (Request) in.readObject();
-                System.out.println("Nhập yêu cầu đầu vào: "+ request.getAction());
-            //2.Xử lý logic- Dựa vào ActionType(LOGIN,LOGOUT,GET_BID,...) để quyết định làm gì.
-                Response response=handleBusinessLogic(request);
+    public void run() {
+        try {
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            while (true) {
+                Request request = (Request) in.readObject();
+                System.out.println("Nhận yêu cầu: " + request.getAction() + " từ Client: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
+
+                // Giao việc cho hàm chia chọn
+                Response response = handleBusinessLogic(request);
+
                 out.writeObject(response);
-                out.flush(); //liên tục đẩy dữ liệu ra khỏi bộ đệm
+                out.flush();
             }
-        }
-        catch (IOException | ClassNotFoundException exception){
-            System.err.println("Người dùng "+socket.getInetAddress()+"đã ngắt kết nối tới máy chủ");
-        }
-        finally {
-            closeEverything(); //Đóng tất cả các luồng
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Một Client đã ngắt kết nối. User: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
+        } finally {
+            closeEverything();
         }
     }
-    //Hàm xử lí request
-    private Response handleBusinessLogic(Request request){
-        Response response=new Response();
-        ActionType type =request.getAction();   //
-    switch(type){
-        case LOGIN:
-            response.setStatus("SUCCESS");
-            response.setMessage("Chào mừng quý khách " + request.getPayload() + " đã trở lại");
-            break;
 
-        case LOGOUT:
-            response.setStatus("SUCCESS");
-            response.setMessage("Đăng xuất tài khoản thành công: " + request.getPayload());
-            break;
+    // BỘ PHẬN ĐIỀU HƯỚNG (ROUTER)
+    private Response handleBusinessLogic(Request request) {
+        ActionType type = request.getAction();
 
-        case REGISTER:
-            response.setStatus("SUCCESS");
-            response.setMessage("Đăng ký thành công!: " + request.getPayload());
-            break;
+        switch (type) {
+            case LOGIN_BIDDER:
+            case LOGIN_SELLER:
+                Response loginResponse = userController.handleLogin(request);
+                // Nếu đăng nhập thành công, lưu lại thông tin user vào ClientHandler
+                if ("SUCCESS".equals(loginResponse.getStatus()) && loginResponse.getData() instanceof User) {
+                    this.loggedInUser = (User) loginResponse.getData();
+                    System.out.println("=> Đã ghi nhận Session cho user: " + loggedInUser.getName());
+                }
+                return loginResponse;
 
-        case BID:
-            response.setStatus("SUCCESS");
-            response.setMessage("Đặt giá mới thành công: " + request.getPayload());
-           //Thong bao cap nhap gia cho nhung nguoi dung khac
-            Response notifyPrice = new Response();
-            notifyPrice.setStatus("NOTIFY");
-            notifyPrice.setMessage("Giá mới của vật phẩm: " + request.getPayload());
-            //Gửi cho everyone
-            AuctionServer.broadcast(notifyPrice);
-            break;
+            case REGISTER:
+                return userController.handleRegister(request);
 
-        case GET_LIST:
-            response.setStatus("SUCCESS");
-            response.setMessage("Danh sách các vật phẩm đang đấu giá đã được tải.");
-            break;
+            case LOGOUT:
+                if (this.loggedInUser != null) {
+                    System.out.println("=> Client ngắt Session (Logout): " + this.loggedInUser.getName());
+                } else {
+                    System.out.println("=> Một Client ẩn danh vừa gửi yêu cầu Logout.");
+                }
+                this.loggedInUser = null; // Xóa session khi logout
+                return new Response("SUCCESS", null, "Đăng xuất thành công.");
 
-        case GET_ITEM_DETAIL:
-            response.setStatus("SUCCESS");
-            response.setMessage("Thông tin chi tiết vật phẩm: " + request.getPayload());
-            break;
+            // --- CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION) ---
+            case CREATE_ITEM:
+                if (!checkAuthorization("SELLER")) {
+                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+                }
+                return itemController.handleCreateItem(request);
+                
+            case CHECK_DUPLICATE_NAME:
+                if (!checkAuthorization("SELLER")) {
+                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+                }
+                // Điều hướng đúng hàm để tránh lỗi ClassCastException
+                return itemController.handleCheckDuplicateName(request);
 
-        case NOTIFY_NEW_PRICE:
-            response.setStatus("NOTIFY");
-            response.setMessage("Có người vừa đặt giá mới: " + request.getPayload());
-            break;
+            case BID:
+                if (!checkAuthorization("BIDDER")) {
+                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
+                }
+                // Tại đây, bạn có thể (và nên) ép buộc Request lấy ID của loggedInUser để đảm bảo an toàn, thay vì tin tưởng ID mà client gửi lên
+                return bidController.handleBid(request);
 
-        case AUCTION_END:
-            // Thông báo kết thúc phiên đấu giá
-            response.setStatus("SUCCESS");
-            response.setMessage("Phiên đấu giá đã kết thúc! Người thắng cuộc là: " + request.getPayload());
-            break;
+            // --- CÁC HÀNH ĐỘNG CÔNG KHAI (KHÔNG CẦN ĐĂNG NHẬP ĐỂ XEM) ---
+            case GET_BID_HISTORY:
+                return bidController.handleGetBidHistory(request);
+            case GET_LIST:
+                return auctionController.handleGetList(request);
+            case GET_ITEM_DETAIL:
+                return auctionController.handleGetItemDetail(request);
+            case CUSTOM_SEARCH:
+                return auctionController.handleCustomSearch(request);
+                
+            case AUCTION_END: // Cái này nên chỉ cho hệ thống gọi (từ AuctionTimeManager), Client gọi sẽ bị chặn. Bạn nên chặn ở đây.
+                return new Response("FAIL", null, "Client không có quyền kết thúc phiên đấu giá.");
 
-        default:
-            response.setStatus("ERROR");
-            response.setMessage("Hành động không xác định.");
+            default:
+                return new Response("ERROR", null, "hành động không xác định: " + type);
+        }
     }
-    return response;
+
+    /**
+     * Hàm phụ trợ để kiểm tra xem Client này đã đăng nhập chưa và có đúng vai trò yêu cầu không.
+     */
+    private boolean checkAuthorization(String expectedRole) {
+        if (this.loggedInUser == null) {
+            return false; // Chưa đăng nhập
+        }
+        if (expectedRole != null && !expectedRole.equalsIgnoreCase(this.loggedInUser.getRole())) {
+            return false; // Sai vai trò (Ví dụ: Seller cố gọi hàm Bid)
+        }
+        return true;
     }
-    //hàm gửi tin cập nhập giá tự động đến client
-    public void sendMessage(Object msg){
-        try{
+
+    public void sendMessage(Object msg) {
+        try {
             out.writeObject(msg);
-            out.flush(); //đẩy tất cả dữ liệu đến client liên tục
-        }catch (IOException ioException){
-            System.err.println("Không thể gửi tin nhắn tới người dùng này.");
+            out.flush();
+        } catch (IOException e) {
+            System.err.println("Không thể gửi tin nhắn.");
         }
     }
 }

@@ -1,12 +1,19 @@
 package model;
 
 public enum ActionType {
-    LOGIN,
+    LOGIN_BIDDER,
+    LOGIN_SELLER,
+    LOGOUT,
     REGISTER,
     BID,
+    GET_BID_HISTORY,
     GET_LIST,
     GET_ITEM_DETAIL,
-    LOGOUT,
+    CHECK_BALANCE,
+    DEPOSIT,
     NOTIFY_NEW_PRICE,
     AUCTION_END,
+    CREATE_ITEM,
+    CHECK_DUPLICATE_NAME,
+    CUSTOM_SEARCH,
 }
