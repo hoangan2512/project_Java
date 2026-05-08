@@ -94,9 +94,9 @@ public class ClientSocket {
     private static void handleBroadcast(Response res) {
         System.out.println("[Server message]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
         
-        // Tự động làm mới UI
+        // Tự động làm mới UI, truyền luôn Broadcast Response sang để Controller tự quyết định làm gì
         if (mainPageController.getInstance() != null) {
-            mainPageController.getInstance().refreshData();
+            mainPageController.getInstance().refreshData(res);
         }
     }
 

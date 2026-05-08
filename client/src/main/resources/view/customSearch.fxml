@@ -18,7 +18,7 @@
                     </children>
                 </AnchorPane>
 
-                <TilePane fx:id="productGrid" hgap="60.0" style="-fx-padding: 0 0 50 70; -fx-background-color: transparent;" vgap="50.0" />
+                <TilePane fx:id="productGrid" hgap="30.0" style="-fx-padding: 0 0 50 95; -fx-background-color: transparent;" vgap="50.0" />
 
             </children>
         </VBox>

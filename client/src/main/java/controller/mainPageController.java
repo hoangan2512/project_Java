@@ -15,7 +15,8 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import model.SearchCriteria;
 import model.User;
-import controller.prdPageController;
+import model.Auction;
+import message.Response;
 
 import java.io.IOException;
 
@@ -31,8 +32,6 @@ public class mainPageController {
     private Button CustomSearch;
     @FXML
     private Button SellerHub;
-    @FXML
-    private StackPane prd1, prd2, prd3, prd4, prd5, prd6;
     @FXML
     private StackPane prdPagePane;
     @FXML
@@ -93,31 +92,6 @@ public class mainPageController {
         }
     }
 
-    public void fillProductCard(StackPane container, String fxmlPath, String name, long price, long time, String imgPath, String description, String status) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent node = loader.load();
-
-            prd_previewController controller = loader.getController();
-
-            if (controller != null) {
-                controller.setData(name, price, time, imgPath, status);
-
-                controller.setOnBidAction(() -> {
-                    fillProductPage(name, price, time, imgPath, description, status);
-                });
-            }
-
-            container.getChildren().setAll(node);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Lỗi: Không tìm thấy file FXML tại " + fxmlPath);
-        }
-    }
-
-    // Hàm mới: Load giao diện kết quả tìm kiếm vào prdPagePane
-    // Thêm tham số SearchCriteria vào hàm
     public void loadCustomSearchPane(SearchCriteria criteria) {
         this.lastSearchCriteria = criteria; // Lưu lại để dùng cho chức năng "Quay lại"
         
@@ -144,7 +118,7 @@ public class mainPageController {
         }
     }
 
-    public void fillProductPage(String name, long price, long time, String imgPath, String description, String status) {
+    public void fillProductPage(Auction auction, long timeRemaining, String currentStatus) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
             Parent prdPageNode = loader.load();
@@ -155,7 +129,7 @@ public class mainPageController {
 
             if (currentPrdPageController != null) {
                 // Đẩy dữ liệu sang trang chi tiết (kèm theo ảnh, mô tả và trạng thái)
-                currentPrdPageController.setData(name, price, time, imgPath, description, status);
+                currentPrdPageController.setData(auction, timeRemaining, currentStatus);
             }
 
             // Hiển thị trang chi tiết lên (đè lên hoặc thay thế nội dung)
@@ -168,16 +142,20 @@ public class mainPageController {
     }
 
     // Hàm gọi khi nhận được tín hiệu Broadcast từ mạng (tự động load lại dữ liệu)
-    public void refreshData() {
+    public void refreshData(Response res) {
         if (currentCustomSearchController != null) {
             System.out.println("Đang làm mới danh sách sản phẩm...");
             currentCustomSearchController.refresh();
         } else if (currentPrdPageController != null) {
-            // Tương lai: có thể thiết kế để lấy lại thông tin 1 sản phẩm cụ thể
             System.out.println("Đang làm mới trang chi tiết sản phẩm...");
-            // Về cơ bản cần ID sản phẩm để kéo lại từ Server, hiện tại ta có thể quay lại trang search
-            goBackToSearch();
+            // Chuyển thông tin Broadcast sang cho Product Page xử lý (Cập nhật giá hoặc trạng thái)
+            currentPrdPageController.handleBroadcast(res);
         }
+    }
+
+    // Giữ lại hàm cũ phòng trường hợp có nơi gọi
+    public void refreshData() {
+        refreshData(null);
     }
 
     // Hàm xử lý khi bấm vào nút tròn hình người (Avatar)
