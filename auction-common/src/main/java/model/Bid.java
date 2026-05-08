@@ -9,9 +9,9 @@ public class Bid implements Serializable {
     private int id;
     private int auction_id;
     private int bidder_id;
-    private double amount;
+    private long amount;
     private LocalDateTime bid_time;
-    public Bid(int id, int auction_id, int bidder_id, double amount, LocalDateTime bid_time){
+    public Bid(int id, int auction_id, int bidder_id, long amount, LocalDateTime bid_time){
         this.id = id;
         this.auction_id = auction_id;
         this.bidder_id = bidder_id;
@@ -46,11 +46,11 @@ public class Bid implements Serializable {
         this.bidder_id = bidder_id;
     }
 
-    public double getAmount() {
+    public long getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(long amount) {
         this.amount = amount;
     }
 

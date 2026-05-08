@@ -56,7 +56,6 @@ public class AuctionRepository {
         // TODO: Thay thế Singleton bằng Connection Pool
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setInt(1, auction.getItem_id());
             pstmt.setTimestamp(2, Timestamp.valueOf(auction.getStart_time()));
             pstmt.setTimestamp(3, Timestamp.valueOf(auction.getEnd_time()));
@@ -193,6 +192,8 @@ public class AuctionRepository {
         if (criteria.getAuctionId() != null && !criteria.getAuctionId().isEmpty()) {
             sql.append(" AND a.id = ?");
             parameters.add(criteria.getAuctionId());
+            // Có thể return ở đây hoặc không thêm điều kiện status nữa
+            return;
         }
 
         if (criteria.getStatuses() != null && !criteria.getStatuses().isEmpty()) {

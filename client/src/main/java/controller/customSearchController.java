@@ -100,10 +100,16 @@ public class customSearchController {
                         String finalStatus = status;
 
                         // Bỏ qua các auction bị ép kết thúc bởi UI NẾU người dùng không chủ động chọn xem "FINISHED" trong bộ lọc
+                        // NGOẠI TRỪ TRƯỜNG HỢP: Người dùng đang tìm kiếm cụ thể bằng ID. 
+                        // Nếu tìm bằng ID thì luôn hiển thị kết quả bất kể trạng thái nào.
                         if ("FINISHED".equals(finalStatus)) {
-                            List<String> selectedStatuses = currentCriteria.getStatuses();
-                            if (selectedStatuses == null || !selectedStatuses.contains("FINISHED")) {
-                                continue; // Bỏ qua không vẽ thẻ sản phẩm này lên màn hình
+                            boolean isSearchingById = (currentCriteria.getAuctionId() != null && !currentCriteria.getAuctionId().trim().isEmpty());
+                            
+                            if (!isSearchingById) {
+                                List<String> selectedStatuses = currentCriteria.getStatuses();
+                                if (selectedStatuses == null || !selectedStatuses.contains("FINISHED")) {
+                                    continue; // Bỏ qua không vẽ thẻ sản phẩm này lên màn hình
+                                }
                             }
                         }
 
@@ -114,8 +120,6 @@ public class customSearchController {
                         // Lấy tên, ảnh và mô tả từ Item nằm trong Auction
                         String name = (auc.getItem() != null) ? auc.getItem().getName() : "Không tên";
                         String imgPath = (auc.getItem() != null) ? auc.getItem().getImgPath() : null;
-                        String description = (auc.getItem() != null && auc.getItem().getDescription() != null) 
-                                                ? auc.getItem().getDescription() : "Chưa có mô tả cho sản phẩm này.";
 
                         // Lấy giá hiện tại từ Auction
                         long currentPrice = (long) auc.getCurrent_price();
@@ -124,6 +128,7 @@ public class customSearchController {
                         cardController.setData(name, currentPrice, timeLeftSeconds, imgPath, finalStatus);
 
                         // Thêm hành động khi click vào card sẽ mở trang chi tiết sản phẩm
+                        final long finalTimeLeft = timeLeftSeconds;
                         cardController.setOnBidAction(() -> {
                             if (mainPageController.getInstance() != null) {
                                 // Tính lại lần nữa khi click để đảm bảo thời gian cập nhật nhất
@@ -150,7 +155,8 @@ public class customSearchController {
                                     }
                                 }
                                 
-                                mainPageController.getInstance().fillProductPage(name, currentPrice, currentRemaining, imgPath, description, currentStatus);
+                                // Gọi fillProductPage và truyền CẢ ĐỐI TƯỢNG AUCTION
+                                mainPageController.getInstance().fillProductPage(auc, currentRemaining, currentStatus);
                             }
                         });
 
