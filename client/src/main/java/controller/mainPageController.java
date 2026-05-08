@@ -44,6 +44,9 @@ public class mainPageController {
     // Lưu lại controller đang được hiển thị để gọi hàm refresh khi có broadcast
     private customSearchController currentCustomSearchController;
     private prdPageController currentPrdPageController;
+    
+    // Lưu lại bộ lọc gần nhất để khi bấm quay về trang chủ (BidHub logo), nó không bị mất kết quả lọc
+    private SearchCriteria lastSearchCriteria = null;
 
     public static mainPageController getInstance() {
         return instance;
@@ -88,11 +91,6 @@ public class mainPageController {
             e.printStackTrace();
             System.err.println("Lỗi: Không load được file customSearch.fxml làm mặc định");
         }
-
-        // --------------------------------------------------------
-        // Đã bỏ việc load các sản phẩm fix cứng vào prd1, prd2... 
-        // Vì giờ đây danh sách sẽ được load tự động từ Database vào prdPagePane.
-        // --------------------------------------------------------
     }
 
     public void fillProductCard(StackPane container, String fxmlPath, String name, long price, long time, String imgPath, String description, String status) {
@@ -121,6 +119,8 @@ public class mainPageController {
     // Hàm mới: Load giao diện kết quả tìm kiếm vào prdPagePane
     // Thêm tham số SearchCriteria vào hàm
     public void loadCustomSearchPane(SearchCriteria criteria) {
+        this.lastSearchCriteria = criteria; // Lưu lại để dùng cho chức năng "Quay lại"
+        
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
             Parent customSearchNode = loader.load();
@@ -170,12 +170,13 @@ public class mainPageController {
     // Hàm gọi khi nhận được tín hiệu Broadcast từ mạng (tự động load lại dữ liệu)
     public void refreshData() {
         if (currentCustomSearchController != null) {
+            System.out.println("Đang làm mới danh sách sản phẩm...");
             currentCustomSearchController.refresh();
         } else if (currentPrdPageController != null) {
             // Tương lai: có thể thiết kế để lấy lại thông tin 1 sản phẩm cụ thể
             System.out.println("Đang làm mới trang chi tiết sản phẩm...");
             // Về cơ bản cần ID sản phẩm để kéo lại từ Server, hiện tại ta có thể quay lại trang search
-            handleBidHub(null);
+            goBackToSearch();
         }
     }
 
@@ -226,7 +227,9 @@ public class mainPageController {
     }
 
     public void handleBidHub(MouseEvent event) {
-        // Thay vì ẩn prdPagePane như cũ, ta load lại danh sách mặc định
+        // Về trang chủ mặc định: XÓA TOÀN BỘ BỘ LỌC
+        this.lastSearchCriteria = null;
+        
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
             Parent customSearchNode = loader.load();
@@ -236,7 +239,29 @@ public class mainPageController {
 
             if (currentCustomSearchController != null) {
                 currentCustomSearchController.hideFilterButton();
-                currentCustomSearchController.setSearchCriteria(null);
+                currentCustomSearchController.setSearchCriteria(null); 
+            }
+
+            prdPagePane.getChildren().setAll(customSearchNode);
+            prdPagePane.setVisible(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Hàm gọi khi bấm nút Back (Nút <) từ trang chi tiết sản phẩm
+    public void goBackToSearch() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
+            Parent customSearchNode = loader.load();
+
+            currentCustomSearchController = loader.getController();
+            currentPrdPageController = null;
+
+            if (currentCustomSearchController != null) {
+                // Khôi phục lại bộ lọc cũ
+                currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
             }
 
             prdPagePane.getChildren().setAll(customSearchNode);
@@ -249,7 +274,8 @@ public class mainPageController {
 
     public void handleCustomSearch(ActionEvent event) {
         try {
-            sceneSwitcher.openFilter();
+            // Mở bộ lọc trống, không truyền lastSearchCriteria
+            sceneSwitcher.openFilter(null);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Lỗi chuyển cảnh");

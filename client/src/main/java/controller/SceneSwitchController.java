@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import model.SearchCriteria;
 
 import java.io.IOException;
 
@@ -56,11 +57,15 @@ public class SceneSwitchController {
         }
     }
 
-
-
-    public void openFilter() throws IOException {
+    // Hỗ trợ truyền tham số cho bộ lọc
+    public void openFilter(SearchCriteria currentCriteria) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/filter.fxml"));
         Parent root = loader.load();
+
+        filterController controller = loader.getController();
+        if (controller != null && currentCriteria != null) {
+            controller.setInitialCriteria(currentCriteria);
+        }
 
         Stage popupStage = new Stage();
         popupStage.setTitle("BidHub: Search Engine");
@@ -73,6 +78,11 @@ public class SceneSwitchController {
 
         // Hiển thị và đợi người dùng đóng cửa sổ này mới thực hiện code tiếp theo (nếu có)
         popupStage.showAndWait();
+    }
+
+    // Overload cho hàm không tham số để code cũ không lỗi
+    public void openFilter() throws IOException {
+        openFilter(null);
     }
 
     public void openBidded() throws IOException {

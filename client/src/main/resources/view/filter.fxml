@@ -71,5 +71,10 @@
             </Button>
          </children>
       </AnchorPane>
+      <Button fx:id="clear_btn" alignment="CENTER" layoutX="26.0" layoutY="467.0" mnemonicParsing="false" onAction="#handleClearBtn" prefHeight="30.0" prefWidth="125.0" style="-fx-border-color: red;" styleClass="action-btn-back" text="Clear All" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Button>
    </children>
 </AnchorPane>

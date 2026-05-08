@@ -49,6 +49,8 @@ public class prdPageController {
     private NumberAxis xAxis;
     @FXML
     private NumberAxis yAxis;
+    @FXML
+    private Button backBtn;
     
     // Các nút Toggle chuyển tab
     @FXML
@@ -137,9 +139,16 @@ public class prdPageController {
         boolean showChart = price_chart_btn != null && price_chart_btn.isSelected();
         boolean showAutoBid = auto_bid_btn != null && auto_bid_btn.isSelected();
 
-        prd_description.setVisible(showDesc);
-        priceC.setVisible(showChart);
-        auto_bid.setVisible(showAutoBid);
+        if (prd_description != null) prd_description.setVisible(showDesc);
+        if (priceC != null) priceC.setVisible(showChart);
+        if (auto_bid != null) auto_bid.setVisible(showAutoBid);
+    }
+
+    @FXML
+    public void handleBackBtn(MouseEvent event) {
+        if (mainPageController.getInstance() != null) {
+            mainPageController.getInstance().goBackToSearch();
+        }
     }
 
     public void handleBidBtn(MouseEvent event) throws IOException {
@@ -303,7 +312,7 @@ public class prdPageController {
         if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
             try {
                 File imgFile = new File("auction-server/src/main/resources" + imagePath);
-                
+
                 if (imgFile.exists()) {
                     Image img = new Image(imgFile.toURI().toString());
                     prdImage.setPreserveRatio(true);

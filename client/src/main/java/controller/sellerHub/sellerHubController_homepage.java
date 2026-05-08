@@ -23,7 +23,11 @@ import model.Item;
 import model.User;
 import network.ClientSocket;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
 public class sellerHubController_homepage {
@@ -269,13 +273,50 @@ public class sellerHubController_homepage {
                 return false;
             }
 
-            newItem.setImgPath(draft.getImgPath());
-            newItem.setImgPath1(draft.getImgPath1());
-            newItem.setImgPath2(draft.getImgPath2());
-            newItem.setImgPath3(draft.getImgPath3());
-            newItem.setImgPath4(draft.getImgPath4());
-            newItem.setImgPath5(draft.getImgPath5());
-            newItem.setImgPath6(draft.getImgPath6());
+            // =========================================================
+            // ĐỌC DỮ LIỆU ẢNH TỪ ĐƯỜNG DẪN VÀ GÁN VÀO BYTE ARRAY
+            // =========================================================
+            try {
+                if (draft.getImgPath() != null && !draft.getImgPath().isBlank()) {
+                    newItem.setImgPath(new File(draft.getImgPath()).getName()); // Chỉ lấy tên file
+                    Path path = Paths.get(draft.getImgPath());
+                    newItem.setImageBytes(Files.readAllBytes(path));
+                }
+                if (draft.getImgPath1() != null && !draft.getImgPath1().isBlank()) {
+                    newItem.setImgPath1(new File(draft.getImgPath1()).getName());
+                    Path path = Paths.get(draft.getImgPath1());
+                    newItem.setImageBytes1(Files.readAllBytes(path));
+                }
+                if (draft.getImgPath2() != null && !draft.getImgPath2().isBlank()) {
+                    newItem.setImgPath2(new File(draft.getImgPath2()).getName());
+                    Path path = Paths.get(draft.getImgPath2());
+                    newItem.setImageBytes2(Files.readAllBytes(path));
+                }
+                if (draft.getImgPath3() != null && !draft.getImgPath3().isBlank()) {
+                    newItem.setImgPath3(new File(draft.getImgPath3()).getName());
+                    Path path = Paths.get(draft.getImgPath3());
+                    newItem.setImageBytes3(Files.readAllBytes(path));
+                }
+                if (draft.getImgPath4() != null && !draft.getImgPath4().isBlank()) {
+                    newItem.setImgPath4(new File(draft.getImgPath4()).getName());
+                    Path path = Paths.get(draft.getImgPath4());
+                    newItem.setImageBytes4(Files.readAllBytes(path));
+                }
+                if (draft.getImgPath5() != null && !draft.getImgPath5().isBlank()) {
+                    newItem.setImgPath5(new File(draft.getImgPath5()).getName());
+                    Path path = Paths.get(draft.getImgPath5());
+                    newItem.setImageBytes5(Files.readAllBytes(path));
+                }
+                if (draft.getImgPath6() != null && !draft.getImgPath6().isBlank()) {
+                    newItem.setImgPath6(new File(draft.getImgPath6()).getName());
+                    Path path = Paths.get(draft.getImgPath6());
+                    newItem.setImageBytes6(Files.readAllBytes(path));
+                }
+            } catch (IOException e) {
+                System.err.println("Lỗi khi đọc file ảnh ở client!");
+                e.printStackTrace();
+                return false; // Dừng lại nếu không đọc được ảnh
+            }
 
             Auction newAuction = new Auction();
             newAuction.setCurrent_price(newItem.getStarting_price());

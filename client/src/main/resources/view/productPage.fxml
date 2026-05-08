@@ -12,9 +12,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
     <children>
-      <ToggleButton fx:id="auto_bid_btn" alignment="TOP_CENTER" layoutX="916.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" style="-fx-border-color: grey; -fx-border-width: 2; -fx-border-radius: 5;" styleClass="filter-btn" text="Auto-bid" />
+      <ToggleButton fx:id="auto_bid_btn" alignment="TOP_CENTER" layoutX="916.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" style="-fx-border-color: grey; -fx-border-width: 2; &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;?import javafx.scene.control.Button?&gt;&lt;?import javafx.scene.text.Font?&gt;&lt;Button fx:id=&quot;backBtn&quot; contentDisplay=&quot;CENTER&quot; layoutX=&quot;260.0&quot; layoutY=&quot;120.0&quot; mnemonicParsing=&quot;false&quot; onMouseClicked=&quot;#handleBackBtn&quot; prefHeight=&quot;30.0&quot; prefWidth=&quot;30.0&quot; style=&quot;-fx-background-color: transparent; -fx-cursor: hand;&quot; text=&quot;&amp;lt;&quot; textFill=&quot;#ff8c21&quot; xmlns=&quot;http://javafx.com/javafx/25&quot; xmlns:fx=&quot;http://javafx.com/fxml/1&quot;&gt;   &lt;font&gt;      &lt;Font name=&quot;System Bold&quot; size=&quot;18.0&quot; /&gt;   &lt;/font&gt;&lt;/Button&gt;: 5;" styleClass="filter-btn" text="Auto-bid" />
       <ToggleButton fx:id="price_chart_btn" alignment="TOP_CENTER" layoutX="794.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" styleClass="filter-btn" text="Price chart" textFill="WHITE" />
       <ToggleButton fx:id="description_btn" alignment="TOP_CENTER" layoutX="672.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" styleClass="filter-btn" text="Description" />
       <StackPane fx:id="imgPane" layoutX="102.0" layoutY="94.0" prefHeight="315.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
@@ -60,7 +60,7 @@
       </Label>
       <StackPane fx:id="togglePane" layoutX="672.0" layoutY="236.0" prefHeight="173.0" prefWidth="540.0" style="-fx-border-color: #ff8e1f; -fx-border-width: 4; -fx-background-radius: 10; -fx-border-radius: 10; -fx-background-color: #ff8e1f;">
          <children>
-            <AnchorPane fx:id="priceC" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;">
+            <AnchorPane fx:id="priceC" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;" visible="false">
                <children>
                   <LineChart fx:id="prcieChart" prefHeight="111.0" prefWidth="354.0">
                     <xAxis>
@@ -77,7 +77,7 @@
                   <Insets left="10.0" top="5.0" />
                </padding>
             </Label>
-            <AnchorPane fx:id="auto_bid" prefHeight="173.0" prefWidth="532.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;" visible="false">
+            <AnchorPane fx:id="auto_bid" prefHeight="173.0" prefWidth="532.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;">
                <children>
                   <Label layoutX="20.0" layoutY="8.0" prefHeight="25.0" prefWidth="190.0" text="Bid Increment" textFill="WHITE">
                      <font>
@@ -110,5 +110,10 @@
             </AnchorPane>
          </children>
       </StackPane>
+      <Button fx:id="backBtn" contentDisplay="CENTER" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onMouseClicked="#handleBackBtn" prefHeight="54.0" prefWidth="54.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Button>
     </children>
 </AnchorPane>

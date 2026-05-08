@@ -11,7 +11,7 @@ import message.Response;
 import controller.mainPageController;
 
 public class ClientSocket {
-    private static final String SERVER_IP = "localhost"; // tạo IP
+    private static final String SERVER_IP = "localhost";
     private static final Integer SERVER_PORT = 2810;     // tạo port
 
     private static Socket socket;
@@ -28,6 +28,7 @@ public class ClientSocket {
         }
         try {
             // Thử tạo một kết nối mới
+
             socket = new Socket(SERVER_IP, SERVER_PORT);
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());

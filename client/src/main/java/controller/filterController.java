@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 import javafx.application.Platform;
 
-// NHỚ IMPORT MODEL NÀY VÀO NHÉ
 import model.SearchCriteria;
 
 public class filterController {
@@ -67,6 +66,8 @@ public class filterController {
     @FXML
     private Button backBtn;
     @FXML
+    private Button clear_btn;
+    @FXML
     private Label status;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
@@ -76,6 +77,41 @@ public class filterController {
         // Gắn hiệu ứng format tiền Việt cho 2 ô nhập giá
         addCurrencyFormat(lowest);
         addCurrencyFormat(highest);
+    }
+    
+    // --- HÀM MỚI: TỰ ĐỘNG CHỌN LẠI CÁC TRƯỜNG ĐÃ LỌC TRƯỚC ĐÓ ---
+    public void setInitialCriteria(SearchCriteria criteria) {
+        if (criteria == null) return;
+
+        // Khôi phục Categories
+        if (criteria.getCategories() != null) {
+            if (criteria.getCategories().contains("Art")) art.setSelected(true);
+            if (criteria.getCategories().contains("Electronics")) electronics.setSelected(true);
+            if (criteria.getCategories().contains("Vehicle")) vehicle.setSelected(true);
+            if (criteria.getCategories().contains("Real Estate")) real_estate.setSelected(true);
+        }
+
+        // Khôi phục Status
+        if (criteria.getStatuses() != null) {
+            if (criteria.getStatuses().contains("Bidding")) bidding.setSelected(true);
+            if (criteria.getStatuses().contains("Newly Listed")) newly_listed.setSelected(true);
+            if (criteria.getStatuses().contains("Ending Soon")) ending_soon.setSelected(true);
+            if (criteria.getStatuses().contains("Upcoming")) upcoming.setSelected(true);
+            if (criteria.getStatuses().contains("FINISHED")) ended.setSelected(true);
+        }
+
+        // Khôi phục ID
+        if (criteria.getAuctionId() != null) {
+            auctionID.setText(criteria.getAuctionId());
+        }
+
+        // Khôi phục Price
+        if (criteria.getMinPrice() > 0) {
+            lowest.setText(String.valueOf(criteria.getMinPrice())); 
+        }
+        if (criteria.getMaxPrice() > 0) {
+            highest.setText(String.valueOf(criteria.getMaxPrice()));
+        }
     }
 
     private void addCurrencyFormat(TextField textField) {
@@ -123,6 +159,27 @@ public class filterController {
     public void handleBackBtn(ActionEvent event) {
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.close();
+    }
+
+    @FXML
+    public void handleClearBtn(ActionEvent event) {
+        // Gom tất cả các nút và trường nhập liệu vào mảng
+        ToggleButton[] allToggleButtons = {art, electronics, vehicle, real_estate, price1, price2, price3, bidding, newly_listed, ending_soon, upcoming, ended};
+        TextField[] allTextFields = {lowest, highest, auctionID};
+
+        // Bỏ chọn tất cả các ToggleButton
+        for (ToggleButton btn : allToggleButtons) {
+            if (btn != null) {
+                btn.setSelected(false);
+            }
+        }
+
+        // Xóa trắng tất cả các TextField
+        for (TextField tf : allTextFields) {
+            if (tf != null) {
+                tf.clear();
+            }
+        }
     }
 
     @FXML
@@ -174,10 +231,11 @@ public class filterController {
         List<String> selected = new ArrayList<>();
         for (ToggleButton btn : buttons) {
             if (btn != null && btn.isSelected()) {
-                // ==========================================
-                // ĐÃ THÊM .trim() VÀO ĐÂY ĐỂ XÓA KHOẢNG TRẮNG
-                // ==========================================
-                selected.add(btn.getText().trim());
+                if (btn == ended) {
+                    selected.add("FINISHED");
+                } else {
+                    selected.add(btn.getText().trim());
+                }
             }
         }
         return selected;

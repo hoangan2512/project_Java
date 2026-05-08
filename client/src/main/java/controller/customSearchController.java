@@ -99,10 +99,10 @@ public class customSearchController {
                         
                         String finalStatus = status;
 
-                        // Bỏ qua các auction bị ép kết thúc bởi UI NẾU người dùng không chủ động chọn xem "Ended" trong bộ lọc
+                        // Bỏ qua các auction bị ép kết thúc bởi UI NẾU người dùng không chủ động chọn xem "FINISHED" trong bộ lọc
                         if ("FINISHED".equals(finalStatus)) {
                             List<String> selectedStatuses = currentCriteria.getStatuses();
-                            if (selectedStatuses == null || !selectedStatuses.contains("Ended")) {
+                            if (selectedStatuses == null || !selectedStatuses.contains("FINISHED")) {
                                 continue; // Bỏ qua không vẽ thẻ sản phẩm này lên màn hình
                             }
                         }
@@ -171,7 +171,8 @@ public class customSearchController {
     @FXML
     private void handleFilter(ActionEvent event) {
         try {
-            sceneSwitcher.openFilter();
+            // Truyền bộ lọc hiện tại vào popup Filter để khôi phục trạng thái nút bấm
+            sceneSwitcher.openFilter(currentCriteria);
         } catch (IOException e) {
             e.printStackTrace();
         }
