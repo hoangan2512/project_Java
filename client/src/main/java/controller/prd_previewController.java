@@ -11,6 +11,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -27,6 +28,8 @@ public class prd_previewController {
     private ImageView prdImage;
     @FXML
     private Label auctionStatus;
+    @FXML
+    private Label sellerName;
 
     private Runnable toPrdPage;
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
@@ -34,9 +37,18 @@ public class prd_previewController {
     private Timeline countdownTimer;
     private long remainingSeconds;
 
-    public void setData(String name, long price, long time, String imagePath, String status) {
+    // PHƯƠNG THỨC MỚI: Hỗ trợ nạp ảnh qua mảng byte (truyền qua mạng)
+    public void setData(String name, long price, long time, String imagePath, String status, String sellerNameStr, byte[] imageBytes) {
         if (prdName != null) {
             prdName.setText(name);
+        }
+        
+        if (sellerName != null) {
+            if (sellerNameStr != null && !sellerNameStr.isEmpty()) {
+                sellerName.setText("by " + sellerNameStr);
+            } else {
+                sellerName.setText("by Unknown");
+            }
         }
 
         // --- BẮT ĐẦU ĐỊNH DẠNG TIỀN TỆ ---
@@ -65,7 +77,7 @@ public class prd_previewController {
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
                         if (auctionStatus != null) {
-                            auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+                            auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
                             auctionStatus.setText("Started - refreshing...");
                         }
                         if (Bid != null) {
@@ -78,7 +90,7 @@ public class prd_previewController {
                 countdownTimer.play();
             } else {
                 if (auctionStatus != null) {
-                    auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+                    auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
                     auctionStatus.setText("Started - refreshing...");
                 }
                 if (Bid != null) {
@@ -120,28 +132,44 @@ public class prd_previewController {
         }
         // --- KẾT THÚC BỘ ĐẾM THỜI GIAN ---
 
-        // --- BẮT ĐẦU LOAD ẢNH TỪ ITEM ---
-        if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
-            try {
-                // Vì Client và Server chạy trên cùng một máy tính (Local) trong quá trình dev, 
-                // chúng ta có thể load thẳng từ thư mục tài nguyên của Server.
-                // Đường dẫn trong DB có dạng "/images/products/..."
-                File imgFile = new File("auction-server/src/main/resources" + imagePath);
-                
-                if (imgFile.exists()) {
-                    Image image = new Image(imgFile.toURI().toString());
+        // --- BẮT ĐẦU LOAD ẢNH ---
+        if (prdImage != null) {
+            if (imageBytes != null && imageBytes.length > 0) {
+                // Cách mới: Dựng ảnh từ dữ liệu nhị phân do Server truyền sang
+                try {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                    Image image = new Image(bis);
                     prdImage.setImage(image);
-                } else {
-                    // Nếu không tìm thấy file thực tế, thử tìm trong resources của client (dự phòng)
-                    java.io.InputStream is = getClass().getResourceAsStream(imagePath);
-                    if (is != null) {
-                        prdImage.setImage(new Image(is));
-                    }
+                } catch (Exception e) {
+                    System.out.println("Lỗi khi load ảnh từ byte array: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.out.println("Không thể hiển thị ảnh từ: " + imagePath);
+            } else if (imagePath != null && !imagePath.trim().isEmpty()) {
+                // Cách cũ: Fallback dự phòng đọc thẳng từ đĩa (local)
+                try {
+                    File imgFile = new File("auction-server/src/main/resources" + imagePath);
+                    if (imgFile.exists()) {
+                        Image image = new Image(imgFile.toURI().toString());
+                        prdImage.setImage(image);
+                    } else {
+                        java.io.InputStream is = getClass().getResourceAsStream(imagePath);
+                        if (is != null) {
+                            prdImage.setImage(new Image(is));
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Không thể hiển thị ảnh từ path: " + imagePath);
+                }
             }
         }
+    }
+
+    // Giữ lại hàm cũ để tránh lỗi tương thích ở những chỗ khác chưa truyền mảng byte
+    public void setData(String name, long price, long time, String imagePath, String status, String sellerNameStr) {
+        setData(name, price, time, imagePath, status, sellerNameStr, null);
+    }
+
+    public void setData(String name, long price, long time, String imagePath, String status) {
+        setData(name, price, time, imagePath, status, "Unknown", null);
     }
     
     private void updateTimeLabel() {
@@ -150,7 +178,7 @@ public class prd_previewController {
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
             String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-            auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+            auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
             auctionStatus.setText(timeString);
         }
     }
@@ -161,14 +189,14 @@ public class prd_previewController {
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
             String timeString = String.format("Upcoming: %02d:%02d:%02d", hours, minutes, seconds);
-            auctionStatus.setStyle("-fx-background-color: grey; -fx-background-radius: 10px");
+            auctionStatus.setStyle("-fx-background-color: rgba(128, 128, 128, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
             auctionStatus.setText(timeString);
         }
     }
     
     private void handleAuctionEnd() {
         if (auctionStatus != null) {
-            auctionStatus.setStyle("-fx-background-color: black; -fx-background-radius: 10px;  -fx-text-fill: grey;");
+            auctionStatus.setStyle("-fx-background-color: rgba(0, 0, 0, 0.6); -fx-background-radius: 10px;  -fx-text-fill: #b5b4b4;");
             auctionStatus.setText("Ended");
         }
         if (Bid != null) {

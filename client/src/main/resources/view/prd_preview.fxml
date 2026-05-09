@@ -7,27 +7,24 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane onMouseClicked="#handleBidBtn" prefHeight="265.0" prefWidth="347.0" style="-fx-background-color: #1E1E1E;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prd_previewController">
+<AnchorPane onMouseClicked="#handleBidBtn" prefHeight="260.0" prefWidth="347.0" style="-fx-background-color: radial-gradient(center 50% 37.5%, radius 70%,     #2c2c2c 0%,     #272727 30%,     #222222 60%,     #1e1e1e 100%);;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prd_previewController">
    <children>
-      <StackPane prefHeight="195.0" prefWidth="347.0" style="-fx-background-color: #2c2c2c;">
+      <StackPane prefHeight="195.0" prefWidth="347.0" style="-fx-background-color: transparent;">
          <children>
-            <ImageView fx:id="prdImage" fitHeight="195.0" fitWidth="347.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
+            <ImageView fx:id="prdImage" fitHeight="195.0" fitWidth="347.0" onMouseClicked="#handleBidBtn" pickOnBounds="true" preserveRatio="true" StackPane.alignment="BOTTOM_CENTER" />
          </children>
       </StackPane>
-      <Label fx:id="prdName" alignment="TOP_LEFT" layoutX="7.0" layoutY="196.0" onMouseClicked="#handleBidBtn" prefHeight="25.0" prefWidth="330.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
+      <Label fx:id="prdName" alignment="TOP_LEFT" layoutX="10.0" layoutY="200.0" onMouseClicked="#handleBidBtn" prefHeight="27.0" prefWidth="324.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
       </Label>
-      <Label fx:id="currentPrice" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="154.0" layoutY="214.0" onMouseClicked="#handleBidBtn" prefHeight="32.0" prefWidth="185.0" text="150.00 USD" textFill="WHITE">
+      <Label fx:id="currentPrice" alignment="BOTTOM_RIGHT" contentDisplay="RIGHT" layoutX="148.0" layoutY="220.0" onMouseClicked="#handleBidBtn" prefHeight="32.0" prefWidth="185.0" text="150.00 USD" textFill="WHITE">
          <font>
-            <Font name="System Bold" size="22.0" />
+            <Font name="System Bold" size="18.0" />
          </font>
-         <padding>
-            <Insets left="7.0" />
-         </padding>
       </Label>
-      <Label fx:id="auctionStatus" layoutX="10.0" layoutY="10.0" opacity="0.7" prefHeight="22.0" prefWidth="148.0" style="-fx-background-color: grey; -fx-background-radius: 8;" text="Auction Status" textFill="WHITE">
+      <Label fx:id="auctionStatus" layoutX="10.0" layoutY="163.0" prefHeight="22.0" prefWidth="148.0" style="-fx-background-color: rgba(85, 85, 85, 0.7); -fx-background-radius: 8; -fx-text-fill: white;" text="Auction Status" textFill="WHITE">
          <font>
             <Font name="System Bold" size="10.0" />
          </font>
@@ -35,9 +32,20 @@
             <Insets left="7.0" />
          </padding>
       </Label>
-      <Label fx:id="categories" layoutX="7.0" layoutY="214.0" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="100.0" text="by Someone" textFill="#b9b6b6">
+      <StackPane onMouseClicked="#handleBidBtn" prefHeight="260.0" prefWidth="347.0" styleClass="my-product-card" stylesheets="@prdPage.css">
+         <children>
+            <Label fx:id="categories1" alignment="CENTER" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="117.0" style="-fx-background-color: transparent;" styleClass="join-label" text="Click to join the auction" textFill="WHITE" StackPane.alignment="TOP_CENTER">
+               <font>
+                  <Font size="10.0" />
+               </font>
+               <StackPane.margin>
+                  <Insets top="7.0" />
+               </StackPane.margin>
+            </Label>
+         </children></StackPane>
+      <Label fx:id="sellerName" alignment="BOTTOM_LEFT" layoutX="10.0" layoutY="232.0" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="100.0" styleClass="seller-label" stylesheets="@prdPage.css" text="by Someone" textFill="#b9b6b6">
          <font>
-            <Font size="10.0" />
+            <Font size="11.0" />
          </font>
       </Label>
    </children>

@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDateTime;
 import java.util.Locale;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 
 import javafx.animation.KeyFrame;
@@ -328,6 +329,7 @@ public class prdPageController {
         String name = auction.getItem().getName();
         long price = (long) auction.getCurrent_price();
         String imagePath = auction.getItem().getImgPath();
+        byte[] imageBytes = auction.getItem().getImageBytes();
         String descriptionText = auction.getItem().getDescription();
 
         if (prdName != null) {
@@ -425,25 +427,38 @@ public class prdPageController {
         }
 
         // 3. Load Ảnh và Mô tả
-        if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
-            try {
-                File imgFile = new File("auction-server/src/main/resources" + imagePath);
-
-                if (imgFile.exists()) {
-                    Image img = new Image(imgFile.toURI().toString());
+        if (prdImage != null) {
+            if (imageBytes != null && imageBytes.length > 0) {
+                // Ưu tiên load ảnh từ mảng byte do Server gửi
+                try {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                    Image img = new Image(bis);
                     prdImage.setPreserveRatio(true);
                     prdImage.setSmooth(true);
                     prdImage.setImage(img);
-                } else {
-                    java.io.InputStream is = getClass().getResourceAsStream(imagePath);
-                    if (is != null) {
+                } catch (Exception e) {
+                    System.out.println("Lỗi khi hiển thị ảnh từ byte array: " + e.getMessage());
+                }
+            } else if (imagePath != null && !imagePath.trim().isEmpty()) {
+                // Cách cũ: Load trực tiếp từ ổ cứng nếu chưa có byte array
+                try {
+                    File imgFile = new File("auction-server/src/main/resources" + imagePath);
+                    if (imgFile.exists()) {
+                        Image img = new Image(imgFile.toURI().toString());
                         prdImage.setPreserveRatio(true);
                         prdImage.setSmooth(true);
-                        prdImage.setImage(new Image(is));
+                        prdImage.setImage(img);
+                    } else {
+                        java.io.InputStream is = getClass().getResourceAsStream(imagePath);
+                        if (is != null) {
+                            prdImage.setPreserveRatio(true);
+                            prdImage.setSmooth(true);
+                            prdImage.setImage(new Image(is));
+                        }
                     }
+                } catch (Exception e) {
+                    System.out.println("Cannot find image: " + imagePath);
                 }
-            } catch (Exception e) {
-                System.out.println("Cannot find image: " + imagePath);
             }
         }
         

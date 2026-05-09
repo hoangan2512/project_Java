@@ -129,7 +129,6 @@ public class ClientHandler implements Runnable {
                 return auctionController.handleGetItemDetail(request);
             case CUSTOM_SEARCH:
                 return auctionController.handleCustomSearch(request);
-                
             case AUCTION_END: // Cái này nên chỉ cho hệ thống gọi (từ AuctionTimeManager), Client gọi sẽ bị chặn. Bạn nên chặn ở đây.
                 return new Response("FAIL", null, "Client không có quyền kết thúc phiên đấu giá.");
 
