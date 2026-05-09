@@ -16,6 +16,9 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static java.awt.Color.white;
+import static java.awt.SystemColor.text;
+
 public class prd_previewController {
     @FXML
     private Label prdName;
@@ -65,7 +68,7 @@ public class prd_previewController {
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
                         if (auctionStatus != null) {
-                            auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+                            auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
                             auctionStatus.setText("Started - refreshing...");
                         }
                         if (Bid != null) {
@@ -78,7 +81,7 @@ public class prd_previewController {
                 countdownTimer.play();
             } else {
                 if (auctionStatus != null) {
-                    auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+                    auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
                     auctionStatus.setText("Started - refreshing...");
                 }
                 if (Bid != null) {
@@ -150,7 +153,7 @@ public class prd_previewController {
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
             String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-            auctionStatus.setStyle("-fx-background-color: #3dd35b; -fx-background-radius: 10px");
+            auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
             auctionStatus.setText(timeString);
         }
     }
@@ -161,14 +164,14 @@ public class prd_previewController {
             long minutes = (remainingSeconds % 3600) / 60;
             long seconds = remainingSeconds % 60;
             String timeString = String.format("Upcoming: %02d:%02d:%02d", hours, minutes, seconds);
-            auctionStatus.setStyle("-fx-background-color: grey; -fx-background-radius: 10px");
+            auctionStatus.setStyle("-fx-background-color: rgba(128, 128, 128, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
             auctionStatus.setText(timeString);
         }
     }
     
     private void handleAuctionEnd() {
         if (auctionStatus != null) {
-            auctionStatus.setStyle("-fx-background-color: black; -fx-background-radius: 10px;  -fx-text-fill: grey;");
+            auctionStatus.setStyle("-fx-background-color: rgba(0, 0, 0, 0.6); -fx-background-radius: 10px;  -fx-text-fill: grey;");
             auctionStatus.setText("Ended");
         }
         if (Bid != null) {
