@@ -138,3 +138,10 @@
 .my-product-card:hover .join-label {
     -fx-opacity: 1.0;
 }
+
+.seller-label {
+    -fx-underline: false;
+}
+.seller-label:hover {
+    -fx-underline: true;
+}

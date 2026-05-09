@@ -1,5 +1,8 @@
 package controller;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,6 +11,8 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.TilePane;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.time.LocalDateTime;
 import java.time.Duration;
 
@@ -50,6 +55,7 @@ public class customSearchController {
         fetchProductsFromDatabase();
     }
 
+    @SuppressWarnings("unchecked")
     private void fetchProductsFromDatabase() {
         productGrid.getChildren().clear();
         
@@ -65,10 +71,23 @@ public class customSearchController {
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            // Ép kiểu về List<Auction> vì Server đã đổi sang dùng AuctionRepository
-            List<Auction> resultList = (List<Auction>) res.getData();
+            
+            List<Auction> resultList = null;
+            Map<Integer, String> sellerNames = null;
+
+            // Xử lý an toàn để tránh lỗi ClassCastException nếu Server chưa kịp cập nhật (hoặc trả về sai kiểu)
+            if (res.getData() instanceof Object[]) {
+                Object[] dataPackage = (Object[]) res.getData();
+                resultList = (List<Auction>) dataPackage[0];
+                sellerNames = (Map<Integer, String>) dataPackage[1];
+            } else if (res.getData() instanceof List) {
+                // Đề phòng Server cũ vẫn trả về List<Auction>
+                resultList = (List<Auction>) res.getData();
+                sellerNames = new HashMap<>(); // Khởi tạo map rỗng để tránh NullPointer
+            }
 
             if (resultList != null && !resultList.isEmpty()) {
+                int cardIndex = 0;
                 for (Auction auc : resultList) {
                     try {
                         // --- TÍNH TOÁN THỜI GIAN VÀ TRẠNG THÁI ---
@@ -120,12 +139,22 @@ public class customSearchController {
                         // Lấy tên, ảnh và mô tả từ Item nằm trong Auction
                         String name = (auc.getItem() != null) ? auc.getItem().getName() : "Không tên";
                         String imgPath = (auc.getItem() != null) ? auc.getItem().getImgPath() : null;
+                        
+                        // Lấy mảng byte hình ảnh từ Item
+                        byte[] imageBytes = (auc.getItem() != null) ? auc.getItem().getImageBytes() : null;
+                        
+                        // LẤY TÊN SELLER TỪ BẢNG MAP (Đã gửi kèm trong Response)
+                        String sellerNameStr = "Unknown";
+                        if (auc.getItem() != null && sellerNames != null) {
+                            int sellerId = auc.getItem().getSeller_id();
+                            sellerNameStr = sellerNames.getOrDefault(sellerId, "Unknown");
+                        }
 
                         // Lấy giá hiện tại từ Auction
                         long currentPrice = (long) auc.getCurrent_price();
 
-                        // Cập nhật card với số giây còn lại thực tế và trạng thái
-                        cardController.setData(name, currentPrice, timeLeftSeconds, imgPath, finalStatus);
+                        // Cập nhật card với số giây còn lại thực tế, trạng thái, và TRUYỀN MẢNG BYTE ẢNH VÀO
+                        cardController.setData(name, currentPrice, timeLeftSeconds, imgPath, finalStatus, sellerNameStr, imageBytes);
 
                         // Thêm hành động khi click vào card sẽ mở trang chi tiết sản phẩm
                         cardController.setOnBidAction(() -> {
@@ -135,7 +164,28 @@ public class customSearchController {
                             }
                         });
 
+                        // --- THIẾT LẬP ANIMATION THẢ RƠI (STAGGERED DROP) ---
+                        // 1. Trạng thái bắt đầu: Mờ và nằm cao hơn vị trí thật 30px
+                        productCard.setOpacity(0);
+                        productCard.setTranslateY(-30);
+
+                        // 2. Tạo hiệu ứng hiện dần
+                        FadeTransition fadeIn = new FadeTransition(javafx.util.Duration.millis(400), productCard);
+                        fadeIn.setToValue(1.0);
+
+                        // 3. Tạo hiệu ứng rơi xuống vị trí chuẩn
+                        TranslateTransition dropDown = new TranslateTransition(javafx.util.Duration.millis(400), productCard);
+                        dropDown.setToY(0);
+
+                        // 4. Kết hợp và tạo độ trễ (mỗi card xuất hiện cách nhau 60ms)
+                        ParallelTransition combinedAnim = new ParallelTransition(fadeIn, dropDown);
+                        combinedAnim.setDelay(javafx.util.Duration.millis(cardIndex * 60));
+
+                        // Thêm card vào lưới và chạy animation
                         productGrid.getChildren().add(productCard);
+                        combinedAnim.play();
+
+                        cardIndex++; // Tăng index để card tiếp theo trễ hơn
 
                     } catch (IOException e) {
                         System.err.println("Lỗi load card giao diện!");

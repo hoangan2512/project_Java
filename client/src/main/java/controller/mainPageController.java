@@ -1,5 +1,6 @@
 package controller;
 
+import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +14,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 import model.SearchCriteria;
 import model.User;
 import model.Auction;
@@ -83,6 +85,8 @@ public class mainPageController {
             // Đánh dấu là đang mở bảng tìm kiếm
             currentPrdPageController = null; 
 
+            // Cài đặt màu nền cho khung chứa để hiệu ứng fade đẹp hơn
+            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
 
@@ -108,9 +112,24 @@ public class mainPageController {
                 currentCustomSearchController.setSearchCriteria(criteria);
             }
 
+            // Cài màu nền cam lúc chuyển cảnh
+            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
+            
+            // Ép tàng hình ngay lập tức để lộ nền cam
+            customSearchNode.setOpacity(0.0);
+            
             // Nhét giao diện vào StackPane và hiển thị
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
+            
+            // Rút ngắn thời gian fade (ví dụ: 150ms)
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            
+            // Ngâm màu nền 50ms
+            fadeIn.setDelay(Duration.millis(50));
+            fadeIn.play();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,9 +151,24 @@ public class mainPageController {
                 currentPrdPageController.setData(auction);
             }
 
-            // Hiển thị trang chi tiết lên (đè lên hoặc thay thế nội dung)
+            // Đặt màu nền màu cam cho khung chứa
+            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
+            
+            // Tàng hình giao diện mới để lộ nền cam
+            prdPageNode.setOpacity(0.0);
+            
+            // Hiển thị trang chi tiết lên
             prdPagePane.getChildren().setAll(prdPageNode);
             prdPagePane.setVisible(true);
+            
+            // Tốc độ mờ dần nhanh hơn (150ms)
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), prdPageNode);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            
+            // Ngâm màu nền 250ms
+            fadeIn.setDelay(Duration.millis(50));
+            fadeIn.play();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -220,8 +254,19 @@ public class mainPageController {
                 currentCustomSearchController.setSearchCriteria(null); 
             }
 
+            // Đặt nền cam
+            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
+            customSearchNode.setOpacity(0.0);
+            
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
+            
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            // Ngâm màu nền 50ms
+            fadeIn.setDelay(Duration.millis(50));
+            fadeIn.play();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -242,8 +287,20 @@ public class mainPageController {
                 currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
             }
 
+            // Đặt nền cam
+            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
+            customSearchNode.setOpacity(0.0);
+            
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
+            
+            // TẠO HIỆU ỨNG FADE-IN KHI QUAY LẠI
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            // Ngâm màu nền 50ms
+            fadeIn.setDelay(Duration.millis(50));
+            fadeIn.play();
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -21,7 +21,7 @@
       </Label>
       <Label fx:id="currentPrice" alignment="BOTTOM_RIGHT" contentDisplay="RIGHT" layoutX="148.0" layoutY="220.0" onMouseClicked="#handleBidBtn" prefHeight="32.0" prefWidth="185.0" text="150.00 USD" textFill="WHITE">
          <font>
-            <Font name="System Bold" size="22.0" />
+            <Font name="System Bold" size="18.0" />
          </font>
       </Label>
       <Label fx:id="auctionStatus" layoutX="10.0" layoutY="163.0" prefHeight="22.0" prefWidth="148.0" style="-fx-background-color: rgba(85, 85, 85, 0.7); -fx-background-radius: 8; -fx-text-fill: white;" text="Auction Status" textFill="WHITE">
@@ -31,11 +31,6 @@
          <padding>
             <Insets left="7.0" />
          </padding>
-      </Label>
-      <Label fx:id="seller" layoutX="10.0" layoutY="230.0" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="100.0" text="by Someone" textFill="#b9b6b6">
-         <font>
-            <Font size="11.0" />
-         </font>
       </Label>
       <StackPane onMouseClicked="#handleBidBtn" prefHeight="260.0" prefWidth="347.0" styleClass="my-product-card" stylesheets="@prdPage.css">
          <children>
@@ -48,5 +43,10 @@
                </StackPane.margin>
             </Label>
          </children></StackPane>
+      <Label fx:id="sellerName" alignment="BOTTOM_LEFT" layoutX="10.0" layoutY="232.0" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="100.0" styleClass="seller-label" stylesheets="@prdPage.css" text="by Someone" textFill="#b9b6b6">
+         <font>
+            <Font size="11.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>
