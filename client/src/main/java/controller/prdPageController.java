@@ -323,7 +323,7 @@ public class prdPageController {
         });
     }
 
-    public void setData(Auction auction, long time, String status) {
+    public void setData(Auction auction) {
         this.currentAuction = auction;
         String name = auction.getItem().getName();
         long price = (long) auction.getCurrent_price();
@@ -336,10 +336,35 @@ public class prdPageController {
 
         updateCurrentPriceLabel(price);
 
-        this.remainingSeconds = time;
         if (countdownTimer != null) countdownTimer.stop();
 
-        if ("WAITING".equals(status) || "UPCOMING".equals(status)) {
+        LocalDateTime now = LocalDateTime.now();
+        String status = auction.getStatus();
+
+        // 1. Tự động tính toán lại trạng thái và thời gian còn lại (bảo vệ khỏi việc dữ liệu cũ)
+        if ("RUNNING".equals(status) && auction.getEnd_time() != null) {
+            if (now.isBefore(auction.getEnd_time())) {
+                this.remainingSeconds = java.time.Duration.between(now, auction.getEnd_time()).getSeconds();
+            } else {
+                status = "FINISHED";
+            }
+        } else if ("WAITING".equals(status) && auction.getStart_time() != null) {
+            if (now.isBefore(auction.getStart_time())) {
+                this.remainingSeconds = java.time.Duration.between(now, auction.getStart_time()).getSeconds();
+            } else {
+                status = "RUNNING";
+                if (auction.getEnd_time() != null && now.isBefore(auction.getEnd_time())) {
+                    this.remainingSeconds = java.time.Duration.between(now, auction.getEnd_time()).getSeconds();
+                } else {
+                    status = "FINISHED";
+                }
+            }
+        } else if ("FINISHED".equals(status)) {
+            this.remainingSeconds = 0;
+        }
+
+        // 2. Cập nhật UI dựa trên trạng thái đã tính toán
+        if ("WAITING".equals(status)) {
             updateUpcomingTimeLabel();
             if (remainingSeconds > 0) {
                 countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
@@ -347,6 +372,7 @@ public class prdPageController {
                     updateUpcomingTimeLabel();
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
+                        // Chuyển trạng thái UI sang RUNNING (Chờ server xác nhận qua broadcast)
                         if (timeLeft != null) timeLeft.setText("Started - Refreshing...");
                         if (Bid != null) {
                             Bid.setDisable(false);
@@ -398,6 +424,7 @@ public class prdPageController {
             handleAuctionEnd();
         }
 
+        // 3. Load Ảnh và Mô tả
         if (imagePath != null && !imagePath.trim().isEmpty() && prdImage != null) {
             try {
                 File imgFile = new File("auction-server/src/main/resources" + imagePath);
