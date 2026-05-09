@@ -118,7 +118,7 @@ public class mainPageController {
         }
     }
 
-    public void fillProductPage(Auction auction, long timeRemaining, String currentStatus) {
+    public void fillProductPage(Auction auction) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
             Parent prdPageNode = loader.load();
@@ -128,8 +128,8 @@ public class mainPageController {
             currentCustomSearchController = null; // Đánh dấu không ở trang tìm kiếm
 
             if (currentPrdPageController != null) {
-                // Đẩy dữ liệu sang trang chi tiết (kèm theo ảnh, mô tả và trạng thái)
-                currentPrdPageController.setData(auction, timeRemaining, currentStatus);
+                // Đẩy dữ liệu sang trang chi tiết
+                currentPrdPageController.setData(auction);
             }
 
             // Hiển thị trang chi tiết lên (đè lên hoặc thay thế nội dung)

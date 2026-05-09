@@ -128,35 +128,10 @@ public class customSearchController {
                         cardController.setData(name, currentPrice, timeLeftSeconds, imgPath, finalStatus);
 
                         // Thêm hành động khi click vào card sẽ mở trang chi tiết sản phẩm
-                        final long finalTimeLeft = timeLeftSeconds;
                         cardController.setOnBidAction(() -> {
                             if (mainPageController.getInstance() != null) {
-                                // Tính lại lần nữa khi click để đảm bảo thời gian cập nhật nhất
-                                long currentRemaining = 0;
-                                String currentStatus = auc.getStatus();
-                                LocalDateTime nowClick = LocalDateTime.now();
-                                
-                                if ("RUNNING".equals(currentStatus) && auc.getEnd_time() != null) {
-                                    if (nowClick.isBefore(auc.getEnd_time())) {
-                                        currentRemaining = Duration.between(nowClick, auc.getEnd_time()).getSeconds();
-                                    } else {
-                                        currentStatus = "FINISHED";
-                                    }
-                                } else if ("WAITING".equals(currentStatus) && auc.getStart_time() != null) {
-                                    if (nowClick.isBefore(auc.getStart_time())) {
-                                        currentRemaining = Duration.between(nowClick, auc.getStart_time()).getSeconds();
-                                    } else {
-                                        currentStatus = "RUNNING";
-                                        if (auc.getEnd_time() != null && nowClick.isBefore(auc.getEnd_time())) {
-                                            currentRemaining = Duration.between(nowClick, auc.getEnd_time()).getSeconds();
-                                        } else {
-                                            currentStatus = "FINISHED";
-                                        }
-                                    }
-                                }
-                                
-                                // Gọi fillProductPage và truyền CẢ ĐỐI TƯỢNG AUCTION
-                                mainPageController.getInstance().fillProductPage(auc, currentRemaining, currentStatus);
+                                // Chỉ cần truyền đối tượng Auction, prdPageController sẽ tự chịu trách nhiệm tính toán thời gian thực tế
+                                mainPageController.getInstance().fillProductPage(auc);
                             }
                         });
 
