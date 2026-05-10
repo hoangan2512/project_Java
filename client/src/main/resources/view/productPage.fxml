@@ -10,110 +10,154 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
     <children>
-      <ToggleButton fx:id="auto_bid_btn" alignment="TOP_CENTER" layoutX="916.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" style="-fx-border-color: grey; -fx-border-width: 2; &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;?import javafx.scene.control.Button?&gt;&lt;?import javafx.scene.text.Font?&gt;&lt;Button fx:id=&quot;backBtn&quot; contentDisplay=&quot;CENTER&quot; layoutX=&quot;260.0&quot; layoutY=&quot;120.0&quot; mnemonicParsing=&quot;false&quot; onMouseClicked=&quot;#handleBackBtn&quot; prefHeight=&quot;30.0&quot; prefWidth=&quot;30.0&quot; style=&quot;-fx-background-color: transparent; -fx-cursor: hand;&quot; text=&quot;&amp;lt;&quot; textFill=&quot;#ff8c21&quot; xmlns=&quot;http://javafx.com/javafx/25&quot; xmlns:fx=&quot;http://javafx.com/fxml/1&quot;&gt;   &lt;font&gt;      &lt;Font name=&quot;System Bold&quot; size=&quot;18.0&quot; /&gt;   &lt;/font&gt;&lt;/Button&gt;: 5;" styleClass="filter-btn" text="Auto-bid" />
-      <ToggleButton fx:id="price_chart_btn" alignment="TOP_CENTER" layoutX="794.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" styleClass="filter-btn" text="Price chart" textFill="WHITE" />
-      <ToggleButton fx:id="description_btn" alignment="TOP_CENTER" layoutX="672.0" layoutY="206.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="122.0" styleClass="filter-btn" text="Description" />
-      <StackPane fx:id="imgPane" layoutX="102.0" layoutY="94.0" prefHeight="315.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
-         <children>
-            <ImageView fx:id="prdImage" fitHeight="310.0" fitWidth="530.0" pickOnBounds="true" preserveRatio="true" />
-         </children>
-      </StackPane>
-      <Label fx:id="prdName" layoutX="672.0" layoutY="79.0" prefHeight="54.0" prefWidth="540.0" style="-fx-background-radius: 13px;" text="Product name" textFill="WHITE">
+        <ToggleButton fx:id="auto_bid_btn" layoutX="928.0" layoutY="396.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="141.0" style="-fx-border-color: grey; -fx-border-width: 1; -fx-cursor: hand;" styleClass="filter-btn" text="Auto-bid">
          <font>
-            <Font name="System Bold" size="30.0" />
-         </font>
-      </Label>
-      <Label fx:id="currentPrice" layoutX="672.0" layoutY="133.0" prefHeight="54.0" prefWidth="540.0" style="-fx-background-color: #3dd35b; -fx-background-radius: 13;" text="Current price" textFill="WHITE">
+            <Font name="System Bold" size="12.0" />
+         </font></ToggleButton>
+        <ToggleButton fx:id="price_chart_btn" layoutX="800.0" layoutY="396.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="122.0" styleClass="filter-btn" text="Price chart" textFill="WHITE">
          <font>
-            <Font name="System Bold" size="28.0" />
-         </font>
-         <padding>
-            <Insets left="13.0" />
-         </padding>
-      </Label>
-      <Button fx:id="Bid" layoutX="672.0" layoutY="458.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="35.0" prefWidth="540.0" styleClass="btn-bid" text="Place a bid">
+            <Font name="System Bold" size="12.0" />
+         </font></ToggleButton>
+        <ToggleButton fx:id="description_btn" layoutX="672.0" layoutY="396.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="122.0" styleClass="filter-btn" text="Description">
          <font>
-            <Font name="System Bold" size="16.0" />
-         </font>
-      </Button>
-      <TextField fx:id="bidAmount" layoutX="102.0" layoutY="458.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert a number" style="-fx-background-color: #1e1e1e; -fx-background-radius: 20px; -fx-border-color: #ff8e1f; -fx-border-radius: 20px;" styleClass="priceField" stylesheets="@prdPage.css">
-         <font>
-            <Font size="16.0" />
-         </font>
-         <padding>
-            <Insets left="13.0" />
-         </padding>
-      </TextField>
-      <Label layoutX="102.0" layoutY="429.0" prefHeight="25.0" prefWidth="126.0" text="Time Remaining:" textFill="WHITE">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <Label fx:id="timeLeft" layoutX="228.0" layoutY="429.0" prefHeight="24.0" prefWidth="476.0" text="00:00:00" textFill="WHITE">
-         <font>
-            <Font name="System Bold" size="16.0" />
-         </font>
-      </Label>
-      <StackPane fx:id="togglePane" layoutX="672.0" layoutY="236.0" prefHeight="173.0" prefWidth="540.0" style="-fx-border-color: #ff8e1f; -fx-border-width: 4; -fx-background-radius: 10; -fx-border-radius: 10; -fx-background-color: #ff8e1f;">
-         <children>
-            <AnchorPane fx:id="priceC" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;" visible="false">
+            <Font name="System Bold" size="12.0" />
+         </font></ToggleButton>
+        <StackPane fx:id="imgPane" layoutX="90.0" layoutY="80.0" prefHeight="304.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
+            <children>
+                <ImageView fx:id="prdImage" fitHeight="304.0" fitWidth="540.0" pickOnBounds="true" preserveRatio="true" />
+            <StackPane fx:id="imgPane1" prefHeight="304.0" prefWidth="540.0" styleClass="product-name-card">
                <children>
-                  <LineChart fx:id="prcieChart" prefHeight="111.0" prefWidth="354.0">
-                    <xAxis>
-                        <NumberAxis side="BOTTOM" />
-                    </xAxis>
-                    <yAxis>
-                      <NumberAxis side="LEFT" />
-                    </yAxis>
-                  </LineChart>
+                    <Label fx:id="prdName" alignment="BOTTOM_LEFT" prefHeight="82.0" prefWidth="526.0" styleClass="product-name-label" text="Product name" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
+                        <font>
+                            <Font name="Segoe UI Bold" size="30.0" />
+                        </font>
+                     <StackPane.margin>
+                        <Insets bottom="5.0" left="7.0" />
+                     </StackPane.margin>
+                    </Label>
                </children>
-            </AnchorPane>
-            <Label fx:id="prd_description" alignment="TOP_LEFT" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;" text="Product description" textFill="WHITE" visible="false" wrapText="true">
-               <padding>
-                  <Insets left="10.0" top="5.0" />
-               </padding>
+            </StackPane>
+            </children>
+        </StackPane>
+        <Label fx:id="currentPrice" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="535.0" layoutY="413.0" prefHeight="27.0" prefWidth="101.0" text="100 USD" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="18.0" />
+            </font>
+        </Label>
+        <Button fx:id="Bid" layoutX="481.0" layoutY="519.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="35.0" prefWidth="155.0" style="-fx-background-radius: 5; -fx-background-color: #ff8e1f;" styleClass="btn-bid" text="Place bid">
+            <font>
+                <Font name="System Bold" size="16.0" />
+            </font>
+        </Button>
+        <TextField fx:id="bidAmount" layoutX="386.0" layoutY="450.0" prefHeight="35.0" prefWidth="250.0" promptText="Insert a number" style="-fx-background-color: #1e1e1e;" styleClass="priceField" stylesheets="@prdPage.css">
+            <font>
+                <Font size="16.0" />
+            </font>
+            <padding>
+                <Insets left="13.0" />
+            </padding>
+        </TextField>
+        <Label alignment="CENTER" layoutX="879.0" layoutY="79.0" prefHeight="25.0" prefWidth="126.0" text="Auction Ends In" textFill="WHITE">
+            <font>
+                <Font size="16.0" />
+            </font>
+        </Label>
+        <Label fx:id="timeLeft" layoutX="672.0" layoutY="140.0" prefHeight="24.0" prefWidth="476.0" text="00:00:00" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="16.0" />
+            </font>
+        </Label>
+        <StackPane fx:id="togglePane" layoutX="672.0" layoutY="217.0" prefHeight="173.0" prefWidth="540.0" style="-fx-border-color: #ff8e1f; -fx-border-width: 1; -fx-background-radius: 0; -fx-border-radius: 0; -fx-background-color: #ff8e1f;">
+            <children>
+                <AnchorPane fx:id="priceC" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 0;" visible="false">
+                    <children>
+                        <LineChart fx:id="prcieChart" prefHeight="111.0" prefWidth="354.0">
+                            <xAxis>
+                                <NumberAxis side="BOTTOM" />
+                            </xAxis>
+                            <yAxis>
+                                <NumberAxis side="LEFT" />
+                            </yAxis>
+                        </LineChart>
+                    </children>
+                </AnchorPane>
+                <Label fx:id="prd_description" alignment="TOP_LEFT" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 0;" text="Product description" textFill="WHITE" visible="false" wrapText="true">
+                    <padding>
+                        <Insets left="10.0" top="5.0" />
+                    </padding>
+                </Label>
+                <AnchorPane fx:id="auto_bid" prefHeight="173.0" prefWidth="532.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 0;">
+                    <children>
+                        <Label layoutX="20.0" layoutY="8.0" prefHeight="25.0" prefWidth="190.0" text="Bid Increment" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                        </Label>
+                        <Label layoutX="20.0" layoutY="70.0" prefHeight="25.0" prefWidth="190.0" text="Ceiling Price" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="ceilling_price" layoutX="20.0" layoutY="95.0" prefHeight="25.0" prefWidth="332.0" promptText="Insert amount" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 20; -fx-border-radius: 20;" styleClass="priceField">
+                            <padding>
+                                <Insets left="13.0" />
+                            </padding>
+                        </TextField>
+                        <TextField fx:id="price_step" layoutX="20.0" layoutY="33.0" prefHeight="25.0" prefWidth="332.0" promptText="Insert amount" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 20; -fx-border-radius: 20;" styleClass="priceField">
+                            <padding>
+                                <Insets left="13.0" />
+                            </padding>
+                        </TextField>
+                        <Label fx:id="auto_bid_status" layoutX="20.0" layoutY="134.0" prefHeight="17.0" prefWidth="332.0" text="Status" textFill="WHITE" />
+                        <ToggleButton fx:id="auto_bid_status_btn" alignment="TOP_CENTER" layoutX="377.0" layoutY="94.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" styleClass="auto-bid-btn" text="Inactive" />
+                        <Label layoutX="377.0" layoutY="70.0" prefHeight="25.0" prefWidth="122.0" text="Auto-bid Status" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </AnchorPane>
+            </children>
+        </StackPane>
+        <Button fx:id="backBtn" contentDisplay="CENTER" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onMouseClicked="#handleBackBtn" prefHeight="54.0" prefWidth="54.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+            <font>
+                <Font name="System Bold" size="24.0" />
+            </font>
+        </Button>
+      <Label layoutX="90.0" layoutY="414.0" prefHeight="25.0" prefWidth="126.0" text="Current price" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Line endX="100.0" layoutX="535.0" layoutY="505.0" startX="-445.0" stroke="WHITE" />
+      <Label layoutX="90.0" layoutY="455.0" prefHeight="25.0" prefWidth="126.0" text="Your bid" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <AnchorPane layoutX="90.0" layoutY="519.0" style="-fx-border-color: white; -fx-border-width: 0.5; -fx-border-radius: 7;">
+         <children>
+            <Label fx:id="currentPrice2" alignment="CENTER" contentDisplay="RIGHT" layoutX="54.0" prefHeight="35.0" prefWidth="268.0" style="-fx-background-color: transparent;" text="100 USD" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
             </Label>
-            <AnchorPane fx:id="auto_bid" prefHeight="173.0" prefWidth="532.0" style="-fx-background-color: #1e1e1e; -fx-background-radius: 10; -fx-border-radius: 10;">
-               <children>
-                  <Label layoutX="20.0" layoutY="8.0" prefHeight="25.0" prefWidth="190.0" text="Bid Increment" textFill="WHITE">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                  </Label>
-                  <Label layoutX="20.0" layoutY="70.0" prefHeight="25.0" prefWidth="190.0" text="Ceiling Price" textFill="WHITE">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                  </Label>
-                  <TextField fx:id="ceilling_price" layoutX="20.0" layoutY="95.0" prefHeight="25.0" prefWidth="332.0" promptText="Insert amount" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 20; -fx-border-radius: 20;" styleClass="priceField">
-                     <padding>
-                        <Insets left="13.0" />
-                     </padding>
-                  </TextField>
-                  <TextField fx:id="price_step" layoutX="20.0" layoutY="33.0" prefHeight="25.0" prefWidth="332.0" promptText="Insert amount" style="-fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-background-radius: 20; -fx-border-radius: 20;" styleClass="priceField">
-                     <padding>
-                        <Insets left="13.0" />
-                     </padding>
-                  </TextField>
-                  <Label fx:id="auto_bid_status" layoutX="20.0" layoutY="134.0" prefHeight="17.0" prefWidth="332.0" text="Status" textFill="WHITE" />
-                  <ToggleButton fx:id="auto_bid_status_btn" alignment="TOP_CENTER" layoutX="377.0" layoutY="94.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" styleClass="auto-bid-btn" text="Inactive" />
-                  <Label layoutX="377.0" layoutY="70.0" prefHeight="25.0" prefWidth="122.0" text="Auto-bid Status" textFill="WHITE">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                  </Label>
-               </children>
-            </AnchorPane>
+            <Button fx:id="bid_decrease" layoutX="322.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="54.0" style="-fx-background-radius: 0; -fx-background-color: transparent;" text="-" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="bid_increase" mnemonicParsing="false" prefHeight="27.0" prefWidth="54.0" style="-fx-background-radius: 0; -fx-background-color: transparent;" text="+" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
          </children>
-      </StackPane>
-      <Button fx:id="backBtn" contentDisplay="CENTER" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onMouseClicked="#handleBackBtn" prefHeight="54.0" prefWidth="54.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
-         <font>
-            <Font name="System Bold" size="24.0" />
-         </font>
-      </Button>
+      </AnchorPane>
     </children>
 </AnchorPane>
