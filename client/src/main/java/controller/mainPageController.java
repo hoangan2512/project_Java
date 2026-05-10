@@ -1,6 +1,9 @@
 package controller;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.PauseTransition;
+import javafx.animation.TranslateTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
@@ -38,15 +42,15 @@ public class mainPageController {
     private StackPane prdPagePane;
     @FXML
     private ImageView bidHub;
+    @FXML
+    private Pane transitionPane;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
     private static mainPageController instance;
     
-    // Lưu lại controller đang được hiển thị để gọi hàm refresh khi có broadcast
     private customSearchController currentCustomSearchController;
     private prdPageController currentPrdPageController;
     
-    // Lưu lại bộ lọc gần nhất để khi bấm quay về trang chủ (BidHub logo), nó không bị mất kết quả lọc
     private SearchCriteria lastSearchCriteria = null;
 
     public static mainPageController getInstance() {
@@ -67,26 +71,18 @@ public class mainPageController {
         instance = this;
         updateAvatarUI();
 
-        // --------------------------------------------------------
-        // LOAD GIAO DIỆN TÌM KIẾM MẶC ĐỊNH VÀO prdPagePane
-        // VÀ ẨN NÚT FILTER
-        // --------------------------------------------------------
+        // Load giao diện tìm kiếm mặc định
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
             Parent customSearchNode = loader.load();
 
             currentCustomSearchController = loader.getController();
             if (currentCustomSearchController != null) {
-                currentCustomSearchController.hideFilterButton(); // Ẩn nút filter theo yêu cầu
-                // Load dữ liệu mặc định (tất cả sản phẩm) từ Database
+                currentCustomSearchController.hideFilterButton();
                 currentCustomSearchController.setSearchCriteria(null); 
             }
 
-            // Đánh dấu là đang mở bảng tìm kiếm
             currentPrdPageController = null; 
-
-            // Cài đặt màu nền cho khung chứa để hiệu ứng fade đẹp hơn
-            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
 
@@ -94,40 +90,32 @@ public class mainPageController {
             e.printStackTrace();
             System.err.println("Lỗi: Không load được file customSearch.fxml làm mặc định");
         }
+
+        transitionPane.setVisible(false);
     }
 
     public void loadCustomSearchPane(SearchCriteria criteria) {
-        this.lastSearchCriteria = criteria; // Lưu lại để dùng cho chức năng "Quay lại"
+        this.lastSearchCriteria = criteria;
         
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
             Parent customSearchNode = loader.load();
 
-            // Lấy controller của trang customSearch
             currentCustomSearchController = loader.getController();
-            currentPrdPageController = null; // Đánh dấu không ở trang chi tiết
+            currentPrdPageController = null;
 
-            // TRUYỀN DỮ LIỆU SANG TRANG CUSTOM SEARCH
-            if (currentCustomSearchController != null && criteria != null) {
+            if (currentCustomSearchController != null) {
                 currentCustomSearchController.setSearchCriteria(criteria);
             }
 
-            // Cài màu nền cam lúc chuyển cảnh
             prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
-            
-            // Ép tàng hình ngay lập tức để lộ nền cam
             customSearchNode.setOpacity(0.0);
-            
-            // Nhét giao diện vào StackPane và hiển thị
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
             
-            // Rút ngắn thời gian fade (ví dụ: 150ms)
             FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
             fadeIn.setFromValue(0.0);
             fadeIn.setToValue(1.0);
-            
-            // Ngâm màu nền 50ms
             fadeIn.setDelay(Duration.millis(50));
             fadeIn.play();
 
@@ -138,61 +126,81 @@ public class mainPageController {
     }
 
     public void fillProductPage(Auction auction) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
-            Parent prdPageNode = loader.load();
+        // --- HIỆU ỨNG GẠT MÀU MỚI ---
+        
+        // Khôi phục lại độ mờ về 100% (Rất quan trọng cho lần click thứ 2 trở đi vì trước đó nó bị Fade về 0)
+        transitionPane.setOpacity(1.0);
+        
+        // Bật và đặt màu cho lớp hiệu ứng
+        transitionPane.setVisible(true);
+        transitionPane.toFront(); // Đảm bảo lớp gạt màu nằm trên cùng
 
-            // Lấy controller của trang chi tiết
-            currentPrdPageController = loader.getController();
-            currentCustomSearchController = null; // Đánh dấu không ở trang tìm kiếm
+        // Đặt vị trí bắt đầu ở ngoài màn hình bên trái
+        double paneWidth = prdPagePane.getWidth() > 0 ? prdPagePane.getWidth() : 1500;
+        transitionPane.setTranslateX(-paneWidth);
 
-            if (currentPrdPageController != null) {
-                // Đẩy dữ liệu sang trang chi tiết
-                currentPrdPageController.setData(auction);
+        // 1. Tạo hiệu ứng gạt vào (Slide-in)
+        // Kéo dài thời gian ra một chút (450ms) để nhìn thấy rõ hiệu ứng Rất Chậm - Nhanh - Rất Chậm
+        TranslateTransition wipeIn = new TranslateTransition(Duration.millis(450), transitionPane);
+        wipeIn.setToX(0);
+
+        // CUSTOM SPLINE: Điểm x1, y1, x2, y2 -> Tạo độ võng cực gắt (Bắt đầu rất chậm -> Phóng cực nhanh ở giữa -> Kết thúc rất chậm)
+        wipeIn.setInterpolator(Interpolator.SPLINE(0.65, 0.0, 0.35, 1.0));
+
+        // 2. Gán hành động sau khi gạt xong
+        wipeIn.setOnFinished(e -> {
+            // BẮT ĐẦU LOAD DỮ LIỆU MỚI (SAU KHI MÀN HÌNH ĐÃ BỊ CHE)
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
+                Parent prdPageNode = loader.load();
+                currentPrdPageController = loader.getController();
+                currentCustomSearchController = null;
+
+                if (currentPrdPageController != null) {
+                    currentPrdPageController.setData(auction);
+                }
+                // Thay thế nội dung bên dưới lớp hiệu ứng
+                prdPagePane.getChildren().setAll(prdPageNode);
+
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
             }
 
-            // Đặt màu nền màu cam cho khung chứa
-            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
-            
-            // Tàng hình giao diện mới để lộ nền cam
-            prdPageNode.setOpacity(0.0);
-            
-            // Hiển thị trang chi tiết lên
-            prdPagePane.getChildren().setAll(prdPageNode);
-            prdPagePane.setVisible(true);
-            
-            // Tốc độ mờ dần nhanh hơn (150ms)
-            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), prdPageNode);
-            fadeIn.setFromValue(0.0);
-            fadeIn.setToValue(1.0);
-            
-            // Ngâm màu nền 250ms
-            fadeIn.setDelay(Duration.millis(50));
-            fadeIn.play();
+            // 3. Tạo độ trễ "ngâm" màu cam
+            PauseTransition hold = new PauseTransition(Duration.millis(200));
+            hold.setOnFinished(ev -> {
+                // 4. Tạo hiệu ứng mờ dần lớp hiệu ứng để lộ nội dung mới
+                FadeTransition fadeOut = new FadeTransition(Duration.millis(400), transitionPane);
+                fadeOut.setFromValue(1.0);
+                fadeOut.setToValue(0.0);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                fadeOut.setOnFinished(evt -> {
+                    transitionPane.setVisible(false); // Tắt đi sau khi xong
+                    transitionPane.setTranslateX(-paneWidth); // Đẩy lại về vị trí chờ
+                });
+                fadeOut.play();
+            });
+            hold.play();
+        });
+
+        // Chạy hiệu ứng gạt vào
+        wipeIn.play();
     }
 
-    // Hàm gọi khi nhận được tín hiệu Broadcast từ mạng (tự động load lại dữ liệu)
     public void refreshData(Response res) {
         if (currentCustomSearchController != null) {
             System.out.println("Đang làm mới danh sách sản phẩm...");
             currentCustomSearchController.refresh();
         } else if (currentPrdPageController != null) {
             System.out.println("Đang làm mới trang chi tiết sản phẩm...");
-            // Chuyển thông tin Broadcast sang cho Product Page xử lý (Cập nhật giá hoặc trạng thái)
             currentPrdPageController.handleBroadcast(res);
         }
     }
 
-    // Giữ lại hàm cũ phòng trường hợp có nơi gọi
     public void refreshData() {
         refreshData(null);
     }
 
-    // Hàm xử lý khi bấm vào nút tròn hình người (Avatar)
     @FXML
     public void handleAvatarClick(MouseEvent event) {
         try {
@@ -225,21 +233,17 @@ public class mainPageController {
     }
 
     public void updateAvatarUI() {
-        // Hỏi "bộ nhớ" xem hiện tại có ai đang đăng nhập không?
         if (SessionManager.getInstance().isBidder()) {
-            // Đã đăng nhập: Viền xanh lá
             userAvatar.setStroke(Color.GREEN);
             User user = SessionManager.getInstance().getCurrentUser();
             System.out.println("Logged In: " + user.getUsername());
         } else {
-            // Chưa đăng nhập (Bấm tắt popup mà không login): Viền đỏ
             System.out.println("Status: Waiting for login");
             userAvatar.setStroke(Color.RED);
         }
     }
 
     public void handleBidHub(MouseEvent event) {
-        // Về trang chủ mặc định: XÓA TOÀN BỘ BỘ LỌC
         this.lastSearchCriteria = null;
         
         try {
@@ -254,17 +258,14 @@ public class mainPageController {
                 currentCustomSearchController.setSearchCriteria(null); 
             }
 
-            // Đặt nền cam
             prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
             customSearchNode.setOpacity(0.0);
-            
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
             
             FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
             fadeIn.setFromValue(0.0);
             fadeIn.setToValue(1.0);
-            // Ngâm màu nền 50ms
             fadeIn.setDelay(Duration.millis(50));
             fadeIn.play();
 
@@ -273,7 +274,6 @@ public class mainPageController {
         }
     }
 
-    // Hàm gọi khi bấm nút Back (Nút <) từ trang chi tiết sản phẩm
     public void goBackToSearch() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
@@ -283,22 +283,17 @@ public class mainPageController {
             currentPrdPageController = null;
 
             if (currentCustomSearchController != null) {
-                // Khôi phục lại bộ lọc cũ
                 currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
             }
 
-            // Đặt nền cam
             prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
             customSearchNode.setOpacity(0.0);
-            
             prdPagePane.getChildren().setAll(customSearchNode);
             prdPagePane.setVisible(true);
             
-            // TẠO HIỆU ỨNG FADE-IN KHI QUAY LẠI
             FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
             fadeIn.setFromValue(0.0);
             fadeIn.setToValue(1.0);
-            // Ngâm màu nền 50ms
             fadeIn.setDelay(Duration.millis(50));
             fadeIn.play();
 
@@ -309,7 +304,6 @@ public class mainPageController {
 
     public void handleCustomSearch(ActionEvent event) {
         try {
-            // Mở bộ lọc trống, không truyền lastSearchCriteria
             sceneSwitcher.openFilter(null);
         } catch (IOException e) {
             e.printStackTrace();
