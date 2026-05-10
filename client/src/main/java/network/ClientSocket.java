@@ -94,7 +94,7 @@ public class ClientSocket {
 
             return responseQueue.take();
         } catch (Exception e) {
-            System.out.println("ERROR: Lỗi khi gửi/nhận Request mã hóa: " + e.getMessage());
+            System.out.println("ERROR: Failed to send/receive encrypted request. " + e.getMessage());
             e.printStackTrace();
             return null;
         }
