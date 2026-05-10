@@ -95,7 +95,7 @@
 .auto-bid-btn {
     -fx-background-color: grey;
     -fx-text-fill: black;
-    -fx-background-radius: 20px;
+    -fx-background-radius: 5px;
     -fx-cursor: hand;
     -fx-padding: 5px 20px;
     -fx-font-weight: bold;
