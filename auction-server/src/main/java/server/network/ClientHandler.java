@@ -72,6 +72,8 @@ public class ClientHandler implements Runnable {
             }
         } catch (Exception e) {
             // Bắt tất cả các lỗi (IOException, ClassNotFound, Lỗi mã hóa,...)
+            System.err.println("!!! SERVER ERROR !!!");
+            e.printStackTrace();
             LOGGER.log(Level.WARNING, "Client đã ngắt kết nối hoặc có lỗi. User: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"), e);
         } finally {
             // Luôn dọn dẹp tài nguyên khi kết thúc
@@ -91,7 +93,7 @@ public class ClientHandler implements Runnable {
 
         // 3. Dùng private key để giải mã và lưu lại khóa AES
         Cipher rsaCipher = Cipher.getInstance("RSA");
-        rsaCipher.init(Cipher.DECRYPT_MODE, AuctionServer.getServerPrivateKey());
+        rsaCipher.init(Cipher.UNWRAP_MODE, AuctionServer.getServerPrivateKey());
         this.sharedAesKey = (SecretKey) rsaCipher.unwrap(encryptedAesKey, "AES", Cipher.SECRET_KEY);
         LOGGER.info("Handshake thành công, đã thiết lập khóa AES an toàn cho client " + socket.getInetAddress());
     }

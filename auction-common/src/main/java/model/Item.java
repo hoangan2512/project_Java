@@ -29,7 +29,7 @@ public class Item extends entity implements Serializable {
     // Constructor có tham số (Đã bổ sung user_prdID)
     public Item(int id, String user_prdID, String name, String description, double starting_price, int seller_id, String categories,
                 String imgPath, String imgPath1, String imgPath2, String imgPath3,
-                String imgPath4, String imgPath5, String imgPath6) {
+                String imgPath4, String imgPath5, String imgPath6)  {
         super(id, name);
         this.user_prdID = user_prdID;
         this.description = description;
@@ -49,7 +49,8 @@ public class Item extends entity implements Serializable {
     }
 
     // Constructor mặc định
-    public Item() {
+    public Item()
+    {
         super(0, "");
     }
 
