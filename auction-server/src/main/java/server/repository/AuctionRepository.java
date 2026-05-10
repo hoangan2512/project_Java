@@ -4,6 +4,8 @@ import model.Auction;
 import model.Item;
 import model.SearchCriteria;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,9 +46,32 @@ public class AuctionRepository {
         Item item = new Item();
         item.setId(rs.getInt("item_id")); // Hoặc rs.getInt("i.id") nếu có alias
         item.setName(rs.getString("name"));
-        item.setImgPath(rs.getString("imgPath"));
         item.setCategories(rs.getString("categories"));
         item.setDescription(rs.getString("description"));
+        // THÊM DÒNG NÀY ĐỂ ĐỌC SELLER_ID
+        item.setSeller_id(rs.getInt("seller_id"));
+        
+        String imgPath = rs.getString("imgPath");
+        item.setImgPath(imgPath);
+
+        // ĐỌC ẢNH TỪ Ổ ĐĨA SERVER VÀ CHUYỂN THÀNH MẢNG BYTE ĐỂ TRUYỀN QUA MẠNG
+        if (imgPath != null && !imgPath.trim().isEmpty()) {
+            try {
+                // Thử 2 đường dẫn có thể xảy ra khi chạy Server (từ root project hoặc từ thư mục auction-server)
+                File file = new File("src/main/resources" + imgPath);
+                if (!file.exists()) {
+                    file = new File("auction-server/src/main/resources" + imgPath);
+                }
+                
+                if (file.exists()) {
+                    byte[] fileBytes = Files.readAllBytes(file.toPath());
+                    item.setImageBytes(fileBytes);
+                }
+            } catch (Exception e) {
+                System.err.println("Không thể đọc file ảnh: " + imgPath);
+            }
+        }
+
         auction.setItem(item);
         return auction;
     }
@@ -74,7 +99,7 @@ public class AuctionRepository {
     }
 
     public Auction getAuctionById(int id) {
-        String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description " +
+        String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description, i.seller_id " +
                      "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -93,7 +118,7 @@ public class AuctionRepository {
 
     private List<Auction> getAuctionsByStatus(String status) {
         List<Auction> auctions = new ArrayList<>();
-        String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description " +
+        String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description, i.seller_id " +
                      "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -151,7 +176,7 @@ public class AuctionRepository {
         List<Auction> resultList = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT a.id, a.item_id, a.start_time, a.end_time, a.status, a.current_price, a.highest_bidder_id, " +
-            "i.name, i.categories, i.imgPath, i.description " +
+            "i.name, i.categories, i.imgPath, i.description, i.seller_id " +
             "FROM auctions a INNER JOIN items i ON a.item_id = i.id WHERE 1=1"
         );
         List<Object> parameters = new ArrayList<>();
