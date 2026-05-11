@@ -118,9 +118,6 @@ public class customSearchController {
                         
                         String finalStatus = status;
 
-                        // Bỏ qua các auction bị ép kết thúc bởi UI NẾU người dùng không chủ động chọn xem "FINISHED" trong bộ lọc
-                        // NGOẠI TRỪ TRƯỜNG HỢP: Người dùng đang tìm kiếm cụ thể bằng ID. 
-                        // Nếu tìm bằng ID thì luôn hiển thị kết quả bất kể trạng thái nào.
                         if ("FINISHED".equals(finalStatus)) {
                             boolean isSearchingById = (currentCriteria.getAuctionId() != null && !currentCriteria.getAuctionId().trim().isEmpty());
                             

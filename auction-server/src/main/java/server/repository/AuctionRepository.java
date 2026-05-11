@@ -227,15 +227,22 @@ public class AuctionRepository {
             for (String status : criteria.getStatuses()) {
                 if (!firstStatus) sql.append(" OR ");
                 
-                if ("Ending Soon".equalsIgnoreCase(status)) {
-                    sql.append("(a.status = 'RUNNING' AND a.end_time <= ?)");
-                    parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusMinutes(30)));
+                if ("Bidding".equalsIgnoreCase(status)) {
+                    sql.append("a.status = 'RUNNING'");
+                } else if ("Newly Listed".equalsIgnoreCase(status)) {
+                    sql.append("(a.status = 'WAITING' AND a.start_time > ?)");
+                    parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
                 } else if ("Upcoming".equalsIgnoreCase(status)) {
                     sql.append("(a.status = 'WAITING' AND a.start_time <= ?)");
                     parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
+                } else if ("Ending Soon".equalsIgnoreCase(status)) {
+                    sql.append("(a.status = 'RUNNING' AND a.end_time <= ?)");
+                    parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
+                } else if ("FINISHED".equalsIgnoreCase(status) || "Ended".equalsIgnoreCase(status)) {
+                    sql.append("a.status = 'FINISHED'");
                 } else {
                     sql.append("a.status = ?");
-                    parameters.add(status); // "RUNNING", "WAITING", "FINISHED"
+                    parameters.add(status);
                 }
                 firstStatus = false;
             }

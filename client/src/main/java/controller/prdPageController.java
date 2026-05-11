@@ -36,7 +36,7 @@ import java.io.IOException;
 public class prdPageController {
 
     @FXML
-    private Label currentPrice;
+    private Label currentPrice, currentPrice2;
     @FXML
     private ImageView prdImage;
     @FXML
@@ -50,7 +50,7 @@ public class prdPageController {
     @FXML
     private Button Bid;
     @FXML
-    private Label timeLeft;
+    private Label timeLeft, hours_left, mins_left, seconds_left, auctiontime_status;
     @FXML
     private LineChart<Number, Number> priceChart;
     @FXML
@@ -242,10 +242,13 @@ public class prdPageController {
                 Auction startedAuction = (Auction) res.getData();
                 if (startedAuction.getId() == currentAuction.getId()) {
                      Platform.runLater(() -> {
-                        if (timeLeft != null) timeLeft.setText("Started - Refreshing...");
+                        if (timeLeft != null) {
+                            timeLeft.setText("Started - Refreshing...");
+                            auctiontime_status.setText("Auction Started - Refreshing");
+                        }
                         if (Bid != null) {
                             Bid.setDisable(false);
-                            Bid.setText("Bid");
+                            Bid.setText("Place Bid");
                         }
                         if (bidAmount != null) bidAmount.setDisable(false);
                     });
@@ -375,10 +378,13 @@ public class prdPageController {
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
                         // Chuyển trạng thái UI sang RUNNING (Chờ server xác nhận qua broadcast)
-                        if (timeLeft != null) timeLeft.setText("Started - Refreshing...");
+                        if (timeLeft != null) {
+                            timeLeft.setText("Started - Refreshing...");
+                            auctiontime_status.setText("Auction Started - Refreshing");
+                        }
                         if (Bid != null) {
                             Bid.setDisable(false);
-                            Bid.setText("Bid");
+                            Bid.setText("Place Bid");
                         }
                         if (bidAmount != null) bidAmount.setDisable(false);
                     }
@@ -386,10 +392,14 @@ public class prdPageController {
                 countdownTimer.setCycleCount(Timeline.INDEFINITE);
                 countdownTimer.play();
             } else {
-                if (timeLeft != null) timeLeft.setText("Started - Refreshing...");
+                if (timeLeft != null) {
+                    timeLeft.setText("Started - Refreshing...");
+                    auctiontime_status.setText("Auction Started - Refreshing");
+
+                }
                 if (Bid != null) {
                     Bid.setDisable(false);
-                    Bid.setText("Bid");
+                    Bid.setText("Place Bid");
                 }
                 if (bidAmount != null) bidAmount.setDisable(false);
             }
@@ -404,7 +414,7 @@ public class prdPageController {
             updateTimeLabel();
             if (Bid != null) {
                 Bid.setDisable(false);
-                Bid.setText("Bid");
+                Bid.setText("Place Bid");
             }
             if (bidAmount != null) bidAmount.setDisable(false);
 
@@ -476,6 +486,10 @@ public class prdPageController {
             long seconds = remainingSeconds % 60;
             String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
             timeLeft.setText(timeString);
+            auctiontime_status.setText("Auction Ends In");
+            hours_left.setText(String.format("%02d", hours));
+            mins_left.setText(String.format("%02d", minutes));
+            seconds_left.setText(String.format("%02d", seconds));
         }
     }
 
@@ -486,11 +500,16 @@ public class prdPageController {
             long seconds = remainingSeconds % 60;
             String timeString = String.format("Upcoming in: %02d:%02d:%02d", hours, minutes, seconds);
             timeLeft.setText(timeString);
+            auctiontime_status.setText("Auction Coming In");
+            hours_left.setText(String.format("%02d", hours));
+            mins_left.setText(String.format("%02d", minutes));
+            seconds_left.setText(String.format("%02d", seconds));
         }
     }
     
     private void handleAuctionEnd() {
         if (timeLeft != null) {
+            auctiontime_status.setText("Auction Ended");
             timeLeft.setText("Ended");
         }
         if (Bid != null) {
