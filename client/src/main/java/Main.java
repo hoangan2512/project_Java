@@ -29,7 +29,7 @@ public class Main extends Application {
         Parent root = loader.load();
 
         Scene scene = new Scene(root);
-        Image icon = new Image(getClass().getResourceAsStream("/image/logo_project_2.jpg"));
+        Image icon = new Image(getClass().getResourceAsStream("/image/logo_project_2-removebg-preview.png"));
         primaryStage.getIcons().add(icon);
         primaryStage.setTitle("BidHub");
         primaryStage.setResizable(false);
