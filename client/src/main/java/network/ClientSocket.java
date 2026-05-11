@@ -20,6 +20,9 @@ public class ClientSocket {
 
     // Hàng đợi để giao tiếp giữa luồng đọc (Listener) và luồng chính gọi sendRequest
     private static final BlockingQueue<Response> responseQueue = new LinkedBlockingQueue<>();
+    
+    // Biến lưu trữ Public Key của Server
+    private static String serverPublicKey = null;
 
     // --- HÀM KIỂM TRA KẾT NỐI BAN ĐẦU ---
     public static boolean tryConnect() {
@@ -52,7 +55,11 @@ public class ClientSocket {
                     Response res = (Response) in.readObject();
 
                     String status = res.getStatus();
-                    if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status) || "AUCTION_START".equals(status)) {
+                    if ("PUBLIC_KEY".equals(status)) {
+                        // Nhận Public Key từ Server ngay khi kết nối
+                        serverPublicKey = (String) res.getData();
+                        System.out.println("Đã nhận Public Key từ Server.");
+                    } else if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status) || "AUCTION_START".equals(status)) {
                         Platform.runLater(() -> handleBroadcast(res));
                     } else {
                         responseQueue.put(res);
@@ -108,5 +115,20 @@ public class ClientSocket {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    // Hàm cung cấp Public Key cho các Controller (ví dụ lúc đăng nhập/đăng ký)
+    public static String getServerPublicKey() {
+        // Đợi một chút nếu chưa có (trường hợp vừa connect xong nhưng luồng Listener chưa kịp nhận)
+        int retries = 0;
+        while (serverPublicKey == null && retries < 10) {
+            try {
+                Thread.sleep(100);
+                retries++;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return serverPublicKey;
     }
 }
