@@ -19,6 +19,7 @@ import model.ActionType;
 import model.User;
 import network.ClientSocket;
 import controller.SessionManager;
+import security.RSA;
 
 import java.io.IOException;
 
@@ -88,6 +89,25 @@ public class sellerHubController_signin {
             return;
         }
 
+        // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
+        String serverPublicKey = ClientSocket.getServerPublicKey();
+        if (serverPublicKey == null) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Cannot get security key from Server!");
+            return;
+        }
+
+        try {
+            password = RSA.encrypt(password, serverPublicKey);
+        } catch (Exception e) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Encryption failed: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
         User newUser = new User();
         newUser.setName(username);
         newUser.setPassword(password);
@@ -125,6 +145,25 @@ public class sellerHubController_signin {
 
         if (username.isEmpty() || password.isEmpty()) {
             Status.setText("Please insert username & password");
+            return;
+        }
+
+        // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
+        String serverPublicKey = ClientSocket.getServerPublicKey();
+        if (serverPublicKey == null) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Cannot get security key from Server!");
+            return;
+        }
+
+        try {
+            password = RSA.encrypt(password, serverPublicKey);
+        } catch (Exception e) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Encryption failed: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
 

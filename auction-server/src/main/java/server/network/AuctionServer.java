@@ -1,83 +1,69 @@
 package server.network;
 
+import server.Main;
 import server.repository.DatabaseConnection;
 import server.service.AuctionTimeManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AuctionServer {
     private static final Logger LOGGER = Logger.getLogger(AuctionServer.class.getName());
     private static final int PORT = 2810;
-    private static final int THREAD_POOL_SIZE = 50;
 
+    // Danh sách thread-safe để quản lý các client đang kết nối
     public static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     // Trình quản lý thời gian của các phiên đấu giá
     private static final AuctionTimeManager auctionTimeManager = new AuctionTimeManager();
 
-    // Cặp khóa RSA của server, dùng để trao đổi khóa AES an toàn
-    private static PublicKey serverPublicKey;
-    private static PrivateKey serverPrivateKey;
-
-    public static PublicKey getServerPublicKey() {
-        return serverPublicKey;
-    }
-
-    public static PrivateKey getServerPrivateKey() {
-        return serverPrivateKey;
-    }
+    //Lưu trữ khóa RSA để dùng chung cho toàn bộ Server
+    public static java.security.PrivateKey serverPrivateKey;
+    public static String serverPublicKeyStr;
 
     public static void main(String[] args) {
-        //-1. TẠO CẶP KHOÁ RSA CHO SERVER
-        try{
-            KeyPairGenerator keyGen =KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(2048); //độ dài khoá
-            KeyPair keyPair = keyGen.generateKeyPair();
-            serverPublicKey = keyPair.getPublic();
-            serverPrivateKey = keyPair.getPrivate();
-            LOGGER.info("RSA KeyPair generated successfully.");
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.log(Level.SEVERE, "Không thể tạo cặp khóa RSA, server không thể khởi động.", e);
-            return; // Dừng server nếu không tạo được khóa
-        }
-
-        // 0. KHỞI TẠO THREAD POOL
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-
-        // 1. KHỞI TẠO DB
+        // 0. KHỞI TẠO DB TRƯỚC KHI LÀM BẤT CỨ VIỆC GÌ KHÁC
+        // Nếu không gọi hàm này, DB mới tinh sẽ không có các bảng (users, items, auctions, bids)
+        // và Thread của AuctionTimeManager sẽ ném lỗi "no such table: auctions"
         LOGGER.info("Initializing database tables if not exist...");
         // Gọi hàm main của class Main để chạy các lệnh CREATE TABLE IF NOT EXISTS
         // Đây là cách fix nhanh, chuẩn nhất là tách phần khởi tạo bảng ra một hàm riêng
-        server.Main.main(new String[]{});
+        server.Main.main(new String[]{}); 
 
-        // 2. KẾT NỐI CƠ SỞ DỮ LIỆU
+        // 1. Kết nối cơ sở dữ liệu
         LOGGER.info("Connecting to the database...");
         DatabaseConnection.getInstance().getConnection();
         LOGGER.info("Database connection successful.");
 
-        // 3. KHỞI ĐỘNG TRÌNH QUẢN LÝ THỜI GIAN
+        // 2. Khởi động trình quản lý thời gian đấu giá
         LOGGER.info("Starting Auction Time Manager...");
         auctionTimeManager.start();
 
-        // 4. ĐĂNG KÝ SHUTDOWN HOOK
+        LOGGER.info("Generating RSA Key Pair for Security...");
+        try {
+            java.security.KeyPair keyPair = security.RSA.generateKeyPair();
+            serverPrivateKey = keyPair.getPrivate();
+            serverPublicKeyStr = security.RSA.keyToString(keyPair.getPublic());
+            LOGGER.info("RSA Keys generated successfully.");
+        } catch (Exception e) {
+            LOGGER.severe("Lỗi khi tạo khóa RSA: " + e.getMessage());
+        }
+
+
+        // 3. Đăng ký shutdown hook để đảm bảo tài nguyên được giải phóng khi server tắt
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOGGER.info("Server is shutting down. Cleaning up resources...");
             auctionTimeManager.stop();
             LOGGER.info("Auction Time Manager stopped.");
-            executorService.shutdown();
-            LOGGER.info("Thread pool shut down.");
         }));
 
-        // 5. KHỞI ĐỘNG SERVER VÀ LẮNG NGHE KẾT NỐI
+        // 4. Khởi động server và lắng nghe kết nối
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             LOGGER.info("Server started. Listening on port: " + PORT);
 
@@ -88,7 +74,7 @@ public class AuctionServer {
                 // Tạo và khởi chạy một trình xử lý riêng cho mỗi client
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 clients.add(clientHandler);
-                executorService.execute(clientHandler); // Sử dụng thread pool
+                new Thread(clientHandler).start();
             }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Server error: " + e.getMessage(), e);
@@ -96,9 +82,6 @@ public class AuctionServer {
             // Đảm bảo AuctionTimeManager luôn được dừng lại, ngay cả khi có lỗi nghiêm trọng
             if (auctionTimeManager != null) {
                 auctionTimeManager.stop();
-            }
-            if (executorService != null && !executorService.isShutdown()) {
-                executorService.shutdown();
             }
         }
     }
