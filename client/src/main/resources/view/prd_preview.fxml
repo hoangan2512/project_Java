@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="200.0" prefWidth="340.0" style="-fx-background-color: #1E1E1E;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prd_previewController">
+<AnchorPane onMouseClicked="#handleBidBtn" prefHeight="260.0" prefWidth="347.0" style="-fx-background-color: radial-gradient(center 50% 37.5%, radius 70%,     #2c2c2c 0%,     #272727 30%,     #222222 60%,     #1e1e1e 100%);;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prd_previewController">
    <children>
-      <Label fx:id="prdName" alignment="TOP_LEFT" layoutX="190.0" layoutY="10.0" onMouseClicked="#handleBidBtn" prefHeight="54.0" prefWidth="140.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
+      <StackPane prefHeight="195.0" prefWidth="347.0" style="-fx-background-color: transparent;">
+         <children>
+            <ImageView fx:id="prdImage" fitHeight="195.0" fitWidth="347.0" onMouseClicked="#handleBidBtn" pickOnBounds="true" preserveRatio="true" StackPane.alignment="BOTTOM_CENTER" />
+         </children>
+      </StackPane>
+      <Label fx:id="prdName" alignment="TOP_LEFT" layoutX="10.0" layoutY="200.0" onMouseClicked="#handleBidBtn" prefHeight="27.0" prefWidth="324.0" style="-fx-cursor: hand;" text="Product name" textFill="WHITE" wrapText="true">
          <font>
-            <Font name="System Bold" size="16.0" />
+            <Font name="System Bold" size="18.0" />
          </font>
       </Label>
-      <Label fx:id="currentPrice" layoutX="190.0" layoutY="72.0" prefHeight="25.0" prefWidth="142.0" style="-fx-background-color: #3dd35b; -fx-background-radius: 10;" text="150.00 USD" textFill="WHITE">
+      <Label fx:id="currentPrice" alignment="BOTTOM_RIGHT" contentDisplay="RIGHT" layoutX="148.0" layoutY="220.0" onMouseClicked="#handleBidBtn" prefHeight="32.0" prefWidth="185.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="150.00 USD" textFill="WHITE">
          <font>
-            <Font name="System Bold" size="15.0" />
+            <Font name="System Bold" size="18.0" />
          </font>
-         <padding>
-            <Insets left="7.0" />
-         </padding>
       </Label>
-      <Button fx:id="Bid" layoutX="188.0" layoutY="160.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="27.0" prefWidth="142.0" styleClass="action-btn-search" stylesheets="@filter.css" text="Start Bidding" />
-      <Label fx:id="auctionStatus" layoutX="190.0" layoutY="130.0" prefHeight="22.0" prefWidth="111.0" style="-fx-background-color: grey; -fx-background-radius: 10;" text="Auction Status" textFill="WHITE">
+      <Label fx:id="auctionStatus" layoutX="10.0" layoutY="163.0" prefHeight="22.0" prefWidth="148.0" style="-fx-background-color: rgba(85, 85, 85, 0.7); -fx-background-radius: 8; -fx-text-fill: white;" text="Auction Status" textFill="WHITE">
          <font>
             <Font name="System Bold" size="10.0" />
          </font>
@@ -32,10 +32,21 @@
             <Insets left="7.0" />
          </padding>
       </Label>
-      <StackPane layoutX="12.0" layoutY="13.0" prefHeight="170.0" prefWidth="170.0" style="-fx-background-color: #1E1E1E;">
+      <StackPane onMouseClicked="#handleBidBtn" prefHeight="260.0" prefWidth="347.0" styleClass="my-product-card" stylesheets="@prdPage.css">
          <children>
-            <ImageView fx:id="prdImage" fitHeight="170.0" fitWidth="170.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
-         </children>
-      </StackPane>
+            <Label fx:id="categories1" alignment="CENTER" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="117.0" style="-fx-background-color: transparent;" styleClass="join-label" text="Click to join the auction" textFill="WHITE" StackPane.alignment="TOP_CENTER">
+               <font>
+                  <Font size="10.0" />
+               </font>
+               <StackPane.margin>
+                  <Insets top="7.0" />
+               </StackPane.margin>
+            </Label>
+         </children></StackPane>
+      <Label fx:id="sellerName" alignment="BOTTOM_LEFT" layoutX="10.0" layoutY="232.0" onMouseClicked="#handleBidBtn" prefHeight="18.0" prefWidth="100.0" styleClass="seller-label" stylesheets="@prdPage.css" text="by Someone" textFill="#b9b6b6">
+         <font>
+            <Font size="11.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>

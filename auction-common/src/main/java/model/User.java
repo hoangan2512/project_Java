@@ -62,14 +62,14 @@ public class User extends entity implements Serializable {
     }
 
     // Lớp Bidder: Người tham gia đấu giá
-    static class Bidder extends User {
+    static class Bidder extends User implements Serializable {
         public Bidder(int id, String username, String password) {
             super(id, username, password, "Bidder");
         }
     }
 
     // Lớp Seller: Người đăng bán sản phẩm
-    static class Seller extends User {
+    static class Seller extends User implements Serializable {
         public Seller(int id, String username, String password) {
             super(id, username, password, "Seller");
         }
@@ -78,7 +78,7 @@ public class User extends entity implements Serializable {
     }
 
     // Lớp Admin: Quản lý hệ thống
-    static class Admin extends User {
+    static class Admin extends User implements Serializable {
         public Admin(int id, String name, String password) {
             super(id, name, password, "Admin");
         }

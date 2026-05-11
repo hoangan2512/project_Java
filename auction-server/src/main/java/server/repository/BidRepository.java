@@ -1,6 +1,6 @@
 package server.repository;
 
-import model.Bid; // Nhớ đảm bảo bạn có class Bid.java bên common nhé
+import model.Bid; 
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,12 +12,11 @@ import java.util.List;
 public class BidRepository {
 
     public boolean placeBid(Bid bid) {
-        String sql = "INSERT INTO bids (auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO bids (auction_id, bidder_id, amount, bid_time) VALUES (?, ?, ?, ?)";
 
-        // Lấy kết nối ĐỂ BÊN NGOÀI để tránh bị đóng ngầm
-        Connection conn = DatabaseConnection.getInstance().getConnection();
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             
             pstmt.setInt(1, bid.getAuction_id());
             pstmt.setInt(2, bid.getBidder_id());
             pstmt.setDouble(3, bid.getAmount());
@@ -38,11 +37,11 @@ public class BidRepository {
     // TÌM NGƯỜI ĐANG TRẢ GIÁ CAO NHẤT HIỆN TẠI (Để kiểm tra lúc đấu giá)
     public Bid getHighestBid(int auctionId) {
         // Tuyệt chiêu SQL: Sắp xếp giá giảm dần (DESC) và chỉ lấy 1 dòng đầu tiên (LIMIT 1)
-        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_amount DESC LIMIT 1";
+        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY amount DESC LIMIT 1";
 
-        Connection conn = DatabaseConnection.getInstance().getConnection();
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             
             pstmt.setInt(1, auctionId);
             ResultSet rs = pstmt.executeQuery();
 
@@ -51,7 +50,7 @@ public class BidRepository {
                 highestBid.setId(rs.getInt("id"));
                 highestBid.setAuction_id(rs.getInt("auction_id"));
                 highestBid.setBidder_id(rs.getInt("bidder_id"));
-                highestBid.setAmount(rs.getInt("bid_amount"));
+                highestBid.setAmount(rs.getDouble("amount"));
 
                 // Ép ngược từ Timestamp dưới DB lên lại LocalDateTime cho Java
                 highestBid.setBid_time(rs.getTimestamp("bid_time").toLocalDateTime());
@@ -74,9 +73,9 @@ public class BidRepository {
         // Sắp xếp theo thời gian mới nhất lên đầu
         String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_time DESC";
 
-        Connection conn = DatabaseConnection.getInstance().getConnection();
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             
             pstmt.setInt(1, auctionId);
             ResultSet rs = pstmt.executeQuery();
 
@@ -85,7 +84,7 @@ public class BidRepository {
                 bid.setId(rs.getInt("id"));
                 bid.setAuction_id(rs.getInt("auction_id"));
                 bid.setBidder_id(rs.getInt("bidder_id"));
-                bid.setAmount(rs.getInt("bid_amount"));
+                bid.setAmount(rs.getDouble("amount"));
                 bid.setBid_time(rs.getTimestamp("bid_time").toLocalDateTime());
 
                 history.add(bid);
