@@ -8,6 +8,7 @@ import server.repository.UserRepository;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.List;
 
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
@@ -27,12 +28,26 @@ public class UserController {
 
         // Bước 2: Kiểm tra quyền hạn (Authorization)
         if (authenticatedUser != null) {
+            
+            // Xử lý trường hợp tài khoản bị khóa
+            if ("BANNED".equalsIgnoreCase(authenticatedUser.getStatus())) {
+                 response.setStatus("FAIL");
+                 response.setMessage("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                 return response;
+            }
+
             String role = authenticatedUser.getRole();
             ActionType action = request.getAction();
 
-            // Ignore case when checking roles to prevent issues like "Bidder" vs "BIDDER"
-            boolean isLoginRequestValid = (action == ActionType.LOGIN_BIDDER && "BIDDER".equalsIgnoreCase(role)) ||
-                                          (action == ActionType.LOGIN_SELLER && "SELLER".equalsIgnoreCase(role));
+            // Kiểm tra role dựa trên loại login request
+            boolean isLoginRequestValid = false;
+            if (action == ActionType.LOGIN_BIDDER) {
+                 isLoginRequestValid = "BIDDER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
+            } else if (action == ActionType.LOGIN_SELLER) {
+                 isLoginRequestValid = "SELLER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
+            } else if (action == ActionType.LOGIN_ADMIN) {
+                 isLoginRequestValid = "ADMIN".equalsIgnoreCase(role);
+            }
 
             if (isLoginRequestValid) {
                 // Đăng nhập thành công và đúng vai trò
@@ -46,10 +61,10 @@ public class UserController {
                         "Authorization failed for user ''{0}''. Role mismatch. Expected login type: {1}, but user role is: {2}",
                         new Object[]{username, action, role});
                 response.setStatus("FAIL");
+                response.setMessage("Bạn không có quyền truy cập vào khu vực này."); 
             }
         } else {
             // Xác thực thất bại (sai username/password)
-            // UserRepository đã log việc này, ở đây chỉ cần trả về response
             response.setStatus("FAIL");
             response.setMessage("Sai tài khoản hoặc mật khẩu!");
         }
@@ -60,6 +75,14 @@ public class UserController {
         Response response = new Response();
         User newUser = (User) request.getPayload();
 
+        // Thêm bước kiểm tra tài khoản đã tồn tại hay chưa
+        if (userRepo.isUserExists(newUser.getName())) {
+            LOGGER.log(Level.WARNING, "Registration failed: Username ''{0}'' already exists.", newUser.getName());
+            response.setStatus("FAIL");
+            response.setMessage("Tài khoản đã tồn tại.");
+            return response;
+        }
+
         boolean isRegistered = userRepo.addUser(newUser);
 
         if (isRegistered) {
@@ -68,10 +91,55 @@ public class UserController {
             response.setMessage("Đăng ký thành công!");
             response.setData(newUser);
         } else {
-            LOGGER.log(Level.WARNING, "Registration failed for username: ''{0}'' (likely a duplicate or DB error).", newUser.getName());
+            LOGGER.log(Level.SEVERE, "Registration failed for username: ''{0}'' due to a database error.", newUser.getName());
             response.setStatus("FAIL");
-            response.setMessage("Tên tài khoản đã tồn tại hoặc có lỗi xảy ra.");
+            response.setMessage("Có lỗi xảy ra trong quá trình đăng ký.");
         }
         return response;
+    }
+    
+    // ==========================================
+    // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ USER
+    // ==========================================
+    
+    public Response handleGetAllUsers(Request request) {
+        Response response = new Response();
+        List<User> users = userRepo.getAllUsers();
+        
+        response.setStatus("SUCCESS");
+        response.setMessage("Lấy danh sách user thành công.");
+        response.setData(users);
+        return response;
+    }
+    
+    public Response handleBanUser(Request request) {
+         Response response = new Response();
+         // Payload gửi lên có thể là ID của User (Integer)
+         Integer userIdToBan = (Integer) request.getPayload();
+         
+         boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
+         if (success) {
+             response.setStatus("SUCCESS");
+             response.setMessage("Đã khóa tài khoản thành công.");
+         } else {
+             response.setStatus("FAIL");
+             response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
+         }
+         return response;
+    }
+    
+    public Response handleUnbanUser(Request request) {
+         Response response = new Response();
+         Integer userIdToUnban = (Integer) request.getPayload();
+         
+         boolean success = userRepo.updateUserStatus(userIdToUnban, "ACTIVE");
+         if (success) {
+             response.setStatus("SUCCESS");
+             response.setMessage("Đã mở khóa tài khoản thành công.");
+         } else {
+             response.setStatus("FAIL");
+             response.setMessage("Không thể mở khóa tài khoản, vui lòng thử lại.");
+         }
+         return response;
     }
 }

@@ -43,19 +43,19 @@ public class BidRepository {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
              
             pstmt.setInt(1, auctionId);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Bid highestBid = new Bid();
+                    highestBid.setId(rs.getInt("id"));
+                    highestBid.setAuction_id(rs.getInt("auction_id"));
+                    highestBid.setBidder_id(rs.getInt("bidder_id"));
+                    highestBid.setAmount(rs.getDouble("amount"));
 
-            if (rs.next()) {
-                Bid highestBid = new Bid();
-                highestBid.setId(rs.getInt("id"));
-                highestBid.setAuction_id(rs.getInt("auction_id"));
-                highestBid.setBidder_id(rs.getInt("bidder_id"));
-                highestBid.setAmount(rs.getDouble("amount"));
+                    // Ép ngược từ Timestamp dưới DB lên lại LocalDateTime cho Java
+                    highestBid.setBid_time(rs.getTimestamp("bid_time").toLocalDateTime());
 
-                // Ép ngược từ Timestamp dưới DB lên lại LocalDateTime cho Java
-                highestBid.setBid_time(rs.getTimestamp("bid_time").toLocalDateTime());
-
-                return highestBid;
+                    return highestBid;
+                }
             }
         } catch (Exception e) {
             System.out.println("Lỗi khi tìm giá cao nhất!");
@@ -77,17 +77,17 @@ public class BidRepository {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
              
             pstmt.setInt(1, auctionId);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Bid bid = new Bid();
+                    bid.setId(rs.getInt("id"));
+                    bid.setAuction_id(rs.getInt("auction_id"));
+                    bid.setBidder_id(rs.getInt("bidder_id"));
+                    bid.setAmount(rs.getDouble("amount"));
+                    bid.setBid_time(rs.getTimestamp("bid_time").toLocalDateTime());
 
-            while (rs.next()) {
-                Bid bid = new Bid();
-                bid.setId(rs.getInt("id"));
-                bid.setAuction_id(rs.getInt("auction_id"));
-                bid.setBidder_id(rs.getInt("bidder_id"));
-                bid.setAmount(rs.getDouble("amount"));
-                bid.setBid_time(rs.getTimestamp("bid_time").toLocalDateTime());
-
-                history.add(bid);
+                    history.add(bid);
+                }
             }
         } catch (Exception e) {
             System.out.println("Lỗi khi lấy lịch sử trả giá!");

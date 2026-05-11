@@ -1,28 +1,22 @@
 package server;
 
-import model.Item;
-import model.User;
 import server.repository.DatabaseConnection;
-import server.repository.ItemRepository;
-import server.repository.UserRepository;
-
 import java.sql.Connection;
 import java.sql.Statement;
-import java.time.LocalDateTime;
-import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        // Bảng Users
-        String UsersTable = "CREATE TABLE IF NOT EXISTS users (" +
+        // language=SQLite
+        String usersTable = "CREATE TABLE IF NOT EXISTS users (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "username TEXT NOT NULL UNIQUE, " +
                 "password TEXT NOT NULL, " +
-                "role TEXT NOT NULL" +
+                "role TEXT NOT NULL, " +
+                "status TEXT NOT NULL DEFAULT 'ACTIVE'" + // ACTIVE, BANNED
                 ");";
 
-        // Bảng Items (ĐÃ SỬA: Xóa bỏ dòng created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-        String ItemsTable = "CREATE TABLE IF NOT EXISTS items (" +
+        // language=SQLite
+        String itemsTable = "CREATE TABLE IF NOT EXISTS items (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_prdID TEXT, " +
                 "name TEXT NOT NULL, " +
@@ -37,23 +31,24 @@ public class Main {
                 "imgpath5 TEXT, " +
                 "imgpath6 TEXT, " +
                 "categories TEXT, " +
+                "moderation_status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL'," + // PENDING_APPROVAL, APPROVED, REJECTED
                 "FOREIGN KEY (seller_id) REFERENCES users(id)" +
                 ");";
 
-        // Bảng Auctions
+        // language=SQLite
         String auctionsTable = "CREATE TABLE IF NOT EXISTS auctions (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "item_id INTEGER NOT NULL, " +
                 "start_time DATETIME NOT NULL, " +
                 "end_time DATETIME NOT NULL, " +
-                "status TEXT DEFAULT 'RUNNING', " +
+                "status TEXT DEFAULT 'WAITING', " + // WAITING, RUNNING, FINISHED
                 "current_price DOUBLE DEFAULT 0.0, " +
                 "highest_bidder_id INTEGER, " +
                 "FOREIGN KEY(item_id) REFERENCES items(id), " +
                 "FOREIGN KEY(highest_bidder_id) REFERENCES users(id)" +
                 ");";
 
-        // Bảng Bids
+        // language=SQLite
         String bidsTable = "CREATE TABLE IF NOT EXISTS bids (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "auction_id INTEGER NOT NULL, " +
@@ -63,18 +58,20 @@ public class Main {
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id), " +
                 "FOREIGN KEY (bidder_id) REFERENCES users(id)" +
                 ");";
+        
+        // language=SQLite
+        String createAdmin = "INSERT OR IGNORE INTO users (username, password, role, status) VALUES ('admin', 'admin123', 'ADMIN', 'ACTIVE');";
 
-        try {
-            Connection conn = DatabaseConnection.getInstance().getConnection();
-            Statement stmt = conn.createStatement();
-            stmt.execute(UsersTable);
-            stmt.execute(ItemsTable);
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(usersTable);
+            stmt.execute(itemsTable);
             stmt.execute(auctionsTable);
             stmt.execute(bidsTable);
-            stmt.close();
-            System.out.println("Tạo cấu trúc cơ sở dữ liệu thành công!");
+            stmt.execute(createAdmin); // Chạy lệnh tạo admin
+            System.out.println("Database structure is up-to-date. Admin user is ready.");
         } catch (Exception e) {
-            System.out.println("Có lỗi xảy ra khi tạo bảng!");
+            System.err.println("Error during database initialization!");
             e.printStackTrace();
         }
     }

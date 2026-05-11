@@ -13,10 +13,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import java.util.List;
 
 public class ItemController {
-    private ItemRepository itemRepo;
-    private AuctionRepository auctionRepo;
+    private final ItemRepository itemRepo;
+    private final AuctionRepository auctionRepo;
 
     public ItemController() {
         this.itemRepo = new ItemRepository();
@@ -56,8 +57,8 @@ public class ItemController {
 
                 if (isAuctionSaved) {
                     response.setStatus("SUCCESS");
-                    response.setMessage("Thêm sản phẩm và tạo phiên đấu giá id:" + newAuction.getId() + " thành công!");
-                    System.out.println("Đã lên sàn SP: " + newItem.getName() + " | Mã SP (User): " + newItem.getUser_prdID() + " | DB Item ID: " + generatedItemId + " | Categories: " + newItem.getCategories());
+                    response.setMessage("Thêm sản phẩm thành công, đang chờ Admin phê duyệt!");
+                    System.out.println("Đã lên sàn SP chờ duyệt: " + newItem.getName() + " | Mã SP (User): " + newItem.getUser_prdID() + " | DB Item ID: " + generatedItemId + " | Categories: " + newItem.getCategories());
                 } else {
                     response.setStatus("FAIL");
                     response.setMessage("Thêm sản phẩm thành công nhưng có lỗi khi tạo phiên đấu giá!");
@@ -98,46 +99,86 @@ public class ItemController {
 
     /**
      * Lưu một mảng byte (dữ liệu ảnh) vào thư mục của project và trả về đường dẫn tương đối.
-     *
-     * @param imageBytes   Dữ liệu ảnh dưới dạng byte array.
-     * @param originalName Tên file gốc (dùng để lấy phần mở rộng, ví dụ: "anh_san_pham.jpg").
-     * @return Đường dẫn tương đối của ảnh đã lưu (ví dụ: "/images/products/163..._anh_san_pham.jpg"),
-     *         hoặc trả về null nếu có lỗi hoặc không có dữ liệu ảnh.
      */
     private String saveImageFromBytes(byte[] imageBytes, String originalName) {
-        // Nếu không có dữ liệu ảnh hoặc không có tên file gốc thì không xử lý
         if (imageBytes == null || imageBytes.length == 0 || originalName == null || originalName.trim().isEmpty()) {
             return null;
         }
 
         try {
-            // 1. Xác định thư mục đích trong project
             String uploadDir = "auction-server/src/main/resources/images/products/";
             File dir = new File(uploadDir);
             if (!dir.exists()) {
-                dir.mkdirs(); // Tạo thư mục nếu chưa có
+                // Sửa lỗi: Kiểm tra kết quả của mkdirs()
+                if (!dir.mkdirs()) {
+                    // Nếu không tạo được thư mục, ghi log và ném ra ngoại lệ để dừng xử lý
+                    System.err.println("Không thể tạo thư mục lưu ảnh: " + dir.getAbsolutePath());
+                    throw new IOException("Could not create directory for image uploads.");
+                }
             }
 
-            // 2. Tạo tên file mới, duy nhất để tránh trùng lặp
-            // Lấy phần mở rộng từ tên file gốc
             String extension = "";
             int lastIndexOfDot = originalName.lastIndexOf(".");
             if (lastIndexOfDot > 0) {
-                extension = originalName.substring(lastIndexOfDot); // .jpg, .png, ...
+                extension = originalName.substring(lastIndexOfDot);
             }
             String fileName = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
             Path targetPath = Paths.get(uploadDir + fileName);
 
-            // 3. Ghi mảng byte vào file
             Files.write(targetPath, imageBytes);
 
-            // 4. Trả về đường dẫn tương đối để lưu vào DB
             return "/images/products/" + fileName;
 
         } catch (IOException e) {
             System.err.println("Lỗi khi lưu file ảnh từ byte array: " + e.getMessage());
             e.printStackTrace();
-            return null; // Trả về null nếu có lỗi xảy ra
+            return null; 
         }
+    }
+    
+    // ==========================================
+    // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ ITEM
+    // ==========================================
+    
+    public Response handleGetPendingItems(Request request) {
+         Response response = new Response();
+         List<Item> pendingItems = itemRepo.getPendingItems();
+         
+         response.setStatus("SUCCESS");
+         response.setMessage("Lấy danh sách sản phẩm chờ duyệt thành công.");
+         response.setData(pendingItems);
+         return response;
+    }
+    
+    public Response handleApproveItem(Request request) {
+         Response response = new Response();
+         Integer itemId = (Integer) request.getPayload();
+         
+         boolean success = itemRepo.updateItemModerationStatus(itemId, "APPROVED");
+         if (success) {
+             response.setStatus("SUCCESS");
+             response.setMessage("Đã phê duyệt sản phẩm thành công.");
+         } else {
+             response.setStatus("FAIL");
+             response.setMessage("Không thể phê duyệt sản phẩm.");
+         }
+         return response;
+    }
+    
+    public Response handleRejectItem(Request request) {
+         Response response = new Response();
+         Integer itemId = (Integer) request.getPayload();
+         
+         boolean success = itemRepo.updateItemModerationStatus(itemId, "REJECTED");
+         if (success) {
+             // Có thể bạn muốn hủy luôn phiên đấu giá tương ứng
+             // auctionRepo.updateStatus(auctionId, "CANCELLED");
+             response.setStatus("SUCCESS");
+             response.setMessage("Đã từ chối sản phẩm.");
+         } else {
+             response.setStatus("FAIL");
+             response.setMessage("Không thể từ chối sản phẩm.");
+         }
+         return response;
     }
 }
