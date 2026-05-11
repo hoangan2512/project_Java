@@ -49,7 +49,7 @@
                 <Font name="System Bold" size="18.0" />
             </font>
         </Label>
-        <Button fx:id="Bid" layoutX="481.0" layoutY="519.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="35.0" prefWidth="155.0" style="-fx-background-radius: 5; -fx-background-color: #ff8e1f;" styleClass="btn-bid" text="Place bid">
+        <Button fx:id="Bid" layoutX="481.0" layoutY="519.0" mnemonicParsing="false" onMouseClicked="#handleBidBtn" prefHeight="35.0" prefWidth="155.0" style="-fx-background-radius: 5;" styleClass="btn-bid" text="Place Bid">
             <font>
                 <Font name="System Bold" size="16.0" />
             </font>
@@ -62,12 +62,12 @@
             <Insets right="13.0" />
          </padding>
         </TextField>
-        <Label alignment="CENTER" layoutX="836.0" layoutY="80.0" prefHeight="35.0" prefWidth="211.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Auction Ends In" textFill="WHITE">
+        <Label fx:id="auctiontime_status" alignment="CENTER" layoutX="764.0" layoutY="80.0" prefHeight="35.0" prefWidth="350.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Auction Ends In" textFill="WHITE">
             <font>
                 <Font name="System Bold" size="20.0" />
             </font>
         </Label>
-        <Label fx:id="timeLeft" layoutX="741.0" layoutY="52.0" prefHeight="25.0" prefWidth="250.0" text="00:00:00" textFill="WHITE">
+        <Label fx:id="timeLeft" layoutX="741.0" layoutY="52.0" prefHeight="25.0" prefWidth="250.0" text="00:00:00" textFill="WHITE" visible="false">
             <font>
                 <Font name="System Bold" size="16.0" />
             </font>
@@ -156,7 +156,7 @@
                   <Insets bottom="7.0" />
                </StackPane.margin>
             </Label>
-            <Label fx:id="hours_left" alignment="CENTER" prefHeight="22.0" prefWidth="40.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
+            <Label fx:id="hours_left" alignment="CENTER" prefHeight="50.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
                <font>
                   <Font name="System Bold" size="34.0" />
                </font>
@@ -168,17 +168,17 @@
       </StackPane>
       <AnchorPane layoutX="90.0" layoutY="519.0" style="-fx-border-color: linear-gradient(to right, #b8b8b8 0%, #ffffff 50%, #b8b8b8 100%); -fx-border-width: 0.75; -fx-border-radius: 7;">
          <children>
-            <Label fx:id="currentPrice2" alignment="CENTER" contentDisplay="RIGHT" layoutX="54.0" prefHeight="35.0" prefWidth="268.0" style="-fx-background-color: transparent;" text="100 USD" textFill="WHITE">
+            <Label fx:id="currentPrice2" alignment="CENTER" contentDisplay="RIGHT" layoutX="66.0" prefHeight="35.0" prefWidth="250.0" style="-fx-background-color: transparent;" text="100 USD" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </Label>
-            <Button fx:id="bid_decrease" layoutX="322.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="54.0" style="-fx-background-radius: 0; -fx-background-color: transparent;" text="-" textFill="#e8a05c">
+            <Button fx:id="bid_decrease" layoutX="322.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="54.0" style="-fx-background-radius: 0;" styleClass="decrease_btn" text="-" textFill="#e8a05c">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </Button>
-            <Button fx:id="bid_increase" mnemonicParsing="false" prefHeight="27.0" prefWidth="54.0" style="-fx-background-radius: 0; -fx-background-color: transparent; -fx-cursor: hand;" text="+" textFill="#f5a254">
+            <Button fx:id="bid_increase" mnemonicParsing="false" prefHeight="27.0" prefWidth="54.0" style="-fx-background-radius: 0;" styleClass="increase_btn" text="+" textFill="#f5a254">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
@@ -195,7 +195,7 @@
                   <Insets bottom="7.0" />
                </StackPane.margin>
             </Label>
-            <Label fx:id="mins_left" alignment="CENTER" prefHeight="40.0" prefWidth="40.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
+            <Label fx:id="mins_left" alignment="CENTER" prefHeight="40.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
                <font>
                   <Font name="System Bold" size="34.0" />
                </font>
@@ -215,7 +215,7 @@
                   <Insets bottom="7.0" />
                </StackPane.margin>
             </Label>
-            <Label fx:id="seconds_left" alignment="CENTER" prefHeight="40.0" prefWidth="40.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
+            <Label fx:id="seconds_left" alignment="CENTER" prefHeight="40.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
                <font>
                   <Font name="System Bold" size="34.0" />
                </font>

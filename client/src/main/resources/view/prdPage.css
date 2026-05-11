@@ -1,10 +1,9 @@
 .btn-bid {
-    -fx-font-weight: bold;
+    -fx-background-color: #ff8e1f;
 }
 
 .btn-bid:hover {
     -fx-background-color: #ffa447;
-    -fx-font-weight: bold;
 }
 
 .context-menu {
@@ -161,4 +160,28 @@
 }
 .product-name-card:hover .product-name-label {
     -fx-opacity: 0.0;
+}
+
+.increase_btn {
+    -fx-text-fill: #f5a254;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+.increase_btn:hover {
+    -fx-text-fill: #ff8e1f;
+    -fx-border-width: 0 0.75 0 0 ;
+    -fx-label-padding: 0 0 0 0.75;
+    -fx-border-color:  linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);
+}
+
+.decrease_btn {
+    -fx-text-fill: #f5a254;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+.decrease_btn:hover {
+    -fx-text-fill: #ff8e1f;
+    -fx-border-width: 0 0 0 0.75 ;
+    -fx-label-padding: 0 0.75 0 0;
+    -fx-border-color:  linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);
 }
