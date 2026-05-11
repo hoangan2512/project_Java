@@ -19,6 +19,7 @@ import model.ActionType;
 import model.User;
 import network.ClientSocket;
 import controller.SessionManager;
+import security.RSA;
 
 import java.io.IOException;
 
@@ -88,6 +89,25 @@ public class sellerHubController_signin {
             return;
         }
 
+        // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
+        String serverPublicKey = ClientSocket.getServerPublicKey();
+        if (serverPublicKey == null) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Cannot get security key from Server!");
+            return;
+        }
+
+        try {
+            password = RSA.encrypt(password, serverPublicKey);
+        } catch (Exception e) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Encryption failed: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
         User newUser = new User();
         newUser.setName(username);
         newUser.setPassword(password);
@@ -115,7 +135,7 @@ public class sellerHubController_signin {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Username existed");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Username existed");
         }
     }
 
@@ -125,6 +145,25 @@ public class sellerHubController_signin {
 
         if (username.isEmpty() || password.isEmpty()) {
             Status.setText("Please insert username & password");
+            return;
+        }
+
+        // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
+        String serverPublicKey = ClientSocket.getServerPublicKey();
+        if (serverPublicKey == null) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Cannot get security key from Server!");
+            return;
+        }
+
+        try {
+            password = RSA.encrypt(password, serverPublicKey);
+        } catch (Exception e) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Encryption failed: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
 
@@ -138,7 +177,9 @@ public class sellerHubController_signin {
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
-            if ("SELLER".equalsIgnoreCase(userFromServer.getRole())) {
+            
+            // Sửa lỗi: Cập nhật kiểm tra vai trò để cho phép BOTH
+            if ("SELLER".equalsIgnoreCase(userFromServer.getRole()) || "BOTH".equalsIgnoreCase(userFromServer.getRole())) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: green;");
@@ -163,7 +204,7 @@ public class sellerHubController_signin {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("This is not a seller account");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Login Failed");
         }
 
     }

@@ -18,6 +18,7 @@ import model.ActionType;
 import model.User;
 import network.ClientSocket;
 import controller.SessionManager;
+import security.RSA;
 
 public class signInController {
 
@@ -79,6 +80,25 @@ public class signInController {
             Status.setText("Please insert username & password");
             return;
         }
+        
+        // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
+        String serverPublicKey = ClientSocket.getServerPublicKey();
+        if (serverPublicKey == null) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Cannot get security key from Server!");
+            return;
+        }
+
+        try {
+            password = RSA.encrypt(password, serverPublicKey);
+        } catch (Exception e) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Encryption failed: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
 
         User newUser = new User();
         newUser.setName(username);
@@ -104,7 +124,7 @@ public class signInController {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("Username existed");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Username existed");
         }
     }
 
@@ -114,6 +134,25 @@ public class signInController {
 
         if (username.isEmpty() || password.isEmpty()) {
             Status.setText("Please insert username & password");
+            return;
+        }
+        
+        // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
+        String serverPublicKey = ClientSocket.getServerPublicKey();
+        if (serverPublicKey == null) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Cannot get security key from Server!");
+            return;
+        }
+
+        try {
+            password = RSA.encrypt(password, serverPublicKey);
+        } catch (Exception e) {
+            Status.setVisible(true);
+            Status.setStyle("-fx-text-fill: red;");
+            Status.setText("Encryption failed: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
 
@@ -128,8 +167,8 @@ public class signInController {
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
 
-            // The client-side check is still useful for immediate feedback
-            if ("BIDDER".equalsIgnoreCase(userFromServer.getRole())) {
+            // Sửa lỗi: Cập nhật kiểm tra vai trò để cho phép BOTH
+            if ("BIDDER".equalsIgnoreCase(userFromServer.getRole()) || "BOTH".equalsIgnoreCase(userFromServer.getRole())) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: green;");
@@ -151,7 +190,7 @@ public class signInController {
         } else {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: red;");
-            Status.setText("This is not a bidder account");
+            Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Login Failed");
         }
 
     }

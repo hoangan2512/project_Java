@@ -16,4 +16,5 @@ public enum ActionType {
     CREATE_ITEM,
     CHECK_DUPLICATE_NAME,
     CUSTOM_SEARCH,
+    GET_SELLER_NAME,
 }

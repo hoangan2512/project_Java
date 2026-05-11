@@ -1,8 +1,10 @@
 package server.network;
 
+import server.Main;
 import server.repository.DatabaseConnection;
 import server.service.AuctionTimeManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,7 +23,19 @@ public class AuctionServer {
     // Trình quản lý thời gian của các phiên đấu giá
     private static final AuctionTimeManager auctionTimeManager = new AuctionTimeManager();
 
+    //Lưu trữ khóa RSA để dùng chung cho toàn bộ Server
+    public static java.security.PrivateKey serverPrivateKey;
+    public static String serverPublicKeyStr;
+
     public static void main(String[] args) {
+        // 0. KHỞI TẠO DB TRƯỚC KHI LÀM BẤT CỨ VIỆC GÌ KHÁC
+        // Nếu không gọi hàm này, DB mới tinh sẽ không có các bảng (users, items, auctions, bids)
+        // và Thread của AuctionTimeManager sẽ ném lỗi "no such table: auctions"
+        LOGGER.info("Initializing database tables if not exist...");
+        // Gọi hàm main của class Main để chạy các lệnh CREATE TABLE IF NOT EXISTS
+        // Đây là cách fix nhanh, chuẩn nhất là tách phần khởi tạo bảng ra một hàm riêng
+        server.Main.main(new String[]{}); 
+
         // 1. Kết nối cơ sở dữ liệu
         LOGGER.info("Connecting to the database...");
         DatabaseConnection.getInstance().getConnection();
@@ -30,6 +44,17 @@ public class AuctionServer {
         // 2. Khởi động trình quản lý thời gian đấu giá
         LOGGER.info("Starting Auction Time Manager...");
         auctionTimeManager.start();
+
+        LOGGER.info("Generating RSA Key Pair for Security...");
+        try {
+            java.security.KeyPair keyPair = security.RSA.generateKeyPair();
+            serverPrivateKey = keyPair.getPrivate();
+            serverPublicKeyStr = security.RSA.keyToString(keyPair.getPublic());
+            LOGGER.info("RSA Keys generated successfully.");
+        } catch (Exception e) {
+            LOGGER.severe("Lỗi khi tạo khóa RSA: " + e.getMessage());
+        }
+
 
         // 3. Đăng ký shutdown hook để đảm bảo tài nguyên được giải phóng khi server tắt
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

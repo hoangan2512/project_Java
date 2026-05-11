@@ -1,17 +1,9 @@
 .btn-bid {
     -fx-background-color: #ff8e1f;
-    -fx-background-radius: 30px;
-    -fx-cursor: hand;
-    -fx-font-weight: bold;
-    -fx-font-size: 16px;
 }
 
 .btn-bid:hover {
     -fx-background-color: #ffa447;
-    -fx-background-radius: 30px;
-    -fx-cursor: hand;
-    -fx-font-weight: bold;
-    -fx-font-size: 16px;
 }
 
 .context-menu {
@@ -80,45 +72,116 @@
 }
 
 .filter-btn {
-    -fx-background-color: #a15c12;
-    -fx-text-fill: black;
-    -fx-background-radius: 10px;
-    -fx-cursor: hand;
-    -fx-padding: 5px 20px;
+    -fx-background-color: transparent;
+    -fx-border-color: #676767;
+    -fx-text-fill: #676767;
+    -fx-background-radius: 0px;
+    -fx-border-radius: 0px;
     -fx-font-weight: bold;
 }
-
 .filter-btn:hover {
-    -fx-background-color: #d68518;
+    -fx-background-color: #2b2b2b;
 }
-
 .filter-btn:selected {
-    -fx-background-color: #ff8e1f;
-    -fx-text-fill: black;
+    -fx-border-color: #afafaf;
+    -fx-text-fill: #afafaf;
+    -fx-font-weight: bold;
 }
-
 .filter-btn:selected:hover {
-    -fx-background-color: #ffa447;
+    -fx-background-color: #2b2b2b;
 }
 
 .auto-bid-btn {
     -fx-background-color: grey;
     -fx-text-fill: black;
-    -fx-background-radius: 20px;
+    -fx-background-radius: 5px;
     -fx-cursor: hand;
     -fx-padding: 5px 20px;
     -fx-font-weight: bold;
 }
-
 .auto-bid-btn:hover {
     -fx-background-color: #979797;
 }
-
 .auto-bid-btn:selected {
     -fx-background-color: #3dd35b;
     -fx-text-fill: black;
 }
-
 .auto-bid-btn:selected:hover {
     -fx-background-color: #5fff00;
+}
+
+.my-product-card {
+    -fx-pref-width: 347;
+    -fx-pref-height: 260;
+    -fx-background-color: transparent; /* Ban đầu trong suốt */
+}
+.my-product-card:hover {
+    -fx-background-color: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.75) 0%,      /* Đỉnh card: Đen mờ 75% */
+    rgba(30, 30, 30, 0.4) 22%,   /* Bắt đầu tan màu từ y=57 */
+    rgba(0, 0, 0, 0.0) 32%,      /* Tan biến hoàn toàn tại y=83 (tạo vùng đệm quanh y=70) */
+    rgba(0, 0, 0, 0.0) 100%     /* Suốt phần còn lại xuyên thấu 100% */
+    );
+    -fx-cursor: hand;
+}
+
+.join-label {
+    -fx-opacity: 0.0;
+}
+.my-product-card:hover .join-label {
+    -fx-opacity: 1.0;
+}
+
+.seller-label {
+    -fx-underline: false;
+}
+.seller-label:hover {
+    -fx-underline: true;
+}
+
+.product-name-card {
+    -fx-background-color: linear-gradient(to top,
+    rgba(0, 0, 0, 0.75) 0%,      /* Đỉnh card: Đen mờ 75% */
+    rgba(30, 30, 30, 0.4) 22%,   /* Bắt đầu tan màu từ y=57 */
+    rgba(0, 0, 0, 0.0) 32%,      /* Tan biến hoàn toàn tại y=83 (tạo vùng đệm quanh y=70) */
+    rgba(0, 0, 0, 0.0) 100%     /* Suốt phần còn lại xuyên thấu 100% */
+    );
+}
+.product-name-card:hover {
+    -fx-cursor: hand;
+    -fx-pref-width: 347;
+    -fx-pref-height: 260;
+    -fx-background-color: transparent;
+    -fx-text-fill: transparent;
+}
+
+.product-name-label {
+    -fx-opacity: 1.0;
+}
+.product-name-card:hover .product-name-label {
+    -fx-opacity: 0.0;
+}
+
+.increase_btn {
+    -fx-text-fill: #f5a254;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+.increase_btn:hover {
+    -fx-text-fill: #ff8e1f;
+    -fx-border-width: 0 0.75 0 0 ;
+    -fx-label-padding: 0 0 0 0.75;
+    -fx-border-color:  linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);
+}
+
+.decrease_btn {
+    -fx-text-fill: #f5a254;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+.decrease_btn:hover {
+    -fx-text-fill: #ff8e1f;
+    -fx-border-width: 0 0 0 0.75 ;
+    -fx-label-padding: 0 0.75 0 0;
+    -fx-border-color:  linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);
 }

@@ -9,6 +9,7 @@ import message.Request;
 import message.Response;
 import model.ActionType;
 import model.User;
+import security.RSA;
 import server.controller.AuctionController;
 import server.controller.BidController;
 import server.controller.ItemController;
@@ -48,6 +49,12 @@ public class ClientHandler implements Runnable {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
+            
+            // --- GỬI PUBLIC KEY CHO CLIENT KHI VỪA KẾT NỐI ---
+            // Yêu cầu Client lưu Public Key này để mã hóa mật khẩu trước khi gửi lên
+            Response pubKeyResponse = new Response("PUBLIC_KEY", AuctionServer.serverPublicKeyStr, "Đây là khóa công khai của Server");
+            out.writeObject(pubKeyResponse);
+            out.flush();
 
             while (true) {
                 Request request = (Request) in.readObject();
@@ -70,9 +77,29 @@ public class ClientHandler implements Runnable {
     private Response handleBusinessLogic(Request request) {
         ActionType type = request.getAction();
 
+        // --- GIẢI MÃ MẬT KHẨU TRƯỚC KHI XỬ LÝ ---
+        if (type == ActionType.LOGIN_BIDDER || type == ActionType.LOGIN_SELLER || type == ActionType.REGISTER) {
+            try {
+                User userWithEncryptedPass = (User) request.getPayload();
+                String encryptedPass = userWithEncryptedPass.getPassword();
+                
+                // Dùng Private Key của Server để giải mã
+                String decryptedPass = RSA.decrypt(encryptedPass, AuctionServer.serverPrivateKey);
+                
+                // Cập nhật lại mật khẩu đã giải mã vào đối tượng User
+                userWithEncryptedPass.setPassword(decryptedPass);
+                
+                // Request bây giờ đã chứa mật khẩu dạng plain-text, sẵn sàng để Controller xử lý
+            } catch (Exception e) {
+                System.err.println("Lỗi giải mã mật khẩu: " + e.getMessage());
+                return new Response("FAIL", null, "Lỗi bảo mật: Không thể xác thực thông tin.");
+            }
+        }
+
         switch (type) {
             case LOGIN_BIDDER:
             case LOGIN_SELLER:
+                
                 Response loginResponse = userController.handleLogin(request);
                 // Nếu đăng nhập thành công, lưu lại thông tin user vào ClientHandler
                 if ("SUCCESS".equals(loginResponse.getStatus()) && loginResponse.getData() instanceof User) {
@@ -82,7 +109,13 @@ public class ClientHandler implements Runnable {
                 return loginResponse;
 
             case REGISTER:
-                return userController.handleRegister(request);
+                Response registerResponse = userController.handleRegister(request);
+                // Nếu đăng ký thành công, hệ thống tự động đăng nhập (lưu Session) luôn cho User đó
+                if ("SUCCESS".equals(registerResponse.getStatus()) && registerResponse.getData() instanceof User) {
+                    this.loggedInUser = (User) registerResponse.getData();
+                    System.out.println("=> Đã tự động ghi nhận Session sau khi đăng ký cho user: " + loggedInUser.getName());
+                }
+                return registerResponse;
 
             case LOGOUT:
                 if (this.loggedInUser != null) {
@@ -104,7 +137,7 @@ public class ClientHandler implements Runnable {
                 if (!checkAuthorization("SELLER")) {
                     return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
                 }
-                // Điều hướng đúng hàm để tránh lỗi ClassCastException
+                // Điều hướng đúng về hàm kiểm tra trùng lặp (tránh lỗi ClassCastException)
                 return itemController.handleCheckDuplicateName(request);
 
             case BID:
