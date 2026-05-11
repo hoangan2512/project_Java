@@ -7,8 +7,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class UserRepository {
     private static final Logger LOGGER = Logger.getLogger(UserRepository.class.getName());
@@ -95,5 +100,32 @@ public class UserRepository {
 
         // Đăng nhập thất bại trả về null
         return null;
+    }
+
+    public Map<Integer, String> getUsernamesByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<Integer, String> usernameMap = new HashMap<>();
+        String inSql = ids.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT id, username FROM users WHERE id IN (" + inSql + ")";
+
+        Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < ids.size(); i++) {
+                pstmt.setInt(i + 1, ids.get(i));
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    usernameMap.put(rs.getInt("id"), rs.getString("username"));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error getting usernames by ids", e);
+        }
+
+        return usernameMap;
     }
 }
