@@ -1,21 +1,26 @@
 package model;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class User extends entity implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L; // Giúp tránh lỗi khác phiên bản
 
     private String password;
     protected String role;
+    private String status; // Thêm thuộc tính status (ACTIVE, BANNED)
 
     public User(int id, String name, String password, String role) {
         super(id, name);
         this.password = password;
         this.role = role;
+        this.status = "ACTIVE"; // Mặc định là ACTIVE
     }
 
     public User() {
         super(0, "");
+        this.status = "ACTIVE";
     }
 
     // =========================================================
@@ -45,19 +50,27 @@ public class User extends entity implements Serializable {
     public void setRole(String role) {
         this.role = role;
     }
-    public long getID() {return id; }
-
-    public boolean authenticate(String inputPassword) {
-        return this.password.equals(inputPassword);
+    
+    public String getStatus() {
+        return status;
     }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public long getID() {return id; }
 
     public static User createUser(String role, int id, String username, String password) {
         if ("Bidder".equalsIgnoreCase(role)) {
             return new Bidder(id, username, password);
         } else if ("Seller".equalsIgnoreCase(role)) {
             return new Seller(id, username, password);
-        } else {
+        } else if ("Admin".equalsIgnoreCase(role)) {
             return new Admin(id, username, password);
+        } else {
+            // Cho trường hợp role là BOTH hoặc các role khác
+            return new User(id, username, password, role);
         }
     }
 
@@ -73,18 +86,12 @@ public class User extends entity implements Serializable {
         public Seller(int id, String username, String password) {
             super(id, username, password, "Seller");
         }
-        // Giả sử phương thức này nằm trong class Seller hoặc ProductManager
-
     }
 
     // Lớp Admin: Quản lý hệ thống
     static class Admin extends User implements Serializable {
         public Admin(int id, String name, String password) {
             super(id, name, password, "Admin");
-        }
-
-        public void blockUser(User user) {
-            System.out.println("Admin " + getName() + " đã khóa người dùng: " + user.getName());
         }
     }
 }

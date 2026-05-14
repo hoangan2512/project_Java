@@ -1,9 +1,11 @@
 package server.network;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 import message.Request;
 import message.Response;
@@ -56,7 +58,9 @@ public class ClientHandler implements Runnable {
             out.writeObject(pubKeyResponse);
             out.flush();
 
-            while (true) {
+            // Sửa lỗi cảnh báo: 'while' statement cannot complete without throwing an exception
+            // Thêm điều kiện kiểm tra isClosed để vòng lặp có thể kết thúc tự nhiên
+            while (!socket.isClosed()) {
                 Request request = (Request) in.readObject();
                 System.out.println("Nhận yêu cầu: " + request.getAction() + " từ Client: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
 
@@ -66,8 +70,12 @@ public class ClientHandler implements Runnable {
                 out.writeObject(response);
                 out.flush();
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (EOFException | SocketException e) {
+            // SocketException và EOFException là bình thường khi client chủ động ngắt kết nối
             System.err.println("Một Client đã ngắt kết nối. User: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Lỗi kết nối từ Client. User: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
+            e.printStackTrace();
         } finally {
             closeEverything();
         }
@@ -78,7 +86,7 @@ public class ClientHandler implements Runnable {
         ActionType type = request.getAction();
 
         // --- GIẢI MÃ MẬT KHẨU TRƯỚC KHI XỬ LÝ ---
-        if (type == ActionType.LOGIN_BIDDER || type == ActionType.LOGIN_SELLER || type == ActionType.REGISTER) {
+        if (type == ActionType.LOGIN_BIDDER || type == ActionType.LOGIN_SELLER || type == ActionType.LOGIN_ADMIN || type == ActionType.REGISTER) {
             try {
                 User userWithEncryptedPass = (User) request.getPayload();
                 String encryptedPass = userWithEncryptedPass.getPassword();
@@ -99,7 +107,7 @@ public class ClientHandler implements Runnable {
         switch (type) {
             case LOGIN_BIDDER:
             case LOGIN_SELLER:
-                
+            case LOGIN_ADMIN:
                 Response loginResponse = userController.handleLogin(request);
                 // Nếu đăng nhập thành công, lưu lại thông tin user vào ClientHandler
                 if ("SUCCESS".equals(loginResponse.getStatus()) && loginResponse.getData() instanceof User) {
@@ -126,28 +134,52 @@ public class ClientHandler implements Runnable {
                 this.loggedInUser = null; // Xóa session khi logout
                 return new Response("SUCCESS", null, "Đăng xuất thành công.");
 
-            // --- CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION) ---
+            // ======================================================
+            // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
+            // ======================================================
+            case ADMIN_GET_ALL_USERS:
+                // Sửa lỗi: Gọi hàm không bị inverted
+                if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
+                return unauthResponse();
+                
+            case ADMIN_BAN_USER:
+                if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
+                return unauthResponse();
+                
+            case ADMIN_UNBAN_USER:
+                if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
+                return unauthResponse();
+                
+            case ADMIN_GET_PENDING_ITEMS:
+                if (checkAuthorization("ADMIN")) return itemController.handleGetPendingItems(request);
+                return unauthResponse();
+                
+            case ADMIN_APPROVE_ITEM:
+                if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);
+                return unauthResponse();
+                
+            case ADMIN_REJECT_ITEM:
+                if (checkAuthorization("ADMIN")) return itemController.handleRejectItem(request);
+                return unauthResponse();
+
+            // ======================================================
+            // CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION)
+            // ======================================================
             case CREATE_ITEM:
-                if (!checkAuthorization("SELLER")) {
-                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-                }
-                return itemController.handleCreateItem(request);
+                if (checkAuthorization("SELLER")) return itemController.handleCreateItem(request);
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
                 
             case CHECK_DUPLICATE_NAME:
-                if (!checkAuthorization("SELLER")) {
-                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-                }
-                // Điều hướng đúng về hàm kiểm tra trùng lặp (tránh lỗi ClassCastException)
-                return itemController.handleCheckDuplicateName(request);
+                if (checkAuthorization("SELLER")) return itemController.handleCheckDuplicateName(request);
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
 
             case BID:
-                if (!checkAuthorization("BIDDER")) {
-                    return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
-                }
-                // Tại đây, bạn có thể (và nên) ép buộc Request lấy ID của loggedInUser để đảm bảo an toàn, thay vì tin tưởng ID mà client gửi lên
-                return bidController.handleBid(request);
+                if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
 
-            // --- CÁC HÀNH ĐỘNG CÔNG KHAI (KHÔNG CẦN ĐĂNG NHẬP ĐỂ XEM) ---
+            // ======================================================
+            // CÁC HÀNH ĐỘNG CÔNG KHAI (KHÔNG CẦN ĐĂNG NHẬP ĐỂ XEM)
+            // ======================================================
             case GET_BID_HISTORY:
                 return bidController.handleGetBidHistory(request);
             case GET_LIST:
@@ -157,25 +189,38 @@ public class ClientHandler implements Runnable {
             case CUSTOM_SEARCH:
                 return auctionController.handleCustomSearch(request);
                 
-            case AUCTION_END: // Cái này nên chỉ cho hệ thống gọi (từ AuctionTimeManager), Client gọi sẽ bị chặn. Bạn nên chặn ở đây.
+            case AUCTION_END: 
                 return new Response("FAIL", null, "Client không có quyền kết thúc phiên đấu giá.");
 
             default:
-                return new Response("ERROR", null, "hành động không xác định: " + type);
+                return new Response("ERROR", null, "Hành động không xác định: " + type);
         }
     }
 
     /**
      * Hàm phụ trợ để kiểm tra xem Client này đã đăng nhập chưa và có đúng vai trò yêu cầu không.
+     * Sửa lỗi: Trả về false nếu KHÔNG có quyền, true nếu CÓ quyền để câu lệnh if bên trên xuôi theo tự nhiên.
      */
     private boolean checkAuthorization(String expectedRole) {
         if (this.loggedInUser == null) {
             return false; // Chưa đăng nhập
         }
-        if (expectedRole != null && !expectedRole.equalsIgnoreCase(this.loggedInUser.getRole())) {
-            return false; // Sai vai trò (Ví dụ: Seller cố gọi hàm Bid)
+        
+        // Admin có mọi quyền (nếu cần thiết) hoặc chỉ check chính xác role
+        if ("ADMIN".equalsIgnoreCase(this.loggedInUser.getRole())) {
+             return true; 
         }
-        return true;
+        
+        if ("BOTH".equalsIgnoreCase(this.loggedInUser.getRole())) {
+             return true; // Cho phép user có role BOTH thực hiện chức năng của cả Seller và Bidder
+        }
+
+        // Sửa lỗi logic if có thể simplified
+        return expectedRole == null || expectedRole.equalsIgnoreCase(this.loggedInUser.getRole());
+    }
+    
+    private Response unauthResponse() {
+         return new Response("FAIL", null, "Bạn không có quyền thực hiện chức năng này!");
     }
 
     public void sendMessage(Object msg) {
