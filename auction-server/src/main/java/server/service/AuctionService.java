@@ -77,6 +77,10 @@ public class AuctionService {
                 Response notifyPrice = new Response("NOTIFY_NEW_PRICE", bid, "Có người vừa đặt giá mới!");
                 AuctionServer.broadcast(notifyPrice);
 
+                // 8. KIỂM TRA VÀ KÍCH HOẠT AUTO-BID TỪ ĐỐI THỦ
+                // Gọi AutoBidManager ở đây. Không chạy trong thread này để tránh đè lock nếu auto-bid lỗi
+                AutoBidManager.getInstance().processAutoBids(auctionId, bid.getAmount(), this);
+
                 return new Response("SUCCESS", bid, "Đặt giá thành công! Bạn đang dẫn đầu.");
             } else {
                 return new Response("FAIL", null, "Lỗi hệ thống khi lưu giá mới.");
