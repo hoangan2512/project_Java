@@ -1,0 +1,15 @@
+.btn {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+.btn:hover {
+    -fx-background-color: #3a3a3a;
+}
+.btn:selected {
+    -fx-background-color: transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #ff8e1f;
+}
+.btn:selected:hover {
+    -fx-background-color: #3a3a3a;
+}
