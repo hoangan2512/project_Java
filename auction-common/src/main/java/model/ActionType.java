@@ -15,6 +15,7 @@ public enum ActionType {
     DEPOSIT,
     NOTIFY_NEW_PRICE,
     AUCTION_END,
+    AUCTION_EXTENDED,  // Bổ sung: Thông báo gia hạn phiên đấu giá (Anti-Sniping)
     CREATE_ITEM,
     CHECK_DUPLICATE_NAME,
     CUSTOM_SEARCH,

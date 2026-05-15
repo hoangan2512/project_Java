@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 /**
  * Repository để quản lý các phiên đấu giá trong cơ sở dữ liệu.
@@ -159,6 +160,22 @@ public class AuctionRepository {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Lỗi khi cập nhật trạng thái cho auction ID " + auctionId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    // --- Bổ sung hàm cho Anti-Sniping ---
+    public boolean updateEndTime(int auctionId, LocalDateTime newEndTime) {
+        // language=SQLite
+        String sql = "UPDATE auctions SET end_time = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setTimestamp(1, Timestamp.valueOf(newEndTime));
+            pstmt.setInt(2, auctionId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi gia hạn thời gian cho auction ID " + auctionId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }

@@ -10,7 +10,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Xử lý logic đấu giá tự động (Auto-Bidding).
@@ -20,6 +22,9 @@ public class AutoBidManager {
 
     // Lưu trữ cấu hình auto-bid: Key = auctionId, Value = Danh sách các cấu hình của người dùng
     private final Map<Integer, List<AutoBidConfig>> autoBids = new ConcurrentHashMap<>();
+
+    // Sử dụng ScheduledExecutorService thay vì tạo Thread mới thủ công và dùng Thread.sleep
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
     private AutoBidManager() {}
 
@@ -52,57 +57,65 @@ public class AutoBidManager {
             return; // Không có ai đăng ký auto-bid cho phiên này
         }
 
-        // Tạo một luồng riêng để xử lý auto-bid, tránh block luồng chính của client đang đặt giá
-        new Thread(() -> {
-            boolean bidPlaced;
-            do {
-                bidPlaced = false;
-                double loopCurrentPrice = getCurrentPriceFromDB(auctionId); // Cần hàm này hoặc truyền giá vào
+        // Lập lịch thực thi ngay lập tức, và đệ quy tự gọi lại thay vì dùng while(true) + Thread.sleep
+        scheduler.execute(() -> executeNextAutoBid(auctionId, currentHighestBid, auctionService));
+    }
+    
+    private void executeNextAutoBid(int auctionId, double currentPrice, AuctionService auctionService) {
+        List<AutoBidConfig> configs = autoBids.get(auctionId);
+        if (configs == null || configs.isEmpty()) return;
 
-                // Lọc ra những người có khả năng tự động trả giá (còn ngân sách maxBid lớn hơn giá hiện tại + bước giá)
-                List<AutoBidConfig> eligibleConfigs = configs.stream()
-                        .filter(c -> c.getMaxBid() >= loopCurrentPrice + c.getIncrement())
-                        .collect(Collectors.toList());
+        double systemMinIncrement = auctionService.getMinimumIncrement(currentPrice);
 
-                if (eligibleConfigs.isEmpty()) {
-                    break; // Dừng lại nếu không ai còn đủ tiền đua tiếp
-                }
+        // Lọc ra những người có khả năng tự động trả giá
+        List<AutoBidConfig> eligibleConfigs = configs.stream()
+                .filter(c -> {
+                    double requiredNextBid = currentPrice + Math.max(c.getIncrement(), systemMinIncrement);
+                    return c.getMaxBid() >= requiredNextBid;
+                })
+                .toList();
 
-                // Lấy người đầu tiên trong danh sách hợp lệ (nhờ đã sort theo thời gian đăng ký)
-                AutoBidConfig winnerConfig = eligibleConfigs.get(0);
+        if (eligibleConfigs.isEmpty()) {
+            System.out.println("[AUTO-BID] Kết thúc: Không còn ai đủ điều kiện đua giá cho Auction " + auctionId);
+            return; // Thoát đệ quy
+        }
 
-                // Tính toán mức giá mới cần đặt
-                double nextBidAmount = loopCurrentPrice + winnerConfig.getIncrement();
+        AutoBidConfig winnerConfig = eligibleConfigs.getFirst();
 
-                // Đảm bảo không vượt quá maxBid
-                if (nextBidAmount > winnerConfig.getMaxBid()) {
-                     nextBidAmount = winnerConfig.getMaxBid();
-                }
+        double actualIncrement = Math.max(winnerConfig.getIncrement(), systemMinIncrement);
+        double nextBidAmount = currentPrice + actualIncrement;
 
-                // Tạo đối tượng Bid mới
-                Bid autoBid = new Bid();
-                autoBid.setAuction_id(auctionId);
-                autoBid.setBidder_id(winnerConfig.getBidderId());
-                autoBid.setAmount(nextBidAmount);
-                autoBid.setBid_time(LocalDateTime.now());
+        if (nextBidAmount > winnerConfig.getMaxBid()) {
+             nextBidAmount = winnerConfig.getMaxBid();
+        }
 
-                // GỌI LẠI HÀM PLACE BID CỦA AUCTION SERVICE
-                // (Hàm này có lock bên trong nên rất an toàn)
-                message.Response response = auctionService.placeBid(autoBid);
+        Bid autoBid = new Bid();
+        autoBid.setAuction_id(auctionId);
+        autoBid.setBidder_id(winnerConfig.getBidderId());
+        autoBid.setAmount(nextBidAmount);
+        autoBid.setBid_time(LocalDateTime.now());
 
-                if ("SUCCESS".equals(response.getStatus())) {
-                    bidPlaced = true;
-                    System.out.println("[AUTO-BID] User " + winnerConfig.getBidderId() + " tự động trả giá: " + nextBidAmount);
+        message.Response response = auctionService.placeAutoBid(autoBid);
 
-                    // Nghỉ 1 chút xíu (ví dụ 100ms) để hệ thống kịp broadcast giá trước khi chạy vòng đua giá tiếp theo
-                    try { Thread.sleep(100); } catch (InterruptedException e) {}
-                }
-
-            } while (bidPlaced); // Tiếp tục đua giá tự động cho đến khi không ai chịu nâng giá nữa
-        }).start();
+        if ("SUCCESS".equals(response.getStatus())) {
+            System.out.println("[AUTO-BID] User " + winnerConfig.getBidderId() + " tự động trả giá: " + nextBidAmount);
+            
+            // Thay vì dùng while(true) và Thread.sleep(100), ta lập lịch cho lần chạy tiếp theo sau 100ms
+            final double nextPrice = nextBidAmount;
+            scheduler.schedule(() -> executeNextAutoBid(auctionId, nextPrice, auctionService), 100, TimeUnit.MILLISECONDS);
+            
+        } else {
+            System.out.println("[AUTO-BID] Xung đột giá, đọc lại giá mới nhất từ DB...");
+            double priceFromDB = getCurrentPriceFromDB(auctionId);
+            if (priceFromDB > currentPrice) {
+                // Thử lại ngay lập tức với giá mới từ DB
+                scheduler.execute(() -> executeNextAutoBid(auctionId, priceFromDB, auctionService));
+            } else {
+                System.out.println("[AUTO-BID] Kết thúc: Không thể đặt giá mới và giá DB không đổi.");
+            }
+        }
     }
 
-    // Hàm phụ trợ để lấy giá hiện tại mới nhất từ DB
     private double getCurrentPriceFromDB(int auctionId) {
          AuctionRepository repo = new AuctionRepository();
          model.Auction auction = repo.getAuctionById(auctionId);
