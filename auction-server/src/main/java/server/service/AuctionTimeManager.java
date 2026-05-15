@@ -96,7 +96,6 @@ public class AuctionTimeManager implements AutoCloseable {
     public void close() {
         stop();
     }
-
     /**
      * Phương thức cho phép các Service khác (như AuctionService) dời lịch kết thúc của một phiên đấu giá.
      */
