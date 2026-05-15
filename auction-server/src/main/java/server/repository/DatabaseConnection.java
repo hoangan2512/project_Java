@@ -9,13 +9,18 @@ public class DatabaseConnection {
     private static DatabaseConnection instance;
 
     // Đảm bảo database được lưu vào một file cố định trong thư mục project
-    private static final String DB_FILE_PATH = "./auction_db.db";
+    private static final String DB_FILE_PATH = "auction-server/auction_db.db";
     private static final String URL = "jdbc:sqlite:" + DB_FILE_PATH;
 
     private DatabaseConnection() {
         try {
             Class.forName("org.sqlite.JDBC");
             File dbFile = new File(DB_FILE_PATH);
+            // Tạo thư mục nếu chưa có
+            File parentDir = dbFile.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
             System.out.println("Database is persistent at: " + dbFile.getAbsolutePath());
         } catch (ClassNotFoundException e) {
             System.err.println("FATAL: SQLite JDBC driver not found!");
