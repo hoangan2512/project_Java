@@ -61,7 +61,8 @@ public class UserRepository {
         // Bỏ điều kiện AND password = ?. Chỉ tìm kiếm dựa trên username
         // language=SQLite
         String sql = "SELECT * FROM users WHERE username = ?";
-        
+
+
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
