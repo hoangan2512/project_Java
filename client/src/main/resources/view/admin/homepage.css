@@ -1,15 +1,37 @@
 .btn {
     -fx-background-color: transparent;
     -fx-border-width: 0;
+    -fx-label-padding: 0 0 0 0;
 }
 .btn:hover {
     -fx-background-color: #3a3a3a;
 }
 .btn:selected {
     -fx-background-color: transparent;
-    -fx-border-width: 0 0 1 0;
+    -fx-label-padding: 2 0 0 0;
+    -fx-border-width: 0 0 2 0;
     -fx-border-color: #ff8e1f;
 }
 .btn:selected:hover {
     -fx-background-color: #3a3a3a;
+}
+
+.menu-button .context-menu {
+    -fx-background-color: #000000;
+    -fx-border-color: #2c2c2c; /* Viền xám nhẹ để phân tách với nền đen */
+    -fx-border-width: 1px;
+    -fx-padding: 0;
+}
+/* 2. Ép các Menu Item (lớp con) có cùng chiều rộng và màu chữ trắng */
+.menu-button .menu-item {
+    -fx-background-color: transparent;
+    -fx-pref-width: inherit; /* Thừa hưởng chiều rộng từ MenuButton */
+}
+.menu-button .menu-item .label {
+    -fx-text-fill: white;
+}
+/* 3. Hiệu ứng khi di chuột qua các item (hover) */
+.menu-button .menu-item:focused,
+.menu-button .menu-item:hover {
+    -fx-background-color: #2c2c2c; /* Màu xám đậm khi hover */
 }
