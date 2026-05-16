@@ -138,9 +138,7 @@ public class ClientHandler implements Runnable {
             // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
             // ======================================================
             case ADMIN_GET_ALL_USERS:
-                // Sửa lỗi: Gọi hàm không bị inverted
-                if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
-                return unauthResponse();
+                return userController.handleGetAllUsers(request);
                 
             case ADMIN_BAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
@@ -150,9 +148,8 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
                 return unauthResponse();
                 
-            case ADMIN_GET_PENDING_ITEMS:
-                if (checkAuthorization("ADMIN")) return itemController.handleGetPendingItems(request);
-                return unauthResponse();
+            case ADMIN_GET_ITEMS:
+                return itemController.handleGetAllItems(request);
                 
             case ADMIN_APPROVE_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);

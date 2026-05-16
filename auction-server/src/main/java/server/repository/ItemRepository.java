@@ -1,9 +1,12 @@
 package server.repository;
 
+import model.Auction;
 import model.Item;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ItemRepository {
 
@@ -63,6 +66,7 @@ public class ItemRepository {
             while (rs.next()) {
                 Item currentItem = new Item();
                 currentItem.setId(rs.getInt("id"));
+                currentItem.setUser_prdID(rs.getString("user_prdID"));
                 currentItem.setName(rs.getString("name"));
                 currentItem.setDescription(rs.getString("description"));
                 currentItem.setStarting_price(rs.getDouble("starting_price"));
@@ -75,7 +79,8 @@ public class ItemRepository {
                 currentItem.setImgPath5(rs.getString("imgpath5"));
                 currentItem.setImgPath6(rs.getString("imgpath6"));
                 currentItem.setCategories(rs.getString("categories"));
-                // Cần thêm đọc cột moderation_status nếu Model Item có hỗ trợ
+                currentItem.setModeration_status(rs.getString("moderation_status"));
+
                 itemList.add(currentItem);
             }
         } catch (Exception e) {
@@ -83,6 +88,7 @@ public class ItemRepository {
         }
         return itemList;
     }
+
 
     /**
      * Kiểm tra trùng lặp mã sản phẩm hoặc tên sản phẩm trong cùng danh mục
@@ -125,30 +131,46 @@ public class ItemRepository {
     // ==========================================
     // CÁC HÀM DÀNH CHO ADMIN QUẢN LÝ ITEM
     // ==========================================
-    
-    public List<Item> getPendingItems() {
-        List<Item> itemList = new ArrayList<>();
-        // language=SQLite
-        String sql = "SELECT * FROM items WHERE moderation_status = 'PENDING_APPROVAL'";
-        
+
+    public List<Auction> getAllAuctionsWithItems() {
+        List<Auction> auctionList = new ArrayList<>();
+        // Chọn rõ các cột hoặc dùng alias để tránh trùng tên 'id'
+        String sql = "SELECT a.id AS auction_id, a.current_price, a.status, a.start_time, a.end_time, " +
+                "i.id AS item_id, i.user_prdID, i.name, i.description, i.starting_price, " +
+                "i.seller_id, i.imgpath, i.categories, i.moderation_status " +
+                "FROM auctions a INNER JOIN items i ON a.item_id = i.id";
+
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
-             
+
             while (rs.next()) {
+                // 1. Đọc dữ liệu bảng items
                 Item currentItem = new Item();
-                currentItem.setId(rs.getInt("id"));
+                currentItem.setId(rs.getInt("item_id"));
+                currentItem.setUser_prdID(rs.getString("user_prdID"));
                 currentItem.setName(rs.getString("name"));
                 currentItem.setDescription(rs.getString("description"));
                 currentItem.setStarting_price(rs.getDouble("starting_price"));
                 currentItem.setSeller_id(rs.getInt("seller_id"));
-                // ... map các fields khác
-                itemList.add(currentItem);
+                currentItem.setImgPath(rs.getString("imgpath"));
+                currentItem.setCategories(rs.getString("categories"));
+                currentItem.setModeration_status(rs.getString("moderation_status"));
+
+                // 2. Đọc dữ liệu bảng auctions
+                Auction auction = new Auction();
+                auction.setId(rs.getInt("auction_id"));
+
+                // Gắn Item vào trong Auction
+                auction.setItem(currentItem);
+
+                // Thêm Auction vào danh sách trả về
+                auctionList.add(auction);
             }
         } catch (Exception e) {
-            System.err.println("Lỗi khi lấy danh sách sản phẩm chờ duyệt: " + e.getMessage());
+            System.err.println("Lỗi khi lấy danh sách đấu giá: " + e.getMessage());
         }
-        return itemList;
+        return auctionList;
     }
     
     public boolean updateItemModerationStatus(int itemId, String status) {
@@ -167,20 +189,30 @@ public class ItemRepository {
         }
     }
 
-    public int countItemsBySellerId(int sellerId) {
-        String sql = "SELECT COUNT(id) FROM items WHERE seller_id = ?";
+    public Map<String, Integer> countItemsBySellerId(int sellerId) {
+        Map<String, Integer> counts = new HashMap<>();
+        counts.put("active", 0);
+        counts.put("rejected", 0);
+
+        String sql = "SELECT moderation_status, COUNT(id) FROM items WHERE seller_id = ? GROUP BY moderation_status";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, sellerId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1); // Trả về giá trị của cột COUNT
+                while (rs.next()) {
+                    String status = rs.getString(1);
+                    int count = rs.getInt(2);
+                    if ("APPROVED".equalsIgnoreCase(status)) {
+                        counts.put("active", counts.get("active") + count);
+                    } else if ("REJECTED".equalsIgnoreCase(status)) {
+                        counts.put("rejected", counts.get("rejected") + count);
+                    }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
+        return counts;
     }
 }

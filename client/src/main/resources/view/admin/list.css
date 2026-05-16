@@ -1,0 +1,6 @@
+.label {
+    -fx-background-color: transparent;
+}
+.label:hover {
+    -fx-background-color: #353535;
+}

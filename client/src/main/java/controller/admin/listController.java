@@ -12,40 +12,34 @@ public class listController {
     private Label col1, col2, col3, col4, col5, col6, col7;
 
     /**
-     * Populates a row in the list with summary data for a single user.
-     * This method expects a Map containing the User object and their stats.
-     * @param userDataMap A map containing user details and their item/auction/warning counts.
+     * Generic method to populate row data based on the columns
+     * order matching the headers in homepage.fxml.
+     * @param rowData Array of strings representing the data for each column
      */
-    public void setUserData(Map<String, Object> userDataMap) {
-        User user = (User) userDataMap.get("user");
-        // Use getOrDefault to avoid NullPointerException if counts are missing.
-        int itemsCount = ((Number) userDataMap.getOrDefault("itemsCount", 0)).intValue();
-        int auctionsCount = ((Number) userDataMap.getOrDefault("auctionsCount", 0)).intValue();
-        int warningsCount = ((Number) userDataMap.getOrDefault("warningsCount", 0)).intValue();
-
-        if (user != null) {
-            col1.setText(String.valueOf(user.getID()));
-            col2.setText(user.getUsername());
-            col3.setText(user.getRole());
-            col4.setText(String.valueOf(itemsCount));
-            col5.setText(String.valueOf(auctionsCount));
-            col6.setText(String.valueOf(warningsCount));
-            col7.setText(user.getStatus() != null ? user.getStatus() : "ACTIVE");
-
-            // --- Apply conditional styling ---
-
-            // Style for Status: Green for ACTIVE, Red for others (e.g., BANNED)
-            if ("ACTIVE".equalsIgnoreCase(user.getStatus())) {
-                col7.setStyle("-fx-text-fill: #4CAF50;"); // Green color
-            } else {
-                col7.setStyle("-fx-text-fill: #F44336;"); // Red color
-            }
-
-            // Style for Warnings: Amber/Yellow if count > 0
-            if (warningsCount > 0) {
-                col6.setStyle("-fx-text-fill: #FFC107;"); // Amber color
-            } else {
-                col6.setStyle("-fx-text-fill: WHITE;");
+    public void setRowData(String[] rowData) {
+        if (rowData != null) {
+            col1.setText(rowData.length > 0 ? rowData[0] : "");
+            col2.setText(rowData.length > 1 ? rowData[1] : "");
+            col3.setText(rowData.length > 2 ? rowData[2] : "");
+            col4.setText(rowData.length > 3 ? rowData[3] : "");
+            col5.setText(rowData.length > 4 ? rowData[4] : "");
+            col6.setText(rowData.length > 5 ? rowData[5] : "");
+            col7.setText(rowData.length > 6 ? rowData[6] : "");
+            
+            // Apply conditional styling for generic status if present in col7
+            if (rowData.length > 6 && rowData[6] != null) {
+                String status = rowData[6].toUpperCase();
+                if (status.equals("ACTIVE") || status.equals("APPROVED") || status.equals("RUNNING")) {
+                    col7.setStyle("-fx-text-fill: #4CAF50;");
+                } else if (status.equals("BANNED") || status.equals("REJECTED") || status.equals("SUSPENDED")) {
+                    col7.setStyle("-fx-text-fill: #F44336;");
+                } else if (status.equals("PENDING_APPROVAL") || status.equals("WAITING")) {
+                    col7.setStyle("-fx-text-fill: #FFC107;");
+                } else if (status.equals("FINISHED")) {
+                    col7.setStyle("-fx-text-fill: #919191;");
+                }else {
+                    col7.setStyle("-fx-text-fill: WHITE;");
+                }
             }
         }
     }

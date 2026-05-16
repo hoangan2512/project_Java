@@ -27,7 +27,7 @@ public class customSearchController {
 
     @FXML
     private TilePane productGrid;
-    
+
     @FXML
     private Button filter;
 
@@ -37,7 +37,7 @@ public class customSearchController {
     @FXML
     public void initialize() {
     }
-    
+
     public void hideFilterButton() {
         if (filter != null) {
             filter.setVisible(false);
@@ -49,7 +49,7 @@ public class customSearchController {
         this.currentCriteria = criteria;
         fetchProductsFromDatabase();
     }
-    
+
     // Hàm gọi để load lại dữ liệu (dùng khi có tín hiệu broadcast)
     public void refresh() {
         fetchProductsFromDatabase();
@@ -58,7 +58,7 @@ public class customSearchController {
     @SuppressWarnings("unchecked")
     private void fetchProductsFromDatabase() {
         productGrid.getChildren().clear();
-        
+
         // Nếu không có criteria (ví dụ: load mặc định khi mở app), thì tạo criteria trống để lấy tất cả
         if (currentCriteria == null) {
             currentCriteria = new SearchCriteria();
@@ -71,7 +71,7 @@ public class customSearchController {
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            
+
             List<Auction> resultList = null;
             Map<Integer, String> sellerNames = null;
 
@@ -90,10 +90,16 @@ public class customSearchController {
                 int cardIndex = 0;
                 for (Auction auc : resultList) {
                     try {
+                        String status = auc.getStatus();
+
+                        // --- LOẠI BỎ CÁC AUCTION BỊ SUSPENDED ---
+                        if ("SUSPENDED".equals(status)) {
+                            continue; // Bỏ qua không vẽ thẻ sản phẩm này lên màn hình
+                        }
+
                         // --- TÍNH TOÁN THỜI GIAN VÀ TRẠNG THÁI ---
                         long timeLeftSeconds = 0;
                         LocalDateTime now = LocalDateTime.now();
-                        String status = auc.getStatus();
 
                         if ("RUNNING".equals(status) && auc.getEnd_time() != null) {
                             if (now.isBefore(auc.getEnd_time())) {
@@ -115,12 +121,12 @@ public class customSearchController {
                                 }
                             }
                         }
-                        
+
                         String finalStatus = status;
 
                         if ("FINISHED".equals(finalStatus)) {
                             boolean isSearchingById = (currentCriteria.getAuctionId() != null && !currentCriteria.getAuctionId().trim().isEmpty());
-                            
+
                             if (!isSearchingById) {
                                 List<String> selectedStatuses = currentCriteria.getStatuses();
                                 if (selectedStatuses == null || !selectedStatuses.contains("FINISHED")) {
@@ -136,10 +142,10 @@ public class customSearchController {
                         // Lấy tên, ảnh và mô tả từ Item nằm trong Auction
                         String name = (auc.getItem() != null) ? auc.getItem().getName() : "Không tên";
                         String imgPath = (auc.getItem() != null) ? auc.getItem().getImgPath() : null;
-                        
+
                         // Lấy mảng byte hình ảnh từ Item
                         byte[] imageBytes = (auc.getItem() != null) ? auc.getItem().getImageBytes() : null;
-                        
+
                         // LẤY TÊN SELLER TỪ BẢNG MAP (Đã gửi kèm trong Response)
                         String sellerNameStr = "Unknown";
                         if (auc.getItem() != null && sellerNames != null) {

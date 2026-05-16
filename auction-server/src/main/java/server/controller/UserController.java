@@ -4,16 +4,16 @@ import message.Request;
 import message.Response;
 import model.ActionType;
 import model.User;
-import server.repository.AuctionRepository;
-import server.repository.ItemRepository;
 import server.repository.UserRepository;
+import server.repository.ItemRepository;
+import server.repository.AuctionRepository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
@@ -122,17 +122,27 @@ public class UserController {
             userDataMap.put("user", user);
             
             // Đếm số lượng items và auctions cho seller (nếu role là SELLER hoặc BOTH)
-            int itemsCount = 0;
-            int auctionsCount = 0;
-            int warningsCount = 0; // Tạm thời để 0 hoặc bạn có thể gọi ReasonRepository để đếm sau
+            int activeItemsCount = 0;
+            int rejectedItemsCount = 0;
+            int activeAuctionsCount = 0;
+            int suspendedAuctionsCount = 0;
+            int warningsCount = 0;
             
             if ("SELLER".equalsIgnoreCase(user.getRole()) || "BOTH".equalsIgnoreCase(user.getRole())) {
-                itemsCount = itemRepo.countItemsBySellerId(user.getId());
-                auctionsCount = auctionRepo.countAuctionsBySellerId(user.getId());
+                Map<String, Integer> itemCounts = itemRepo.countItemsBySellerId(user.getId());
+                activeItemsCount = itemCounts.getOrDefault("active", 0);
+                rejectedItemsCount = itemCounts.getOrDefault("rejected", 0);
+                
+                Map<String, Integer> auctionCounts = auctionRepo.countAuctionsBySellerId(user.getId());
+                activeAuctionsCount = auctionCounts.getOrDefault("active", 0);
+                suspendedAuctionsCount = auctionCounts.getOrDefault("suspended", 0);
             }
+            warningsCount = rejectedItemsCount + suspendedAuctionsCount;
             
-            userDataMap.put("itemsCount", itemsCount);
-            userDataMap.put("auctionsCount", auctionsCount);
+            userDataMap.put("itemsCount", activeItemsCount);
+            userDataMap.put("rejectedItemsCount", rejectedItemsCount);
+            userDataMap.put("auctionsCount", activeAuctionsCount);
+            userDataMap.put("suspendedAuctionsCount", suspendedAuctionsCount);
             userDataMap.put("warningsCount", warningsCount);
             
             usersData.add(userDataMap);

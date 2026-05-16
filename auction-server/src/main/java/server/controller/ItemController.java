@@ -140,10 +140,9 @@ public class ItemController {
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ ITEM
     // ==========================================
     
-    public Response handleGetPendingItems(Request request) {
+    public Response handleGetAllItems(Request request) {
          Response response = new Response();
-         List<Item> pendingItems = itemRepo.getPendingItems();
-         
+         List<Auction> pendingItems = itemRepo.getAllAuctionsWithItems();
          response.setStatus("SUCCESS");
          response.setMessage("Lấy danh sách sản phẩm chờ duyệt thành công.");
          response.setData(pendingItems);
