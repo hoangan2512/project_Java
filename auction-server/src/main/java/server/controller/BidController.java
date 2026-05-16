@@ -2,8 +2,10 @@ package server.controller;
 
 import message.Request;
 import message.Response;
+import model.AutoBidConfig;
 import model.Bid;
 import server.service.AuctionService;
+import server.service.AutoBidManager;
 import server.repository.BidRepository;
 import java.util.*;
 
@@ -17,26 +19,37 @@ public class BidController {
     }
 
     public Response handleBid(Request request) {
-        // Do request được handle đóng gói, lúc này dùng getPayload để bóc tách dữ liệu
         Object bidData = request.getPayload();
 
-        // Kiểm tra xem payload có đúng là đối tượng Bid không
         if (!(bidData instanceof Bid)) {
             return new Response("FAIL", null, "Dữ liệu đấu giá không hợp lệ.");
         }
 
         Bid bid = (Bid) bidData;
         
-        // Chuyển toàn bộ logic nghiệp vụ (kiểm tra điều kiện, khóa, lưu DB) cho Service xử lý
+        // Chuyển toàn bộ logic nghiệp vụ cho Service xử lý
         return auctionService.placeBid(bid);
     }
+    
+    public Response handleRegisterAutoBid(Request request) {
+        Object payload = request.getPayload();
+        
+        if (!(payload instanceof AutoBidConfig)) {
+            return new Response("FAIL", null, "Dữ liệu cấu hình tự động đấu giá không hợp lệ.");
+        }
+        
+        AutoBidConfig config = (AutoBidConfig) payload;
+        
+        // Đăng ký với Manager
+        AutoBidManager.getInstance().registerAutoBid(config);
+        
+        return new Response("SUCCESS", null, "Đăng ký đấu giá tự động thành công!");
+    }
 
-    public Response handleGetBidHistory(Request request) { //Xem lịch sử
-        if (request.getPayload() instanceof Integer) { //Bóc request IdItem và kiểm tra có phải là số nguyên(ID)
+    public Response handleGetBidHistory(Request request) {
+        if (request.getPayload() instanceof Integer) { 
             int itemId = (Integer) request.getPayload();
-            // Lấy lịch sử chỉ là thao tác đọc đơn giản, Controller có thể gọi thẳng Repository
             List<Bid> history = bidRepo.getBidHistory(itemId);
-
             return new Response("SUCCESS", history, "Tải lịch sử thành công");
         }
         return new Response("FAIL", null, "ID không hợp lệ");

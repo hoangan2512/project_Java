@@ -90,4 +90,36 @@ public class AuctionController {
 
         return response;
     }
+
+    // ==========================================
+    // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ PHIÊN ĐẤU GIÁ
+    // ==========================================
+    
+    public Response handleAdminStopAuction(Request request) {
+        Response response = new Response();
+        
+        if (request.getPayload() instanceof Integer) {
+            int auctionId = (Integer) request.getPayload();
+            boolean success = auctionRepo.stopAuction(auctionId);
+            
+            if (success) {
+                response.setStatus("SUCCESS");
+                response.setMessage("Đã buộc dừng phiên đấu giá thành công.");
+                
+                // Gửi Broadcast để báo cho tất cả Client (đặc biệt là người đang xem) biết phiên này đã bị hủy/kết thúc
+                Response notifyEnd = new Response();
+                notifyEnd.setStatus("AUCTION_END");
+                notifyEnd.setMessage("Phiên đấu giá " + auctionId + " đã bị hủy bởi Quản trị viên.");
+                AuctionServer.broadcast(notifyEnd);
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Không thể dừng phiên đấu giá, vui lòng thử lại.");
+            }
+        } else {
+            response.setStatus("FAIL");
+            response.setMessage("ID phiên đấu giá không hợp lệ.");
+        }
+
+        return response;
+    }
 }

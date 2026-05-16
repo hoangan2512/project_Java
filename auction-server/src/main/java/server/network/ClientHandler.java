@@ -177,6 +177,11 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
 
+            // Thêm route cho REGISTER_AUTO_BID
+            case REGISTER_AUTO_BID:
+                if (checkAuthorization("BIDDER")) return bidController.handleRegisterAutoBid(request);
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá tự động!");
+
             // ======================================================
             // CÁC HÀNH ĐỘNG CÔNG KHAI (KHÔNG CẦN ĐĂNG NHẬP ĐỂ XEM)
             // ======================================================
