@@ -58,6 +58,14 @@ public class Main {
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id), " +
                 "FOREIGN KEY (bidder_id) REFERENCES users(id)" +
                 ");";
+
+        // language=SQLite
+        String reasonsTable = "CREATE TABLE IF NOT EXISTS reasons (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "target_id INTEGER NOT NULL, " +
+                "reason_type TEXT NOT NULL, " + // AUCTION, ITEM, USER
+                "reason_text TEXT NOT NULL" +
+                ");";
         
         // language=SQLite
         String createAdmin = "INSERT OR IGNORE INTO users (username, password, role, status) VALUES ('admin', 'admin123', 'ADMIN', 'ACTIVE');";
@@ -68,6 +76,7 @@ public class Main {
             stmt.execute(itemsTable);
             stmt.execute(auctionsTable);
             stmt.execute(bidsTable);
+            stmt.execute(reasonsTable);
             stmt.execute(createAdmin); // Chạy lệnh tạo admin
             System.out.println("Database structure is up-to-date. Admin user is ready.");
         } catch (Exception e) {
