@@ -5,9 +5,9 @@ import model.Auction;
 import server.network.AuctionServer;
 import server.repository.AuctionRepository;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,10 +21,16 @@ public class AuctionTimeManager implements AutoCloseable {
     private static final String RUNNING_STATUS = "RUNNING";
     private static final long DEFAULT_CHECK_INTERVAL_SECONDS = 5;
 
+    // Singleton instance để AuctionService có thể gọi tới
+    private static AuctionTimeManager instance;
+
     private final AuctionRepository auctionRepository;
     private final ScheduledExecutorService scheduler;
     private final long checkIntervalSeconds;
     private final AtomicBoolean started = new AtomicBoolean(false);
+
+    // Lưu trữ thời gian kết thúc (đã gia hạn) của các phiên đấu giá trong RAM để truy xuất nhanh
+    private final ConcurrentHashMap<Integer, LocalDateTime> extendedEndTimes = new ConcurrentHashMap<>();
 
     public AuctionTimeManager() {
         this(new AuctionRepository(), DEFAULT_CHECK_INTERVAL_SECONDS);
@@ -45,6 +51,16 @@ public class AuctionTimeManager implements AutoCloseable {
             thread.setDaemon(true);
             return thread;
         });
+        
+        // Gán instance để có thể gọi từ ngoài vào
+        instance = this;
+    }
+
+    public static AuctionTimeManager getInstance() {
+        if (instance == null) {
+            instance = new AuctionTimeManager();
+        }
+        return instance;
     }
 
     public void start() {
@@ -80,11 +96,22 @@ public class AuctionTimeManager implements AutoCloseable {
     public void close() {
         stop();
     }
+    /**
+     * Phương thức cho phép các Service khác (như AuctionService) dời lịch kết thúc của một phiên đấu giá.
+     */
+    public void extendAuction(int auctionId, LocalDateTime newEndTime) {
+        extendedEndTimes.put(auctionId, newEndTime);
+    }
 
     public boolean isExpired(Auction auction) {
-        return auction == null
-                || auction.getEnd_time() == null
-                || !LocalDateTime.now().isBefore(auction.getEnd_time());
+        if (auction == null) return true;
+
+        // Ưu tiên lấy thời gian kết thúc đã được gia hạn từ bộ nhớ cache
+        LocalDateTime endTime = extendedEndTimes.getOrDefault(auction.getId(), auction.getEnd_time());
+        
+        if (endTime == null) return true;
+
+        return !LocalDateTime.now().isBefore(endTime);
     }
 
     private void manageAuctionSchedulesSafely() {
@@ -119,6 +146,10 @@ public class AuctionTimeManager implements AutoCloseable {
             boolean updated = auctionRepository.updateStatus(auction.getId(), FINISHED_STATUS);
             if (updated) {
                 auction.setStatus(FINISHED_STATUS);
+                
+                // Khi phiên đấu giá kết thúc thực sự, xóa nó khỏi danh sách gia hạn trong bộ nhớ
+                extendedEndTimes.remove(auction.getId());
+                
                 notifyAuctionFinished(auction);
                 LOGGER.log(Level.INFO, "Auction {0} finished automatically.", auction.getId());
             }

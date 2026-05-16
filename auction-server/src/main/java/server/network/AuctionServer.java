@@ -1,10 +1,8 @@
 package server.network;
 
-import server.Main;
 import server.repository.DatabaseConnection;
 import server.service.AuctionTimeManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,8 +18,8 @@ public class AuctionServer {
     // Danh sách thread-safe để quản lý các client đang kết nối
     public static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
-    // Trình quản lý thời gian của các phiên đấu giá
-    private static final AuctionTimeManager auctionTimeManager = new AuctionTimeManager();
+    // Không khởi tạo tĩnh (static final) ở đây nữa để kiểm soát việc khởi tạo
+    private static AuctionTimeManager auctionTimeManager;
 
     //Lưu trữ khóa RSA để dùng chung cho toàn bộ Server
     public static java.security.PrivateKey serverPrivateKey;
@@ -42,7 +40,9 @@ public class AuctionServer {
         LOGGER.info("Database connection successful.");
 
         // 2. Khởi động trình quản lý thời gian đấu giá
+        // Khởi tạo thông qua Singleton thay vì biến cục bộ
         LOGGER.info("Starting Auction Time Manager...");
+        auctionTimeManager = AuctionTimeManager.getInstance();
         auctionTimeManager.start();
 
         LOGGER.info("Generating RSA Key Pair for Security...");
@@ -59,7 +59,7 @@ public class AuctionServer {
         // 3. Đăng ký shutdown hook để đảm bảo tài nguyên được giải phóng khi server tắt
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOGGER.info("Server is shutting down. Cleaning up resources...");
-            auctionTimeManager.stop();
+            if (auctionTimeManager != null) auctionTimeManager.stop();
             LOGGER.info("Auction Time Manager stopped.");
         }));
 
@@ -67,7 +67,8 @@ public class AuctionServer {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             LOGGER.info("Server started. Listening on port: " + PORT);
 
-            while (true) {
+            // SỬA LỖI Ở ĐÂY: Xóa chữ "throws " thừa thãi sau vòng lặp while
+            while (!serverSocket.isClosed()) {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info("New client connected: " + clientSocket.getInetAddress());
 

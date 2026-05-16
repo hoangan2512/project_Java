@@ -11,22 +11,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 /**
  * Repository để quản lý các phiên đấu giá trong cơ sở dữ liệu.
- * LƯU Ý QUAN TRỌNG: Lớp DatabaseConnection hiện tại đang dùng Singleton,
- * điều này rất nguy hiểm cho môi trường server đa luồng.
- * Cần phải thay thế bằng một Connection Pool (ví dụ: HikariCP) để đảm bảo
- * hiệu năng và sự ổn định.
  */
 public class AuctionRepository {
 
     /**
      * Ánh xạ một dòng từ ResultSet sang một đối tượng Auction.
-     *
-     * @param rs ResultSet đang trỏ tới một dòng dữ liệu.
-     * @return Một đối tượng Auction.
-     * @throws SQLException Nếu có lỗi khi đọc dữ liệu từ ResultSet.
      */
     private Auction mapRowToAuction(ResultSet rs) throws SQLException {
         Auction auction = new Auction();
@@ -44,20 +37,17 @@ public class AuctionRepository {
         auction.setHighest_bidder_id(rs.getInt("highest_bidder_id"));
 
         Item item = new Item();
-        item.setId(rs.getInt("item_id")); // Hoặc rs.getInt("i.id") nếu có alias
+        item.setId(rs.getInt("item_id"));
         item.setName(rs.getString("name"));
         item.setCategories(rs.getString("categories"));
         item.setDescription(rs.getString("description"));
-        // THÊM DÒNG NÀY ĐỂ ĐỌC SELLER_ID
         item.setSeller_id(rs.getInt("seller_id"));
         
         String imgPath = rs.getString("imgPath");
         item.setImgPath(imgPath);
 
-        // ĐỌC ẢNH TỪ Ổ ĐĨA SERVER VÀ CHUYỂN THÀNH MẢNG BYTE ĐỂ TRUYỀN QUA MẠNG
         if (imgPath != null && !imgPath.trim().isEmpty()) {
             try {
-                // Thử 2 đường dẫn có thể xảy ra khi chạy Server (từ root project hoặc từ thư mục auction-server)
                 File file = new File("src/main/resources" + imgPath);
                 if (!file.exists()) {
                     file = new File("auction-server/src/main/resources" + imgPath);
@@ -77,8 +67,8 @@ public class AuctionRepository {
     }
 
     public boolean createAuction(Auction auction) {
+        // language=SQLite
         String sql = "INSERT INTO auctions (item_id, start_time, end_time, status, current_price, highest_bidder_id) VALUES(?, ?, ?, ?, ?, ?)";
-        // TODO: Thay thế Singleton bằng Connection Pool
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, auction.getItem_id());
@@ -91,7 +81,6 @@ public class AuctionRepository {
             return pstmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            // TODO: Sử dụng một logging framework như SLF4J/Log4j
             System.err.println("Lỗi khi tạo phiên đấu giá: " + e.getMessage());
             e.printStackTrace();
             return false;
@@ -99,6 +88,7 @@ public class AuctionRepository {
     }
 
     public Auction getAuctionById(int id) {
+        // language=SQLite
         String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description, i.seller_id " +
                      "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -118,6 +108,7 @@ public class AuctionRepository {
 
     private List<Auction> getAuctionsByStatus(String status) {
         List<Auction> auctions = new ArrayList<>();
+        // language=SQLite
         String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description, i.seller_id " +
                      "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -144,6 +135,7 @@ public class AuctionRepository {
     }
 
     public boolean updateBid(int auctionId, double newPrice, int bidderId) {
+        // language=SQLite
         String sql = "UPDATE auctions SET current_price = ?, highest_bidder_id = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -159,6 +151,7 @@ public class AuctionRepository {
     }
 
     public boolean updateStatus(int auctionId, String status) {
+        // language=SQLite
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -167,6 +160,22 @@ public class AuctionRepository {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Lỗi khi cập nhật trạng thái cho auction ID " + auctionId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    // --- Bổ sung hàm cho Anti-Sniping ---
+    public boolean updateEndTime(int auctionId, LocalDateTime newEndTime) {
+        // language=SQLite
+        String sql = "UPDATE auctions SET end_time = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setTimestamp(1, Timestamp.valueOf(newEndTime));
+            pstmt.setInt(2, auctionId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi gia hạn thời gian cho auction ID " + auctionId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -181,14 +190,10 @@ public class AuctionRepository {
         );
         List<Object> parameters = new ArrayList<>();
 
-        // Build dynamic query
         buildSearchQuery(criteria, sql, parameters);
 
-        // Add sorting
         sql.append(" ORDER BY CASE a.status WHEN 'RUNNING' THEN 1 WHEN 'WAITING' THEN 2 ELSE 3 END ASC, ")
            .append("CASE a.status WHEN 'RUNNING' THEN a.end_time ELSE a.start_time END ASC");
-
-        System.out.println("Executing SQL: " + sql);
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
@@ -205,7 +210,6 @@ public class AuctionRepository {
             e.printStackTrace();
         }
 
-        // Filter by keyword in-memory after fetching from DB
         if (criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) {
             return filterByKeyword(resultList, criteria.getKeyword());
         }
@@ -217,7 +221,6 @@ public class AuctionRepository {
         if (criteria.getAuctionId() != null && !criteria.getAuctionId().isEmpty()) {
             sql.append(" AND a.id = ?");
             parameters.add(criteria.getAuctionId());
-            // Có thể return ở đây hoặc không thêm điều kiện status nữa
             return;
         }
 
@@ -267,15 +270,6 @@ public class AuctionRepository {
         }
     }
 
-    /**
-     * Lọc danh sách các phiên đấu giá dựa trên từ khóa.
-     * Đây là cách tiếp cận đúng và hiệu quả cho việc tìm kiếm "chứa" (contains)
-     * trên một tập dữ liệu nhỏ đã có trong bộ nhớ.
-     *
-     * @param sourceList Danh sách nguồn để lọc.
-     * @param keyword Từ khóa tìm kiếm.
-     * @return Danh sách mới chỉ chứa các auction có tên item chứa từ khóa.
-     */
     private List<Auction> filterByKeyword(List<Auction> sourceList, String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return sourceList;
@@ -286,5 +280,32 @@ public class AuctionRepository {
                                auction.getItem().getName() != null &&
                                auction.getItem().getName().toLowerCase().contains(finalKeyword))
             .collect(Collectors.toList());
+    }
+    
+    // ==========================================
+    // CÁC HÀM DÀNH CHO ADMIN QUẢN LÝ PHIÊN ĐẤU GIÁ
+    // ==========================================
+    
+    /**
+     * Dừng ngay lập tức một phiên đấu giá (Chuyển trạng thái sang CANCELLED hoặc FINISHED).
+     * Phục vụ cho chức năng Giám sát của Admin khi phát hiện vi phạm.
+     */
+    public boolean stopAuction(int auctionId) {
+        // Sử dụng trạng thái 'CANCELLED' để phân biệt với 'FINISHED' (kết thúc bình thường)
+        // Nếu DB của bạn chỉ cho phép 'WAITING', 'RUNNING', 'FINISHED' thì dùng 'FINISHED'
+        // language=SQLite
+        String sql = "UPDATE auctions SET status = 'FINISHED' WHERE id = ?";
+        
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             
+            pstmt.setInt(1, auctionId);
+            return pstmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+             System.err.println("Lỗi khi Admin dừng phiên đấu giá ID " + auctionId + ": " + e.getMessage());
+             e.printStackTrace();
+             return false;
+        }
     }
 }
