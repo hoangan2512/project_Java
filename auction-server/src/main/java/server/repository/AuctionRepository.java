@@ -308,4 +308,25 @@ public class AuctionRepository {
              return false;
         }
     }
+
+    public int countAuctionsBySellerId(int sellerId) {
+        // JOIN bảng auctions và items để tìm các phiên đấu giá thuộc về người bán này
+        String sql = "SELECT COUNT(a.id) FROM auctions a " +
+                "JOIN items i ON a.item_id = i.id " +
+                "WHERE i.seller_id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sellerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

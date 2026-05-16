@@ -166,4 +166,21 @@ public class ItemRepository {
              return false;
         }
     }
+
+    public int countItemsBySellerId(int sellerId) {
+        String sql = "SELECT COUNT(id) FROM items WHERE seller_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sellerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1); // Trả về giá trị của cột COUNT
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

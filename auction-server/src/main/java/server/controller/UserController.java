@@ -4,18 +4,27 @@ import message.Request;
 import message.Response;
 import model.ActionType;
 import model.User;
+import server.repository.AuctionRepository;
+import server.repository.ItemRepository;
 import server.repository.UserRepository;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.List;
 
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
     private final UserRepository userRepo;
+    private final ItemRepository itemRepo;
+    private final AuctionRepository auctionRepo;
 
     public UserController() {
         this.userRepo = new UserRepository();
+        this.itemRepo = new ItemRepository();
+        this.auctionRepo = new AuctionRepository();
     }
 
     public Response handleLogin(Request request) {
@@ -106,9 +115,32 @@ public class UserController {
         Response response = new Response();
         List<User> users = userRepo.getAllUsers();
         
+        List<Map<String, Object>> usersData = new ArrayList<>();
+        
+        for (User user : users) {
+            Map<String, Object> userDataMap = new HashMap<>();
+            userDataMap.put("user", user);
+            
+            // Đếm số lượng items và auctions cho seller (nếu role là SELLER hoặc BOTH)
+            int itemsCount = 0;
+            int auctionsCount = 0;
+            int warningsCount = 0; // Tạm thời để 0 hoặc bạn có thể gọi ReasonRepository để đếm sau
+            
+            if ("SELLER".equalsIgnoreCase(user.getRole()) || "BOTH".equalsIgnoreCase(user.getRole())) {
+                itemsCount = itemRepo.countItemsBySellerId(user.getId());
+                auctionsCount = auctionRepo.countAuctionsBySellerId(user.getId());
+            }
+            
+            userDataMap.put("itemsCount", itemsCount);
+            userDataMap.put("auctionsCount", auctionsCount);
+            userDataMap.put("warningsCount", warningsCount);
+            
+            usersData.add(userDataMap);
+        }
+        
         response.setStatus("SUCCESS");
         response.setMessage("Lấy danh sách user thành công.");
-        response.setData(users);
+        response.setData(usersData);
         return response;
     }
     

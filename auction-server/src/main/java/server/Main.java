@@ -66,7 +66,7 @@ public class Main {
                 "reason_type TEXT NOT NULL, " + // AUCTION, ITEM, USER
                 "reason_text TEXT NOT NULL" +
                 ");";
-        
+
         // language=SQLite
         String createAdmin = "INSERT OR IGNORE INTO users (username, password, role, status) VALUES ('admin', 'admin123', 'ADMIN', 'ACTIVE');";
 
