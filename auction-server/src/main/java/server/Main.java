@@ -41,7 +41,7 @@ public class Main {
                 "item_id INTEGER NOT NULL, " +
                 "start_time DATETIME NOT NULL, " +
                 "end_time DATETIME NOT NULL, " +
-                "status TEXT DEFAULT 'WAITING', " + // WAITING, RUNNING, FINISHED
+                "status TEXT DEFAULT 'PENDING_APPROVAL', " + // PENDING_APPROVAL, WAITING, RUNNING, FINISHED
                 "current_price DOUBLE DEFAULT 0.0, " +
                 "highest_bidder_id INTEGER, " +
                 "FOREIGN KEY(item_id) REFERENCES items(id), " +
