@@ -133,4 +133,12 @@ public class SceneSwitchController {
         stage.setScene(scene);
         stage.show();
     }
+
+    public void switchToAdminConsole(Event e) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/view/admin/homepage.fxml"));
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
 }

@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class homepageController {
     @FXML
-    private ToggleButton Seller, Item, Auction; // Lưu ý: Tên biến FXML phải khớp với fx:id trong FXML
+    private ToggleButton Seller, Item, Auction;
     @FXML
     private HBox seller_head, item_head, auction_head;
     @FXML

@@ -109,7 +109,6 @@ public class ClientHandler implements Runnable {
             case LOGIN_SELLER:
             case LOGIN_ADMIN:
                 Response loginResponse = userController.handleLogin(request);
-                // Nếu đăng nhập thành công, lưu lại thông tin user vào ClientHandler
                 if ("SUCCESS".equals(loginResponse.getStatus()) && loginResponse.getData() instanceof User) {
                     this.loggedInUser = (User) loginResponse.getData();
                     System.out.println("=> Đã ghi nhận Session cho user: " + loggedInUser.getName());
@@ -118,7 +117,6 @@ public class ClientHandler implements Runnable {
 
             case REGISTER:
                 Response registerResponse = userController.handleRegister(request);
-                // Nếu đăng ký thành công, hệ thống tự động đăng nhập (lưu Session) luôn cho User đó
                 if ("SUCCESS".equals(registerResponse.getStatus()) && registerResponse.getData() instanceof User) {
                     this.loggedInUser = (User) registerResponse.getData();
                     System.out.println("=> Đã tự động ghi nhận Session sau khi đăng ký cho user: " + loggedInUser.getName());

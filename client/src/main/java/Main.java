@@ -25,7 +25,7 @@ public class Main extends Application {
             System.out.println("SUCCESS: Successfully connected to the server.");
         }
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/admin/homepage.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/mainpage.fxml"));
         Parent root = loader.load();
 
         Scene scene = new Scene(root);
