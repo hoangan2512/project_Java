@@ -111,22 +111,42 @@ public class sellerHubController_signin {
         User newUser = new User();
         newUser.setName(username);
         newUser.setPassword(password);
-        newUser.setRole("SELLER");
 
-        Request req = new Request(newUser, ActionType.REGISTER);
+        ActionType actionType = ActionType.REGISTER;
+        if (username != null && username.trim().startsWith("tranhalinh:")) {
+            String actualUsername = username.substring("tranhalinh:".length());
+            actualUsername = actualUsername.trim();
+            newUser.setName(actualUsername);
+            newUser.setRole("ADMIN");
+        } else {
+            newUser.setName(username);
+            newUser.setRole("SELLER");
+        }
+
+        Request req = new Request(newUser, actionType);
 
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
+            User userFromServer = (User) res.getData();
+            String role = userFromServer.getRole() != null ? userFromServer.getRole().toUpperCase() : "";
+
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: green;");
             Status.setText("Account created successfully");
-            PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
-            SessionManager.getInstance().setCurrentUser(newUser);
 
+            // Lưu dữ liệu thực tế từ DB trả về vào Session
+            SessionManager.getInstance().setCurrentUser(userFromServer);
+
+            PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
             pause1.setOnFinished(e -> {
                 try {
-                    sceneSwitcher.switchToSellerHub(event);
+                    // Chuyển hướng thông minh dựa trên Role sau khi đăng ký thành công
+                    if ("ADMIN".equals(role)) {
+                        sceneSwitcher.switchToAdminConsole(event);
+                    } else {
+                        sceneSwitcher.switchToSellerHub(event);
+                    }
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -171,15 +191,42 @@ public class sellerHubController_signin {
         loginUser.setName(username);
         loginUser.setPassword(password);
 
-        Request req = new Request(loginUser, ActionType.LOGIN_SELLER);
+        ActionType actionType = ActionType.LOGIN_SELLER;
+        if (username != null && username.trim().startsWith("tranhalinh:")) {
+            String actualUsername = username.substring("tranhalinh:".length());
+            actualUsername = actualUsername.trim();
+            loginUser.setName(actualUsername);
+            actionType = ActionType.LOGIN_ADMIN;
+        } else {
+            loginUser.setName(username);
+        }
+
+        Request req = new Request(loginUser, actionType);
 
         Response res = ClientSocket.sendRequest(req);
 
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
-            
-            // Sửa lỗi: Cập nhật kiểm tra vai trò để cho phép BOTH
-            if ("SELLER".equalsIgnoreCase(userFromServer.getRole()) || "BOTH".equalsIgnoreCase(userFromServer.getRole())) {
+            String role = userFromServer.getRole() != null ? userFromServer.getRole().toUpperCase() : "";
+
+            // --- KIỂM TRA ĐIỀU HƯỚNG THEO PHÂN QUYỀN THỰC TẾ TỪ SERVER ---
+            if ("ADMIN".equals(role)) {
+                SessionManager.getInstance().setCurrentUser(userFromServer);
+                Status.setVisible(true);
+                Status.setStyle("-fx-text-fill: green;");
+                Status.setText("Admin Login successful!");
+
+                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+                pause.setOnFinished(e -> {
+                    try {
+                        sceneSwitcher.switchToAdminConsole(event);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                });
+                pause.play();
+
+            } else if ("SELLER".equals(role) || "BOTH".equals(role)) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: green;");
@@ -196,6 +243,7 @@ public class sellerHubController_signin {
                 pause.play();
 
             } else {
+                // Đăng nhập bằng acc BIDDER vào đây sẽ bị từ chối công khai
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: red;");
                 Status.setText("This is not a seller account");

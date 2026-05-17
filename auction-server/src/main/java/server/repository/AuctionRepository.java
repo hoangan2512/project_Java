@@ -7,9 +7,7 @@ import model.SearchCriteria;
 import java.io.File;
 import java.nio.file.Files;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
@@ -132,6 +130,25 @@ public class AuctionRepository {
 
     public List<Auction> getWaitingAuctions() {
         return getAuctionsByStatus("WAITING");
+    }
+    
+    // --- Bổ sung hàm lấy tất cả các phiên đấu giá ---
+    public List<Auction> getAllAuctions() {
+        List<Auction> auctions = new ArrayList<>();
+        // language=SQLite
+        String sql = "SELECT a.*, i.name, i.categories, i.imgPath, i.description, i.seller_id " +
+                     "FROM auctions a JOIN items i ON a.item_id = i.id";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                auctions.add(mapRowToAuction(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy danh sách toàn bộ phiên đấu giá: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return auctions;
     }
 
     public boolean updateBid(int auctionId, double newPrice, int bidderId) {
@@ -307,5 +324,36 @@ public class AuctionRepository {
              e.printStackTrace();
              return false;
         }
+    }
+
+    public Map<String, Integer> countAuctionsBySellerId(int sellerId) {
+        Map<String, Integer> counts = new HashMap<>();
+        counts.put("active", 0);
+        counts.put("suspended", 0);
+
+        // JOIN bảng auctions và items để tìm các phiên đấu giá thuộc về người bán này
+        String sql = "SELECT a.status, COUNT(a.id) FROM auctions a " +
+                "JOIN items i ON a.item_id = i.id " +
+                "WHERE i.seller_id = ? GROUP BY a.status";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sellerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String status = rs.getString(1);
+                    int count = rs.getInt(2);
+                    if ("RUNNING".equalsIgnoreCase(status) || "WAITING".equalsIgnoreCase(status) || "FINISHED".equalsIgnoreCase(status)) {
+                        counts.put("active", counts.get("active") + count);
+                    } else if ("SUSPENDED".equalsIgnoreCase(status)) {
+                        counts.put("suspended", counts.get("suspended") + count);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return counts;
     }
 }

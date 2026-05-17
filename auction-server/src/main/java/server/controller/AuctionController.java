@@ -52,12 +52,12 @@ public class AuctionController {
     public Response handleGetList(Request request) {
         Response response = new Response();
 
-        // TODO: Gọi DB để lấy danh sách (List<Item>)
-        // List<Item> list = auctionRepo.getAllItems();
+        // Lấy danh sách toàn bộ phiên đấu giá từ DB
+        List<Auction> list = auctionRepo.getAllAuctions();
 
         response.setStatus("SUCCESS");
-        response.setMessage("Danh sách các vật phẩm đang đấu giá đã được tải.");
-        // response.setData(list); // Nhét danh sách vào kiện hàng để trả về
+        response.setMessage("Danh sách các phiên đấu giá đã được tải.");
+        response.setData(list);
 
         return response;
     }

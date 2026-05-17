@@ -5,17 +5,26 @@ import message.Response;
 import model.ActionType;
 import model.User;
 import server.repository.UserRepository;
+import server.repository.ItemRepository;
+import server.repository.AuctionRepository;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
     private final UserRepository userRepo;
+    private final ItemRepository itemRepo;
+    private final AuctionRepository auctionRepo;
 
     public UserController() {
         this.userRepo = new UserRepository();
+        this.itemRepo = new ItemRepository();
+        this.auctionRepo = new AuctionRepository();
     }
 
     public Response handleLogin(Request request) {
@@ -106,9 +115,42 @@ public class UserController {
         Response response = new Response();
         List<User> users = userRepo.getAllUsers();
         
+        List<Map<String, Object>> usersData = new ArrayList<>();
+        
+        for (User user : users) {
+            Map<String, Object> userDataMap = new HashMap<>();
+            userDataMap.put("user", user);
+            
+            // Đếm số lượng items và auctions cho seller (nếu role là SELLER hoặc BOTH)
+            int activeItemsCount = 0;
+            int rejectedItemsCount = 0;
+            int activeAuctionsCount = 0;
+            int suspendedAuctionsCount = 0;
+            int warningsCount = 0;
+            
+            if ("SELLER".equalsIgnoreCase(user.getRole()) || "BOTH".equalsIgnoreCase(user.getRole())) {
+                Map<String, Integer> itemCounts = itemRepo.countItemsBySellerId(user.getId());
+                activeItemsCount = itemCounts.getOrDefault("active", 0);
+                rejectedItemsCount = itemCounts.getOrDefault("rejected", 0);
+                
+                Map<String, Integer> auctionCounts = auctionRepo.countAuctionsBySellerId(user.getId());
+                activeAuctionsCount = auctionCounts.getOrDefault("active", 0);
+                suspendedAuctionsCount = auctionCounts.getOrDefault("suspended", 0);
+            }
+            warningsCount = rejectedItemsCount + suspendedAuctionsCount;
+            
+            userDataMap.put("itemsCount", activeItemsCount);
+            userDataMap.put("rejectedItemsCount", rejectedItemsCount);
+            userDataMap.put("auctionsCount", activeAuctionsCount);
+            userDataMap.put("suspendedAuctionsCount", suspendedAuctionsCount);
+            userDataMap.put("warningsCount", warningsCount);
+            
+            usersData.add(userDataMap);
+        }
+        
         response.setStatus("SUCCESS");
         response.setMessage("Lấy danh sách user thành công.");
-        response.setData(users);
+        response.setData(usersData);
         return response;
     }
     

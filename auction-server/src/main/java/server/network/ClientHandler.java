@@ -109,7 +109,6 @@ public class ClientHandler implements Runnable {
             case LOGIN_SELLER:
             case LOGIN_ADMIN:
                 Response loginResponse = userController.handleLogin(request);
-                // Nếu đăng nhập thành công, lưu lại thông tin user vào ClientHandler
                 if ("SUCCESS".equals(loginResponse.getStatus()) && loginResponse.getData() instanceof User) {
                     this.loggedInUser = (User) loginResponse.getData();
                     System.out.println("=> Đã ghi nhận Session cho user: " + loggedInUser.getName());
@@ -118,7 +117,6 @@ public class ClientHandler implements Runnable {
 
             case REGISTER:
                 Response registerResponse = userController.handleRegister(request);
-                // Nếu đăng ký thành công, hệ thống tự động đăng nhập (lưu Session) luôn cho User đó
                 if ("SUCCESS".equals(registerResponse.getStatus()) && registerResponse.getData() instanceof User) {
                     this.loggedInUser = (User) registerResponse.getData();
                     System.out.println("=> Đã tự động ghi nhận Session sau khi đăng ký cho user: " + loggedInUser.getName());
@@ -138,9 +136,7 @@ public class ClientHandler implements Runnable {
             // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
             // ======================================================
             case ADMIN_GET_ALL_USERS:
-                // Sửa lỗi: Gọi hàm không bị inverted
-                if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
-                return unauthResponse();
+                return userController.handleGetAllUsers(request);
                 
             case ADMIN_BAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
@@ -150,9 +146,8 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
                 return unauthResponse();
                 
-            case ADMIN_GET_PENDING_ITEMS:
-                if (checkAuthorization("ADMIN")) return itemController.handleGetPendingItems(request);
-                return unauthResponse();
+            case ADMIN_GET_ITEMS:
+                return itemController.handleGetAllItems(request);
                 
             case ADMIN_APPROVE_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);

@@ -101,8 +101,6 @@ public class prd_previewController {
             
             if (Bid != null) {
                 Bid.setText("Upcoming");
-                // Tùy chọn: có thể khóa nút hoặc vẫn cho người dùng vào xem trang chi tiết
-                // Bid.setDisable(true); 
             }
 
         } else if ("RUNNING".equals(status)) {

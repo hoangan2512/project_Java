@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<?import javafx.scene.control.Button?>
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@homepage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.homepageController">
     <children>
         <AnchorPane prefHeight="90.0" prefWidth="1280.0" style="-fx-background-color: #1E1E1E;">
             <children>
                 <Circle fx:id="userAvatar" fill="#ff8e1f" layoutX="1227.0" layoutY="45.0" radius="19.0" stroke="BLACK" strokeType="INSIDE" style="-fx-cursor: hand;" />
-                <TextField fx:id="searchBar" layoutX="371.0" layoutY="27.0" prefHeight="37.0" prefWidth="441.0" promptText="Search seller/product by name or ID" style="-fx-background-radius: 30px; -fx-background-color: #2b2b2b; -fx-text-fill: white;">
+                <TextField fx:id="searchBar" layoutX="371.0" layoutY="27.0" prefHeight="37.0" prefWidth="441.0" promptText="Search user/product by name or ID" style="-fx-background-radius: 30px; -fx-background-color: #2b2b2b; -fx-text-fill: white;">
                     <padding>
                         <Insets left="15.0" />
                     </padding>
@@ -48,33 +53,233 @@
         </AnchorPane>
         <VBox layoutY="90.0" prefHeight="630.0" prefWidth="250.0" style="-fx-background-color: #171717;">
             <children>
-                <ToggleButton fx:id="Seller" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" text="Seller Manager" textFill="WHITE">
+                <ToggleButton fx:id="Seller" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" styleClass="btn" text="Seller Manager" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="12.0" />
                     </font>
                 </ToggleButton>
-                <ToggleButton fx:id="Item" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" text="Item Manager" textFill="WHITE">
+                <ToggleButton fx:id="Item" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" styleClass="btn" text="Item Manager" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="12.0" />
                     </font>
                 </ToggleButton>
-                <ToggleButton fx:id="Auction" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" text="Auction Manager" textFill="WHITE">
+                <ToggleButton fx:id="Auction" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" styleClass="btn" text="Auction Manager" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="12.0" />
                     </font>
                 </ToggleButton>
-                <ToggleButton fx:id="BidHubM" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" text="BidHub Manager" textFill="WHITE">
+                <ToggleButton fx:id="BidHubM" mnemonicParsing="false" prefHeight="43.0" prefWidth="285.0" style="-fx-background-radius: 0px; -fx-background-color: #171717;" styleClass="btn" text="BidHub Manager" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="12.0" />
                     </font>
                 </ToggleButton>
             </children>
         </VBox>
-        <StackPane fx:id="contentArea" layoutX="260.0" layoutY="90.0" prefHeight="630.0" prefWidth="1030.0" />
         <Label fx:id="Status" layoutX="280.0" layoutY="100.0" prefHeight="25.0" prefWidth="923.0" text="Status" textFill="RED" visible="false">
             <font>
                 <Font name="System Bold" size="14.0" />
             </font>
         </Label>
+      <fx:include fx:id="auction_manager_pane" layoutX="250.0" layoutY="90.0" source="AuctionManager.fxml" />
+      <fx:include fx:id="item_manager_pane" layoutX="250.0" layoutY="90.0" source="ItemManager.fxml" />
+      <fx:include fx:id="seller_manager_pane" layoutX="250.0" layoutY="90.0" source="SellerManager.fxml" />
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" layoutX="250.0" layoutY="90.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="630.0" prefWidth="1043.0" style="-fx-background-color: #000000;" stylesheets="@../style.css" vbarPolicy="AS_NEEDED">
+         <content>
+            <VBox minHeight="568.0" prefHeight="630.0" prefWidth="1028.0" style="-fx-background-color: #000000;">
+               <children>
+                  <StackPane prefHeight="45.0" prefWidth="200.0">
+                     <children>
+                        <HBox fx:id="seller_head" prefHeight="45.0" prefWidth="200.0" style="-fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" visible="false" StackPane.alignment="CENTER">
+                           <children>
+                              <MenuButton fx:id="seller_col1" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="seller_col2" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="268.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Username" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="seller_col3" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Role" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="Seller" />
+                                    <MenuItem mnemonicParsing="false" text="Bidder" />
+                                    <MenuItem mnemonicParsing="false" text="Admin" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="seller_col4" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="100.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Items" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="seller_col5" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Auctions" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="seller_col6" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Warnings" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="seller_col7" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Status" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" text="ACTIVE" />
+                                    <MenuItem mnemonicParsing="false" text="BANNED" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                           </children>
+                        </HBox>
+                        <HBox fx:id="item_head" prefHeight="45.0" prefWidth="200.0" style="-fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" StackPane.alignment="CENTER">
+                           <children>
+                              <MenuButton fx:id="item_col1" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="item_col2" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="268.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Product Name" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <Button fx:id="item_col3" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID by Seller" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="item_col4" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="100.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="SellerID" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="item_col5" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="AuctionID" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Button>
+                              <MenuButton fx:id="item_col6" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Starting Price" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="item_col7" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Status" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="PENDING_APPROVAL" />
+                                    <MenuItem mnemonicParsing="false" text="APPROVED" />
+                                    <MenuItem mnemonicParsing="false" text="REJECTED" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                           </children>
+                        </HBox>
+                        <HBox fx:id="auction_head" prefHeight="45.0" prefWidth="200.0" style="-fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" visible="false" StackPane.alignment="CENTER">
+                           <children>
+                              <MenuButton fx:id="auction_col1" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="auction_col2" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="268.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Product Name" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <Button fx:id="auction_col3" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ProductID" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="auction_col4" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="100.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="SellerID" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Button>
+                              <MenuButton fx:id="auction_col5" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Current Time" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="auction_col6" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Current Price" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                    <MenuItem mnemonicParsing="false" text="Decrease" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                              <MenuButton fx:id="auction_col7" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Status" textFill="WHITE">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="WAITING" />
+                                    <MenuItem mnemonicParsing="false" text="RUNNING" />
+                                    <MenuItem mnemonicParsing="false" text="FINISHED" />
+                                    <MenuItem mnemonicParsing="false" text="SUSPENDED" />
+                                 </items>
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </MenuButton>
+                           </children>
+                        </HBox>
+                     </children>
+                  </StackPane>
+                  <TilePane fx:id="productGrid" prefColumns="1" style="-fx-padding: 0 0 90 0; -fx-background-color: transparent;" />
+               </children>
+            </VBox>
+         </content>
+      </ScrollPane>
     </children>
 </AnchorPane>
