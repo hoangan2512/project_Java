@@ -3,9 +3,11 @@ package server.controller;
 import message.Request;
 import message.Response;
 import model.Auction;
+import model.Reason;
 import model.SearchCriteria;
 import server.network.AuctionServer;
 import server.repository.AuctionRepository;
+import server.repository.ReasonRepository;
 import server.repository.UserRepository;
 
 import java.util.List;
@@ -16,6 +18,7 @@ public class AuctionController {
 
     private final AuctionRepository auctionRepo = new AuctionRepository();
     private final UserRepository userRepo = new UserRepository();
+    private final ReasonRepository reasonRepo = new ReasonRepository();
 
     public Response handleCustomSearch(Request request) {
         Response response = new Response();
@@ -98,26 +101,59 @@ public class AuctionController {
     public Response handleAdminStopAuction(Request request) {
         Response response = new Response();
         
-        if (request.getPayload() instanceof Integer) {
-            int auctionId = (Integer) request.getPayload();
-            boolean success = auctionRepo.stopAuction(auctionId);
-            
-            if (success) {
-                response.setStatus("SUCCESS");
-                response.setMessage("Đã buộc dừng phiên đấu giá thành công.");
+        // Cập nhật để nhận mảng Object chứa auctionId và lý do
+        if (request.getPayload() instanceof Object[]) {
+            Object[] payload = (Object[]) request.getPayload();
+            if (payload.length == 2 && payload[0] instanceof Integer && payload[1] instanceof String) {
+                int auctionId = (Integer) payload[0];
+                String reasonText = (String) payload[1];
                 
-                // Gửi Broadcast để báo cho tất cả Client (đặc biệt là người đang xem) biết phiên này đã bị hủy/kết thúc
-                Response notifyEnd = new Response();
-                notifyEnd.setStatus("AUCTION_END");
-                notifyEnd.setMessage("Phiên đấu giá " + auctionId + " đã bị hủy bởi Quản trị viên.");
-                AuctionServer.broadcast(notifyEnd);
+                boolean success = auctionRepo.stopAuction(auctionId);
+                
+                if (success) {
+                    // Lưu lý do dừng phiên đấu giá vào bảng reasons
+                    Reason reason = new Reason();
+                    reason.setTargetId(auctionId);
+                    reason.setReasonType("AUCTION_STOPPED");
+                    reason.setReason(reasonText);
+                    reasonRepo.addReason(reason);
+                    
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã buộc dừng phiên đấu giá thành công.");
+                    
+                    // Gửi Broadcast để báo cho tất cả Client (đặc biệt là người đang xem) biết phiên này đã bị hủy/kết thúc
+                    Response notifyEnd = new Response();
+                    notifyEnd.setStatus("AUCTION_END");
+                    notifyEnd.setMessage("Phiên đấu giá " + auctionId + " đã bị hủy bởi Quản trị viên. Lý do: " + reasonText);
+                    AuctionServer.broadcast(notifyEnd);
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể dừng phiên đấu giá, vui lòng thử lại.");
+                }
             } else {
                 response.setStatus("FAIL");
-                response.setMessage("Không thể dừng phiên đấu giá, vui lòng thử lại.");
+                response.setMessage("Định dạng dữ liệu không hợp lệ. Yêu cầu [auctionId, reason].");
             }
+        } else if (request.getPayload() instanceof Integer) {
+             // Tương thích ngược với code cũ nếu Client gửi mỗi Integer
+             int auctionId = (Integer) request.getPayload();
+             boolean success = auctionRepo.stopAuction(auctionId);
+             
+             if (success) {
+                 response.setStatus("SUCCESS");
+                 response.setMessage("Đã buộc dừng phiên đấu giá thành công.");
+                 
+                 Response notifyEnd = new Response();
+                 notifyEnd.setStatus("AUCTION_END");
+                 notifyEnd.setMessage("Phiên đấu giá " + auctionId + " đã bị hủy bởi Quản trị viên.");
+                 AuctionServer.broadcast(notifyEnd);
+             } else {
+                 response.setStatus("FAIL");
+                 response.setMessage("Không thể dừng phiên đấu giá, vui lòng thử lại.");
+             }
         } else {
             response.setStatus("FAIL");
-            response.setMessage("ID phiên đấu giá không hợp lệ.");
+            response.setMessage("Dữ liệu payload không hợp lệ.");
         }
 
         return response;

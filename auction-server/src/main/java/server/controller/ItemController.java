@@ -4,8 +4,10 @@ import message.Request;
 import message.Response;
 import model.Auction;
 import model.Item;
+import model.Reason;
 import server.repository.AuctionRepository;
 import server.repository.ItemRepository;
+import server.repository.ReasonRepository;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,13 +15,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
-import java.util.List;
 
 public class ItemController {
     private final ItemRepository itemRepo;
     private final AuctionRepository auctionRepo;
+    private final ReasonRepository reasonRepo;
 
     public ItemController() {
+        this.reasonRepo = new ReasonRepository();
         this.itemRepo = new ItemRepository();
         this.auctionRepo = new AuctionRepository();
     }
@@ -140,17 +143,6 @@ public class ItemController {
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ ITEM
     // ==========================================
     
-    public Response handleGetPendingItems() {
-         Response response = new Response();
-         // SỬA LỖI: Gọi đúng hàm getAllAuctionsWithItems() thay vì getPendingItems()
-         List<Auction> pendingItems = itemRepo.getAllAuctionsWithItems(); // Hoặc tạo hàm mới nếu chỉ muốn lấy list pending
-         
-         response.setStatus("SUCCESS");
-         response.setMessage("Lấy danh sách sản phẩm chờ duyệt thành công.");
-         response.setData(pendingItems);
-         return response;
-    }
-    
     public Response handleApproveItem(Request request) {
          Response response = new Response();
          Integer auctionId = (Integer) request.getPayload();
@@ -165,21 +157,52 @@ public class ItemController {
          }
          return response;
     }
-    
+
     public Response handleRejectItem(Request request) {
-         Response response = new Response();
-         Integer auctionId = (Integer) request.getPayload();
-         
-         boolean success = auctionRepo.updateStatus(auctionId, "REJECTED");
-         if (success) {
-             // Có thể bạn muốn hủy luôn phiên đấu giá tương ứng
-             // auctionRepo.updateStatus(auctionId, "CANCELLED");
-             response.setStatus("SUCCESS");
-             response.setMessage("Đã từ chối sản phẩm.");
-         } else {
-             response.setStatus("FAIL");
-             response.setMessage("Không thể từ chối sản phẩm.");
-         }
-         return response;
+        Response response = new Response();
+        Object payloadObj = request.getPayload();
+
+        // CHỈ XỬ LÝ: Client bắt buộc phải gửi lên mảng Object [auctionId, reason]
+        if (payloadObj instanceof Object[]) {
+            Object[] payload = (Object[]) payloadObj;
+
+            // Kiểm tra số lượng phần tử và kiểm tra kiểu dữ liệu an toàn (Number, String)
+            if (payload.length == 2 && payload[0] instanceof Number && payload[1] instanceof String) {
+                int auctionId = ((Number) payload[0]).intValue(); // Ép kiểu an toàn tránh lỗi Long/Integer qua Socket
+                String reasonText = (String) payload[1];
+
+                // 1. Thực hiện cập nhật trạng thái từ chối kiểm duyệt sản phẩm/phiên đấu giá
+                boolean success = auctionRepo.updateStatus(auctionId, "REJECTED");
+                if (success) {
+                    // Có thể bạn muốn hủy luôn phiên đấu giá tương ứng
+                    // auctionRepo.updateStatus(auctionId, "CANCELLED");
+
+                    // 2. Thử lưu lý do từ chối vào bảng reasons (Bọc try-catch để an toàn luồng chính)
+                    try {
+                        Reason reason = new Reason();
+                        reason.setTargetId(auctionId);
+                        reason.setReasonType("ITEM_REJECTED");
+                        reason.setReason(reasonText);
+                        reasonRepo.addReason(reason);
+                    } catch (Exception e) {
+                        System.err.println("[SERVER WARNING] Không thể lưu lý do từ chối sản phẩm vào DB: " + e.getMessage());
+                    }
+
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã từ chối sản phẩm thành công kèm lý do.");
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể từ chối sản phẩm, vui lòng thử lại.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Định dạng dữ liệu mảng không hợp lệ. Yêu cầu mảng cấu trúc [Number, String].");
+            }
+        } else {
+            response.setStatus("FAIL");
+            response.setMessage("Dữ liệu payload không hợp lệ. Yêu cầu bắt buộc gửi dạng mảng Object[].");
+        }
+
+        return response;
     }
 }

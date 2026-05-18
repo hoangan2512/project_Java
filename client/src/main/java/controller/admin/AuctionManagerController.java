@@ -6,18 +6,26 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.util.Duration;
+import message.Request;
+import message.Response;
+import model.ActionType;
 import model.Auction;
 import model.Item;
+import network.ClientSocket;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AuctionManagerController {
     @FXML
@@ -25,7 +33,7 @@ public class AuctionManagerController {
     @FXML
     private ImageView prdImage;
     @FXML
-    private Button confirm_btn, backBtn;
+    private Button suspend_btn;
     @FXML
     private Label currentTime, startingPrice, startDate, startTime, duration, prdName, prd_description;
 
@@ -171,5 +179,51 @@ public class AuctionManagerController {
         if (onBackAction != null) {
             onBackAction.run();
         }
+    }
+
+    @FXML
+    private void handleSuspendAuction(MouseEvent event) {
+        if (currentAuction == null) return;
+
+        String reason = (reasonArea != null) ? reasonArea.getText().trim() : "";
+
+        // Bắt buộc Admin phải điền lý do vi phạm trước khi dừng phiên để đảm bảo tính minh bạch
+        if (reason.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập lý do đình chỉ phiên đấu giá này!");
+            return;
+        }
+
+        // Đóng gói dữ liệu gửi đi dưới dạng Object[] như Server đang mong đợi
+        // [auctionId, reasonText]
+        Object[] payload = new Object[]{currentAuction.getId(), reason};
+
+        // Chạy Thread riêng để thực hiện Network Request tránh block UI đóng băng ứng dụng
+        new Thread(() -> {
+            Request request = new Request(payload, ActionType.ADMIN_STOP_AUCTION);
+            Response response = ClientSocket.sendRequest(request);
+
+            Platform.runLater(() -> {
+                if (response != null && "SUCCESS".equals(response.getStatus())) {
+                    showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã đình chỉ thành công phiên đấu giá ID: " + currentAuction.getId());
+
+                    // Vô hiệu hóa nút bấm ngay lập tức sau khi dừng thành công
+                    if (suspend_btn != null) suspend_btn.setDisable(true);
+
+                    // Quay về danh sách quản lý chung của homepage sau khi thực hiện
+                    if (onBackAction != null) onBackAction.run();
+                } else {
+                    String message = (response != null) ? response.getMessage() : "Mất kết nối tới Server.";
+                    showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể dừng phiên: " + message);
+                }
+            });
+        }).start();
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

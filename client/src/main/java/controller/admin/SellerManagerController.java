@@ -5,10 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
@@ -36,6 +33,8 @@ public class SellerManagerController {
     private HBox item_head, auction_head;
     @FXML
     private TilePane productGrid;
+    @FXML
+    private Button confirm_btn;
 
     private Runnable onBackAction;
 
@@ -69,14 +68,112 @@ public class SellerManagerController {
 
         if (item_opt != null) item_opt.setSelected(true);
 
-        // ========================================================
-        // LOGIC MỚI: NHÓM BIỆN PHÁP XỬ LÝ TÀI KHOẢN (ACTIVATE / BAN)
-        // ========================================================
+        // 2. Nhóm biện pháp xử lý tài khoản (Activate / Ban) - Đảm bảo chỉ chọn được 1 trong 2
         ToggleGroup actionGroup = new ToggleGroup();
         if (activate != null) activate.setToggleGroup(actionGroup);
         if (ban != null) ban.setToggleGroup(actionGroup);
 
-        // Mặc định ban đầu không chọn cái nào (Đã được đảm bảo bằng cách không set selected cho nút nào trong hành động này)
+        // ĐỔI LOGIC: Gán sự kiện click cho duy nhất nút confirm_btn để thực thi hành động công việc
+        if (confirm_btn != null) {
+            confirm_btn.setOnAction(this::handleConfirmAction);
+        }
+    }
+
+    /**
+     * HÀM XỬ LÝ TRUNG TÂM: Kích hoạt khi nhấn confirm_btn
+     */
+    @FXML
+    private void handleConfirmAction(ActionEvent event) {
+        if (currentSellerId == -1) return;
+
+        // 1. Kiểm tra xem Admin đang chọn hành động nào
+        boolean isActivateSelected = (activate != null && activate.isSelected());
+        boolean isBanSelected = (ban != null && ban.isSelected());
+
+        if (!isActivateSelected && !isBanSelected) {
+            showAlert(Alert.AlertType.WARNING, "Yêu cầu", "Vui lòng chọn một hành động (Mở khóa hoặc Khóa tài khoản) trước khi xác nhận!");
+            return;
+        }
+
+        // 2. Rẽ nhánh xử lý dựa trên nút ToggleButton được lựa chọn
+        if (isActivateSelected) {
+            executeActivateUser();
+        } else if (isBanSelected) {
+            executeBanUser();
+        }
+    }
+
+    /**
+     * Logic gửi request Mở khóa tài khoản (chạy ngầm sau khi confirm)
+     */
+    private void executeActivateUser() {
+        new Thread(() -> {
+            Request req = new Request(Integer.valueOf(currentSellerId), ActionType.ADMIN_UNBAN_USER);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus())) {
+                    showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã mở khóa tài khoản thành công!");
+                    if (user_status != null) {
+                        user_status.setText("ACTIVE");
+                        user_status.setStyle("-fx-text-fill: #4CAF50;");
+                    }
+                    resetActionButtons();
+                } else {
+                    String msg = (res != null) ? res.getMessage() : "Mất kết nối tới máy chủ.";
+                    showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể mở khóa tài khoản: " + msg);
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * Logic gửi request Khóa tài khoản kèm lý do (chạy ngầm sau khi confirm)
+     */
+    private void executeBanUser() {
+        String reasonText = (reasonArea != null) ? reasonArea.getText().trim() : "";
+
+        if (reasonText.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Yêu cầu dữ liệu", "Vui lòng nhập lý do khóa tài khoản vào ô văn bản!");
+            return;
+        }
+
+        new Thread(() -> {
+            Object[] payloadToSend = new Object[] { Integer.valueOf(currentSellerId), reasonText };
+            Request req = new Request(payloadToSend, ActionType.ADMIN_BAN_USER);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus())) {
+                    showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã khóa tài khoản người dùng thành công.");
+                    if (user_status != null) {
+                        user_status.setText("BANNED");
+                        user_status.setStyle("-fx-text-fill: #F44336;");
+                    }
+                    resetActionButtons();
+                } else {
+                    String msg = (res != null) ? res.getMessage() : "Mất kết nối tới máy chủ.";
+                    showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể khóa tài khoản: " + msg);
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * Hàm phụ trợ dọn dẹp trạng thái các nút và ô nhập liệu sau khi xử lý thành công
+     */
+    private void resetActionButtons() {
+        if (activate != null) activate.setSelected(false);
+        if (ban != null) ban.setSelected(false);
+        if (reasonArea != null) reasonArea.clear();
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     /**
@@ -114,12 +211,7 @@ public class SellerManagerController {
         if (suspend_auction_number != null) suspend_auction_number.setText(String.valueOf(suspendedAuctions));
         if (total != null) total.setText(String.valueOf(warningsCount));
 
-        // ========================================================
-        // SỬA ĐỒI TẠI ĐÂY: KHÔNG GÁN TRẠNG THÁI MẶC ĐỊNH CHO NÚT BẤM NỮA
-        // Để trống hoàn toàn để giữ nguyên trạng thái nhả (không được chọn) ban đầu của cả 2 nút.
-        // ========================================================
-        if (activate != null) activate.setSelected(false);
-        if (ban != null) ban.setSelected(false);
+        resetActionButtons();
 
         clearProductGridAndReleaseResources();
         if (item_opt != null && item_opt.isSelected()) {
