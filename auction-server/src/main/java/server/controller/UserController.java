@@ -3,12 +3,13 @@ package server.controller;
 import message.Request;
 import message.Response;
 import model.ActionType;
+import model.Reason;
 import model.User;
 import server.repository.AuctionRepository;
 import server.repository.ItemRepository;
+import server.repository.ReasonRepository;
 import server.repository.UserRepository;
 import server.network.AuctionServer;
-import server.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,8 +23,10 @@ public class UserController {
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
     private final AuctionRepository auctionRepo;
+    private final ReasonRepository reasonRepo;
 
     public UserController() {
+        this.reasonRepo = new ReasonRepository();
         this.userRepo = new UserRepository();
         this.itemRepo = new ItemRepository();
         this.auctionRepo = new AuctionRepository();
@@ -205,29 +208,54 @@ public class UserController {
         response.setData(usersData);
         return response;
     }
-    
+
     public Response handleBanUser(Request request) {
-         Response response = new Response();
-         // Payload gửi lên có thể là ID của User (Integer)
-         Object payload = request.getPayload();
-         if (payload instanceof Integer userIdToBan) {
+        Response response = new Response();
+        Object payloadObj = request.getPayload();
 
-             boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
-             if (success) {
-                 response.setStatus("SUCCESS");
-                 response.setMessage("Đã khóa tài khoản thành công.");
+        // CHỈ XỬ LÝ: Client bắt buộc phải gửi lên mảng Object [userId, reason]
+        if (payloadObj instanceof Object[]) {
+            Object[] payload = (Object[]) payloadObj;
 
-                 // Gửi yêu cầu FORCE_LOGOUT tới Client đang online
-                 AuctionServer.forceLogoutUser(userIdToBan);
-             } else {
-                 response.setStatus("FAIL");
-                 response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
-             }
-         } else {
-             response.setStatus("FAIL");
-             response.setMessage("Dữ liệu không hợp lệ.");
-         }
-         return response;
+            // Kiểm tra số lượng phần tử và kiểm tra kiểu dữ liệu an toàn (Number, String)
+            if (payload.length == 2 && payload[0] instanceof Number && payload[1] instanceof String) {
+                int userIdToBan = ((Number) payload[0]).intValue(); // Ép kiểu an toàn tránh lỗi Long/Integer qua Socket
+                String reasonText = (String) payload[1];
+
+                // 1. Thực hiện cập nhật trạng thái sang BANNED trong bảng users
+                boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
+                if (success) {
+                    // 2. Thử lưu lý do khóa tài khoản vào bảng reasons (Bọc try-catch để an toàn luồng chính)
+                    try {
+                        Reason reason = new Reason();
+                        reason.setTargetId(userIdToBan);
+                        reason.setReasonType("USER_BANNED");
+                        reason.setReason(reasonText);
+                        reasonRepo.addReason(reason);
+                    } catch (Exception e) {
+                        System.err.println("[SERVER WARNING] Không thể lưu lý do ban user vào DB: " + e.getMessage());
+                    }
+
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã khóa tài khoản thành công kèm lý do.");
+
+                    // 3. Đuổi trực tiếp Client đang online ra khỏi hệ thống ngay lập tức
+                    AuctionServer.forceLogoutUser(userIdToBan);
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                // Thông báo lỗi tường minh cấu trúc mảng để Client điều chỉnh code cho đúng
+                response.setMessage("Định dạng dữ liệu mảng không hợp lệ. Yêu cầu mảng cấu trúc [Number, String].");
+            }
+        } else {
+            response.setStatus("FAIL");
+            response.setMessage("Dữ liệu payload không hợp lệ. Yêu cầu bắt buộc gửi dạng mảng Object[].");
+        }
+
+        return response;
     }
     
     public Response handleUnbanUser(Request request) {

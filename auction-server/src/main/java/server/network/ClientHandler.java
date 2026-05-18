@@ -134,13 +134,11 @@ public class ClientHandler implements Runnable {
 
             case GOOGLE_LOGIN:
                 String codeReceived = (String) request.getPayload();
-
                 String clientId = "887547914295-i912u5c51mm9ur6s7kd1pr5kipmpcgka.apps.googleusercontent.com";
                 String clientSecret = "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";
                 String redirectUri = "http://localhost:8080";
 
                 try {
-                    // Gửi request POST trực tiếp lên Google Token API để đổi mã Code lấy thông tin payload
                     com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse tokenResponse =
                             new com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest(
                                     new com.google.api.client.http.javanet.NetHttpTransport(),
@@ -152,7 +150,6 @@ public class ClientHandler implements Runnable {
                                     redirectUri
                             ).execute();
 
-                    // Trích xuất gói payload chứa thông tin người dùng được mã hóa
                     com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = tokenResponse.parseIdToken();
                     com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
 
@@ -161,24 +158,16 @@ public class ClientHandler implements Runnable {
 
                     System.out.println("[SERVER] User đăng nhập Google: " + name + " (" + email + ")");
 
-                    // ========================================================
-                    // 🌟 KẾT NỐI NGHIỆP VỤ DATABASE QUA USERCONTROLLER
-                    // ========================================================
                     Response authResponse = userController.handleGoogleLoginAuth(email, name);
 
-                    // Nếu đăng nhập/đăng ký thành công, lưu thông tin vào Session của Thread này
                     if ("SUCCESS".equals(authResponse.getStatus()) && authResponse.getData() instanceof User) {
                         this.loggedInUser = (User) authResponse.getData();
                         System.out.println("=> Đã ghi nhận Session qua Google cho user: " + loggedInUser.getName());
                     }
 
-                    // ĐÚNG KIẾN TRÚC: Return kết quả về để luồng chính ở hàm run() tự đẩy ra Socket
-                    return authResponse;
+                    return authResponse; // CRITICAL FIX: Đã bổ sung return để chặn đứng rò rỉ switch-case!
 
                 } catch (com.google.api.client.auth.oauth2.TokenResponseException e) {
-                    // ========================================================
-                    // CRITICAL FIX: BẪY LỖI CHUYÊN SÂU TỪ ENDPOINT CỦA GOOGLE
-                    // ========================================================
                     System.err.println("[SERVER] Google OAuth API trả về lỗi cấu hình:");
                     if (e.getDetails() != null) {
                         System.err.println("  - Error: " + e.getDetails().getError());
@@ -186,15 +175,11 @@ public class ClientHandler implements Runnable {
                     } else {
                         System.err.println("  - Raw Content: " + e.getContent());
                     }
-                    e.printStackTrace();
-
                     String errorMsg = (e.getDetails() != null) ? e.getDetails().getErrorDescription() : e.getMessage();
                     return new Response("FAILED", null, "Google từ chối cấp Token: " + errorMsg);
 
                 } catch (Exception e) {
-                    // Bắt các lỗi hệ thống khác (NullPointer, Network Timeout, IO,...)
                     System.err.println("Lỗi xác thực Google OAuth tại Server: " + e.getMessage());
-                    e.printStackTrace();
                     return new Response("FAILED", null, "Lỗi kết nối hệ thống Server: " + e.getMessage());
                 }
 
