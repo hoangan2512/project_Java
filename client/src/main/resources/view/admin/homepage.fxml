@@ -80,9 +80,6 @@
                 <Font name="System Bold" size="14.0" />
             </font>
         </Label>
-      <fx:include fx:id="auction_manager_pane" layoutX="250.0" layoutY="90.0" source="AuctionManager.fxml" />
-      <fx:include fx:id="item_manager_pane" layoutX="250.0" layoutY="90.0" source="ItemManager.fxml" />
-      <fx:include fx:id="seller_manager_pane" layoutX="250.0" layoutY="90.0" source="SellerManager.fxml" />
       <ScrollPane fitToWidth="true" hbarPolicy="NEVER" layoutX="250.0" layoutY="90.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="630.0" prefWidth="1043.0" style="-fx-background-color: #000000;" stylesheets="@../style.css" vbarPolicy="AS_NEEDED">
          <content>
             <VBox minHeight="568.0" prefHeight="630.0" prefWidth="1028.0" style="-fx-background-color: #000000;">
@@ -281,5 +278,8 @@
             </VBox>
          </content>
       </ScrollPane>
+      <fx:include fx:id="auction_manager_pane" layoutX="250.0" layoutY="90.0" source="AuctionManager.fxml" />
+      <fx:include fx:id="item_manager_pane" layoutX="250.0" layoutY="90.0" source="ItemManager.fxml" />
+      <fx:include fx:id="seller_manager_pane" layoutX="250.0" layoutY="90.0" source="SellerManager.fxml" />
     </children>
 </AnchorPane>

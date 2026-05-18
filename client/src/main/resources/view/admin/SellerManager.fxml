@@ -150,12 +150,12 @@
       </AnchorPane>
       <AnchorPane layoutX="82.0" layoutY="257.0" style="-fx-border-color: linear-gradient(to right, #b8b8b8 0%, #ffffff 50%, #b8b8b8 100%); -fx-border-width: 0.75; -fx-border-radius: 7;">
          <children>
-            <ToggleButton fx:id="not_approve1" layoutX="185.0" layoutY="2.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="not_approve_btn" text="Auctions" textFill="WHITE">
+            <ToggleButton fx:id="auction_opt" layoutX="185.0" layoutY="2.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="not_approve_btn" text="Auctions" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </ToggleButton>
-            <ToggleButton fx:id="approve1" layoutX="2.0" layoutY="2.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="approve_btn" text="Items" textFill="WHITE">
+            <ToggleButton fx:id="item_opt" layoutX="2.0" layoutY="2.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="approve_btn" text="Items" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>

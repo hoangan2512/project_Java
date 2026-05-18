@@ -136,8 +136,8 @@ public class ClientHandler implements Runnable {
             // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
             // ======================================================
             case ADMIN_GET_ALL_USERS:
-                return userController.handleGetAllUsers(request);
-                
+                if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
+                return unauthResponse();
             case ADMIN_BAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
                 return unauthResponse();
@@ -147,8 +147,8 @@ public class ClientHandler implements Runnable {
                 return unauthResponse();
                 
             case ADMIN_GET_ITEMS:
-                return itemController.handleGetAllItems(request);
-                
+                if (checkAuthorization("ADMIN")) return itemController.handleGetAllItems(request);
+                return unauthResponse();
             case ADMIN_APPROVE_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);
                 return unauthResponse();

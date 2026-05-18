@@ -1,9 +1,15 @@
 package controller.admin;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.util.Duration;
 import model.User;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class listController {
@@ -11,11 +17,8 @@ public class listController {
     @FXML
     private Label col1, col2, col3, col4, col5, col6, col7;
 
-    /**
-     * Generic method to populate row data based on the columns
-     * order matching the headers in homepage.fxml.
-     * @param rowData Array of strings representing the data for each column
-     */
+    private Timeline countdownTimeline;
+
     public void setRowData(String[] rowData) {
         if (rowData != null) {
             col1.setText(rowData.length > 0 ? rowData[0] : "");
@@ -41,6 +44,83 @@ public class listController {
                     col7.setStyle("-fx-text-fill: WHITE;");
                 }
             }
+        }
+    }
+
+    public void startCountdown(LocalDateTime startTime, LocalDateTime endTime) {
+        // Khử bộ đếm cũ nếu có (phòng trường hợp bấm chuyển tab liên tục gây chồng luồng)
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+
+        if (startTime == null || endTime == null) {
+            if (col5 != null) col5.setText("N/A");
+            return;
+        }
+
+        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            LocalDateTime now = LocalDateTime.now();
+
+            if (now.isBefore(startTime)) {
+                // 1. Trường hợp: CHƯA ĐẾN GIỜ MỞ CỬA -> Đếm ngược đến lúc Start (Thêm dấu - ở đầu)
+                java.time.Duration durationToStart = java.time.Duration.between(now, startTime);
+                long totalHours = durationToStart.toHours();
+                long minutes = durationToStart.toMinutes() % 60;
+                long seconds = durationToStart.toSeconds() % 60;
+
+                if (col5 != null) {
+                    col5.setText(String.format("- %02d:%02d:%02d", totalHours, minutes, seconds));
+                }
+
+            } else if (now.isBefore(endTime)) {
+                // 2. Trường hợp: PHIÊN ĐANG CHẠY -> Đếm ngược thời gian còn lại đến lúc Kết thúc
+                java.time.Duration durationLeft = java.time.Duration.between(now, endTime);
+                long totalHours = durationLeft.toHours();
+                long minutes = durationLeft.toMinutes() % 60;
+                long seconds = durationLeft.toSeconds() % 60;
+
+                if (col5 != null) {
+                    col5.setText(String.format("%02d:%02d:%02d", totalHours, minutes, seconds));
+                }
+
+            } else {
+                // 3. Trường hợp: PHIÊN ĐÃ KẾT THÚC
+                if (col5 != null) {
+                    col5.setText("00:00:00");
+                }
+                countdownTimeline.stop(); // Dừng luồng chạy ngầm để tiết kiệm CPU
+            }
+        }));
+
+        countdownTimeline.setCycleCount(Animation.INDEFINITE);
+        countdownTimeline.play();
+    }
+
+    /**
+     * Hàm giải phóng tài nguyên khi hàng bị xóa hoặc làm mới danh sách
+     */
+    public void stopTimeline() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+    }
+
+    public interface OnRowClickListener {
+        void onClick();
+    }
+
+    private OnRowClickListener rowClickListener;
+
+    // Hàm để homepageController truyền hành động vào
+    public void setOnRowClick(OnRowClickListener listener) {
+        this.rowClickListener = listener;
+    }
+
+    // Bắt sự kiện click vào dòng này (Gán hàm này vào thuộc tính OnMouseClicked của thẻ cha trong file FXML)
+    @FXML
+    private void handleRowClick(MouseEvent event) {
+        if (rowClickListener != null) {
+            rowClickListener.onClick();
         }
     }
 }

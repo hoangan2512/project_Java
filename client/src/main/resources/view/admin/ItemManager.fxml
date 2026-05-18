@@ -89,7 +89,7 @@
         <Line endX="100.0" layoutX="888.0" layoutY="268.0" startX="-267.0" stroke="WHITE" strokeWidth="0.5" />
         <AnchorPane layoutX="619.0" layoutY="315.0" style="-fx-border-color: linear-gradient(to right, #b8b8b8 0%, #ffffff 50%, #b8b8b8 100%); -fx-border-width: 0.75; -fx-border-radius: 7;">
             <children>
-                <ToggleButton fx:id="not_approve" layoutX="185.0" layoutY="2.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="not_approve_btn" text="Not approve" textFill="WHITE">
+                <ToggleButton fx:id="not_approve" layoutX="185.0" layoutY="2.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="not_approve_btn" text="Reject" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="16.0" />
                     </font>
@@ -111,7 +111,7 @@
                 <Font name="System Bold" size="16.0" />
             </font>
         </Button>
-        <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+        <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>
