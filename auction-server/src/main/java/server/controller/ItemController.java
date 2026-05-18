@@ -140,9 +140,11 @@ public class ItemController {
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ ITEM
     // ==========================================
     
-    public Response handleGetAllItems(Request request) {
+    public Response handleGetPendingItems() {
          Response response = new Response();
-         List<Auction> pendingItems = itemRepo.getAllAuctionsWithItems();
+         // SỬA LỖI: Gọi đúng hàm getAllAuctionsWithItems() thay vì getPendingItems()
+         List<Auction> pendingItems = itemRepo.getAllAuctionsWithItems(); // Hoặc tạo hàm mới nếu chỉ muốn lấy list pending
+         
          response.setStatus("SUCCESS");
          response.setMessage("Lấy danh sách sản phẩm chờ duyệt thành công.");
          response.setData(pendingItems);
@@ -151,9 +153,9 @@ public class ItemController {
     
     public Response handleApproveItem(Request request) {
          Response response = new Response();
-         Integer itemId = (Integer) request.getPayload();
+         Integer auctionId = (Integer) request.getPayload();
          
-         boolean success = itemRepo.updateItemModerationStatus(itemId, "APPROVED");
+         boolean success = auctionRepo.updateStatus(auctionId, "WAITING");
          if (success) {
              response.setStatus("SUCCESS");
              response.setMessage("Đã phê duyệt sản phẩm thành công.");
@@ -166,9 +168,9 @@ public class ItemController {
     
     public Response handleRejectItem(Request request) {
          Response response = new Response();
-         Integer itemId = (Integer) request.getPayload();
+         Integer auctionId = (Integer) request.getPayload();
          
-         boolean success = itemRepo.updateItemModerationStatus(itemId, "REJECTED");
+         boolean success = auctionRepo.updateStatus(auctionId, "REJECTED");
          if (success) {
              // Có thể bạn muốn hủy luôn phiên đấu giá tương ứng
              // auctionRepo.updateStatus(auctionId, "CANCELLED");
