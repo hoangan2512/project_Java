@@ -183,4 +183,26 @@ public class UserRepository {
 
         return usernameMap;
     }
+
+    public User getUserById(int bidderId) {
+        // language=SQLite
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, bidderId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setName(rs.getString("username"));
+                    user.setRole(rs.getString("role"));
+                    user.setStatus(rs.getString("status"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error getting user by ID: " + bidderId, e);
+        }
+        return null;
+    }
 }

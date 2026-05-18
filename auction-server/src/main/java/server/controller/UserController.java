@@ -4,27 +4,19 @@ import message.Request;
 import message.Response;
 import model.ActionType;
 import model.User;
+import server.network.AuctionServer;
 import server.repository.UserRepository;
-import server.repository.ItemRepository;
-import server.repository.AuctionRepository;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
 
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
     private final UserRepository userRepo;
-    private final ItemRepository itemRepo;
-    private final AuctionRepository auctionRepo;
 
     public UserController() {
         this.userRepo = new UserRepository();
-        this.itemRepo = new ItemRepository();
-        this.auctionRepo = new AuctionRepository();
     }
 
     public Response handleLogin(Request request) {
@@ -49,14 +41,7 @@ public class UserController {
             ActionType action = request.getAction();
 
             // Kiểm tra role dựa trên loại login request
-            boolean isLoginRequestValid = false;
-            if (action == ActionType.LOGIN_BIDDER) {
-                 isLoginRequestValid = "BIDDER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
-            } else if (action == ActionType.LOGIN_SELLER) {
-                 isLoginRequestValid = "SELLER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
-            } else if (action == ActionType.LOGIN_ADMIN) {
-                 isLoginRequestValid = "ADMIN".equalsIgnoreCase(role);
-            }
+            boolean isLoginRequestValid = isIsLoginRequestValid(action, role);
 
             if (isLoginRequestValid) {
                 // Đăng nhập thành công và đúng vai trò
@@ -78,6 +63,18 @@ public class UserController {
             response.setMessage("Sai tài khoản hoặc mật khẩu!");
         }
         return response;
+    }
+
+    private static boolean isIsLoginRequestValid(ActionType action, String role) {
+        boolean isLoginRequestValid = false;
+        if (action == ActionType.LOGIN_BIDDER) {
+             isLoginRequestValid = "BIDDER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
+        } else if (action == ActionType.LOGIN_SELLER) {
+             isLoginRequestValid = "SELLER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
+        } else if (action == ActionType.LOGIN_ADMIN) {
+             isLoginRequestValid = "ADMIN".equalsIgnoreCase(role);
+        }
+        return isLoginRequestValid;
     }
 
     public Response handleRegister(Request request) {
@@ -115,72 +112,52 @@ public class UserController {
         Response response = new Response();
         List<User> users = userRepo.getAllUsers();
         
-        List<Map<String, Object>> usersData = new ArrayList<>();
-        
-        for (User user : users) {
-            Map<String, Object> userDataMap = new HashMap<>();
-            userDataMap.put("user", user);
-            
-            // Đếm số lượng items và auctions cho seller (nếu role là SELLER hoặc BOTH)
-            int activeItemsCount = 0;
-            int rejectedItemsCount = 0;
-            int activeAuctionsCount = 0;
-            int suspendedAuctionsCount = 0;
-            int warningsCount = 0;
-            
-            if ("SELLER".equalsIgnoreCase(user.getRole()) || "BOTH".equalsIgnoreCase(user.getRole())) {
-                Map<String, Integer> itemCounts = itemRepo.countItemsBySellerId(user.getId());
-                activeItemsCount = itemCounts.getOrDefault("active", 0);
-                rejectedItemsCount = itemCounts.getOrDefault("rejected", 0);
-                
-                Map<String, Integer> auctionCounts = auctionRepo.countAuctionsBySellerId(user.getId());
-                activeAuctionsCount = auctionCounts.getOrDefault("active", 0);
-                suspendedAuctionsCount = auctionCounts.getOrDefault("suspended", 0);
-            }
-            warningsCount = rejectedItemsCount + suspendedAuctionsCount;
-            
-            userDataMap.put("itemsCount", activeItemsCount);
-            userDataMap.put("rejectedItemsCount", rejectedItemsCount);
-            userDataMap.put("auctionsCount", activeAuctionsCount);
-            userDataMap.put("suspendedAuctionsCount", suspendedAuctionsCount);
-            userDataMap.put("warningsCount", warningsCount);
-            
-            usersData.add(userDataMap);
-        }
-        
         response.setStatus("SUCCESS");
         response.setMessage("Lấy danh sách user thành công.");
-        response.setData(usersData);
+        response.setData(users);
         return response;
     }
     
     public Response handleBanUser(Request request) {
          Response response = new Response();
          // Payload gửi lên có thể là ID của User (Integer)
-         Integer userIdToBan = (Integer) request.getPayload();
-         
-         boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
-         if (success) {
-             response.setStatus("SUCCESS");
-             response.setMessage("Đã khóa tài khoản thành công.");
+         Object payload = request.getPayload();
+         if (payload instanceof Integer userIdToBan) {
+
+             boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
+             if (success) {
+                 response.setStatus("SUCCESS");
+                 response.setMessage("Đã khóa tài khoản thành công.");
+                 
+                 // Gửi yêu cầu FORCE_LOGOUT tới Client đang online
+                 AuctionServer.forceLogoutUser(userIdToBan);
+             } else {
+                 response.setStatus("FAIL");
+                 response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
+             }
          } else {
              response.setStatus("FAIL");
-             response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
+             response.setMessage("Dữ liệu không hợp lệ.");
          }
          return response;
     }
     
     public Response handleUnbanUser(Request request) {
          Response response = new Response();
-         Integer userIdToUnban = (Integer) request.getPayload();
-         
-         boolean success = userRepo.updateUserStatus(userIdToUnban, "ACTIVE");
-         if (success) {
-             response.setStatus("SUCCESS");
-             response.setMessage("Đã mở khóa tài khoản thành công.");
+         Object payload = request.getPayload();
+         if (payload instanceof Integer userIdToUnban) {
+
+             boolean success = userRepo.updateUserStatus(userIdToUnban, "ACTIVE");
+             if (success) {
+                 response.setStatus("SUCCESS");
+                 response.setMessage("Đã mở khóa tài khoản thành công.");
+             } else {
+                 response.setStatus("FAIL");
+                 response.setMessage("Không thể mở khóa tài khoản, vui lòng thử lại.");
+             }
          } else {
              response.setStatus("FAIL");
-             response.setMessage("Không thể mở khóa tài khoản, vui lòng thử lại.");
+             response.setMessage("Dữ liệu không hợp lệ.");
          }
          return response;
     }

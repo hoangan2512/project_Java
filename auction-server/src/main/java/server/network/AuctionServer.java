@@ -11,6 +11,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import message.Response;
+
 public class AuctionServer {
     private static final Logger LOGGER = Logger.getLogger(AuctionServer.class.getName());
     private static final int PORT = 2810;
@@ -94,6 +96,24 @@ public class AuctionServer {
     public static void broadcast(Object message) {
         for (ClientHandler client : clients) {
             client.sendMessage(message);
+        }
+    }
+
+    /**
+     * Tìm ClientHandler của một User ID cụ thể và ép đăng xuất.
+     */
+    public static void forceLogoutUser(int userId) {
+        for (ClientHandler client : clients) {
+            if (client.getLoggedInUser() != null && client.getLoggedInUser().getID() == userId) {
+                // Gửi thông báo ép đăng xuất tới Client này
+                Response forceLogoutResponse = new Response("FORCE_LOGOUT", null, "Tài khoản của bạn đã bị khóa bởi Admin.");
+                client.sendMessage(forceLogoutResponse);
+                
+                // Hủy session ở phía Server
+                client.clearSession();
+                LOGGER.info("Đã ép đăng xuất (Force Logout) đối với User ID: " + userId);
+                break; // Thường mỗi user chỉ log in 1 nơi, nếu cho phép multi-login thì bỏ break
+            }
         }
     }
 }
