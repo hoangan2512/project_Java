@@ -91,7 +91,7 @@
                 <Font name="System Bold" size="16.0" />
             </font>
         </Label>
-        <Button fx:id="confirm_btn" layoutX="619.0" layoutY="317.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="371.0" style="-fx-background-radius: 0; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);" styleClass="confirm_btn" text="Suspend the auction" textFill="WHITE">
+        <Button fx:id="suspend_btn" layoutX="619.0" layoutY="317.0" mnemonicParsing="false" onMouseClicked="#handleSuspendAuction" prefHeight="25.0" prefWidth="371.0" style="-fx-background-radius: 0; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);" styleClass="confirm_btn" text="Suspend the auction" textFill="WHITE">
             <font>
                 <Font name="System Bold" size="16.0" />
             </font>
