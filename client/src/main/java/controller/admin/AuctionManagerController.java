@@ -33,9 +33,7 @@ public class AuctionManagerController {
     private Auction currentAuction;
     private Timeline liveClockTimeline;
 
-    public void initialize() {
-        // Khởi tạo mặc định nếu cần
-    }
+    public void initialize() {}
 
     /**
      * Hàm chính nhận dữ liệu từ homepageController truyền sang khi click vào dòng Auction

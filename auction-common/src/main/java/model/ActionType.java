@@ -18,6 +18,7 @@ public enum ActionType {
     CHECK_DUPLICATE_NAME,
     CUSTOM_SEARCH,
     GET_SELLER_NAME,
+    GOOGLE_LOGIN,
     
     // --- Các hành động dành riêng cho Admin ---
     ADMIN_GET_ALL_USERS,

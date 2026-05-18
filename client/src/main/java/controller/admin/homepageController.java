@@ -67,6 +67,12 @@ public class homepageController {
                 auction_manager_pane.setManaged(false);
             });
         }
+        if (seller_manager_paneController != null) {
+            seller_manager_paneController.setOnBack(() -> {
+                seller_manager_pane.setVisible(false);
+                seller_manager_pane.setManaged(false);
+            });
+        }
 
         ToggleGroup group = new ToggleGroup();
 
@@ -161,7 +167,7 @@ public class homepageController {
                                     };
                                     controller.setRowData(rowData);
                                     controller.setOnRowClick(() -> {
-                                        openUserManager(user);
+                                        openUserManager(userDataMap);
                                     });
                                     productGrid.getChildren().add(listNode);
                                 }
@@ -309,9 +315,9 @@ public class homepageController {
         auction_manager_pane.setVisible(false);
     }
 
-    private void openUserManager(User user) {
+    private void openUserManager(Map<String, Object> userDataMap) {
         if (seller_manager_paneController != null) {
-            //seller_manager_paneController.setUserData(user);
+            seller_manager_paneController.setUserData(userDataMap);
         }
 
         seller_manager_pane.setManaged(true);

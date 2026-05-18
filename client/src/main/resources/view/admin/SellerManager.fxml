@@ -3,16 +3,21 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@manager.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.SellerManagerController">
    <children>
-      <Label fx:id="startingPrice" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="51.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="seller2" textFill="WHITE">
+      <Label fx:id="username" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="190.0" layoutY="51.0" prefHeight="27.0" prefWidth="262.0" style="-fx-text-fill: white;" text="seller2" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -23,7 +28,7 @@
          </font>
       </Label>
       <Line endX="100.0" layoutX="351.0" layoutY="86.0" startX="-267.0" stroke="WHITE" strokeWidth="0.5" />
-      <Label fx:id="startDate" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="99.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="SELLER" textFill="WHITE">
+      <Label fx:id="role" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="99.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="SELLER" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -33,7 +38,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="startTime" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="136.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
+      <Label fx:id="item_number" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="136.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -43,7 +48,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="duration" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="171.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
+      <Label fx:id="auction_number" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="351.0" layoutY="171.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -61,12 +66,12 @@
       </Label>
       <AnchorPane layoutX="567.0" layoutY="257.0" style="-fx-border-color: linear-gradient(to right, #b8b8b8 0%, #ffffff 50%, #b8b8b8 100%); -fx-border-width: 0.75; -fx-border-radius: 7;">
          <children>
-            <ToggleButton fx:id="not_approve" layoutX="185.0" layoutY="2.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="not_approve_btn" text="Suspension" textFill="WHITE">
+            <ToggleButton fx:id="ban" layoutX="185.0" layoutY="2.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="not_approve_btn" text="Ban" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </ToggleButton>
-            <ToggleButton fx:id="approve" layoutX="2.0" layoutY="2.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="approve_btn" text="Activate" textFill="WHITE">
+            <ToggleButton fx:id="activate" layoutX="2.0" layoutY="2.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="183.5" style="-fx-background-radius: 0;" styleClass="approve_btn" text="Activate" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
@@ -83,13 +88,13 @@
             <Font name="System Bold" size="16.0" />
          </font>
       </Button>
-      <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+      <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
          <font>
             <Font name="System Bold" size="24.0" />
          </font>
       </Button>
       <Line endX="200.0" layoutX="416.0" layoutY="125.0" rotate="90.0" stroke="WHITE" strokeWidth="0.5" />
-      <Label fx:id="startingPrice1" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="55.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="Banned" textFill="WHITE">
+      <Label fx:id="user_status" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="55.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="Banned" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -100,7 +105,7 @@
          </font>
       </Label>
       <Line endX="100.0" layoutX="836.0" layoutY="90.0" startX="-267.0" stroke="WHITE" strokeWidth="0.5" />
-      <Label fx:id="startDate1" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="103.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
+      <Label fx:id="reject_item_number" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="103.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -110,7 +115,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="startTime1" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="140.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
+      <Label fx:id="suspend_auction_number" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="140.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -120,7 +125,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="duration1" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="175.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
+      <Label fx:id="total" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="836.0" layoutY="175.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="01" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -164,14 +169,136 @@
       </AnchorPane>
       <AnchorPane fx:id="togglePane11" layoutX="81.0" layoutY="315.0" prefHeight="278.0" prefWidth="374.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-width: 1; -fx-background-radius: 0; -fx-border-radius: 0; -fx-background-color: transparent;">
          <children>
-            <Label alignment="BOTTOM_LEFT" layoutX="10.0" prefHeight="26.0" prefWidth="362.0" styleClass="message-text" text="Items list" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
-               <font>
-                  <Font name="Segoe UI" size="15.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="5.0" left="7.0" />
-               </StackPane.margin>
-            </Label>
+            <ScrollPane layoutX="1.0" layoutY="1.0" prefHeight="278.0" prefWidth="374.0" style="-fx-background-color: black;">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="298.0" prefWidth="1028.0" style="-fx-background-color: black;">
+                     <children>
+                        <StackPane prefHeight="45.0" prefWidth="1028.0">
+                           <children>
+                              <HBox fx:id="item_head" prefHeight="45.0" prefWidth="200.0" style="-fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" StackPane.alignment="CENTER">
+                                 <children>
+                                    <MenuButton fx:id="item_col1" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <MenuButton fx:id="item_col2" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="268.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Product Name" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <Button fx:id="item_col3" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID by Seller" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="item_col4" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="100.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="SellerID" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="item_col5" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="AuctionID" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <MenuButton fx:id="item_col6" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Starting Price" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <MenuButton fx:id="item_col7" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Status" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="PENDING_APPROVAL" />
+                                          <MenuItem mnemonicParsing="false" text="APPROVED" />
+                                          <MenuItem mnemonicParsing="false" text="REJECTED" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                 </children>
+                              </HBox>
+                              <HBox fx:id="auction_head" prefHeight="45.0" prefWidth="200.0" style="-fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" visible="false" StackPane.alignment="CENTER">
+                                 <children>
+                                    <MenuButton fx:id="auction_col1" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ID" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <MenuButton fx:id="auction_col2" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="268.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Product Name" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <Button fx:id="auction_col3" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="ProductID" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="auction_col4" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="100.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="SellerID" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <MenuButton fx:id="auction_col5" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Current Time" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <MenuButton fx:id="auction_col6" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Current Price" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="Increase" />
+                                          <MenuItem mnemonicParsing="false" text="Decrease" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                    <MenuButton fx:id="auction_col7" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="43.0" prefWidth="150.0" style="-fx-background-color: transparent; -fx-background-radius: 0px; -fx-border-width: 0 0.5 0 0; -fx-border-color: linear-gradient(to bottom, transparent 0%, #b8b8b8 25%, #ffffff 50%, #b8b8b8 75%, transparent 100%);" text="Status" textFill="WHITE">
+                                       <items>
+                                          <MenuItem mnemonicParsing="false" styleClass=".bidhub-menu-btn" text="WAITING" />
+                                          <MenuItem mnemonicParsing="false" text="RUNNING" />
+                                          <MenuItem mnemonicParsing="false" text="FINISHED" />
+                                          <MenuItem mnemonicParsing="false" text="SUSPENDED" />
+                                       </items>
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </MenuButton>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </StackPane>
+                        <TilePane fx:id="productGrid" layoutY="45.0" prefColumns="1" prefHeight="90.0" prefWidth="1028.0" style="-fx-padding: 0 0 90 0; -fx-background-color: transparent;" />
+                     </children>
+                  </AnchorPane>
+              </content>
+            </ScrollPane>
          </children>
       </AnchorPane>
    </children>
