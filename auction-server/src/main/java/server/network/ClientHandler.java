@@ -211,10 +211,6 @@ public class ClientHandler implements Runnable {
             case ADMIN_UNBAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
                 return unauthResponse();
-
-            case ADMIN_GET_ITEMS:
-                if (checkAuthorization("ADMIN")) return itemController.handleGetAllItems(request);
-                return unauthResponse();
             case ADMIN_APPROVE_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);
                 return unauthResponse();
