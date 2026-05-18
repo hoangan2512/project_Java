@@ -3,9 +3,11 @@ package server.service;
 import message.Response;
 import model.Auction;
 import model.Bid;
+import model.User;
 import server.network.AuctionServer;
 import server.repository.AuctionRepository;
 import server.repository.BidRepository;
+import server.repository.UserRepository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,16 +16,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class AuctionService {
 
-    // Mỗi phiên đấu giá (Auction) sẽ có một cái "khóa" riêng để tránh tranh chấp giá
-    // Điều này đảm bảo trong 1 mili-giây, chỉ có 1 luồng được phép xử lý giá cho 1 sản phẩm
-    private final ConcurrentHashMap<Integer, ReentrantLock> auctionLocks = new ConcurrentHashMap<>();
-
     // Lưu trữ thời điểm đặt giá cuối cùng của mỗi user để kiểm soát rate limit
     private final ConcurrentHashMap<Integer, LocalDateTime> lastBidTimes = new ConcurrentHashMap<>();
 
     // Tiêm Repository vào để tương tác với Database
     private final AuctionRepository auctionRepository = new AuctionRepository();
     private final BidRepository bidRepository = new BidRepository();
+    private final UserRepository userRepository = new UserRepository(); 
 
     // --- CẤU HÌNH ANTI-SNIPING ---
     // Nếu có bid trong 30 giây cuối -> gia hạn thêm 60 giây
@@ -33,13 +32,6 @@ public class AuctionService {
     // --- CẤU HÌNH RATE LIMIT (ANTI-SPAM) ---
     // Người dùng chỉ được đặt giá tối đa 1 lần mỗi 2 giây
     private static final long BID_COOLDOWN_MILLIS = 2000;
-
-    /**
-     * Hàm lấy khóa Lock cho một phiên đấu giá cụ thể.
-     */
-    private ReentrantLock getLock(int auctionId) {
-        return auctionLocks.computeIfAbsent(auctionId, k -> new ReentrantLock());
-    }
 
     /**
      * Xác định bước giá (minimum increment) hợp lý dựa trên giá trị hiện tại của sản phẩm.
@@ -115,15 +107,29 @@ public class AuctionService {
     public Response placeBid(Bid bid) {
         int auctionId = bid.getAuction_id();
         int bidderId = bid.getBidder_id();
+
+        // 0. KIỂM TRA TRẠNG THÁI BANNED TỪ DATABASE TRỰC TIẾP
+        User bidder = userRepository.getUserById(bidderId);
+        if (bidder == null) {
+            return new Response("FAIL", null, "Lỗi: Không tìm thấy thông tin tài khoản của bạn.");
+        }
+        if ("BANNED".equalsIgnoreCase(bidder.getStatus())) {
+            return new Response("FAIL", null, "Lỗi: Tài khoản của bạn đã bị khóa. Không thể thực hiện đấu giá.");
+        }
         
         // --- KIỂM TRA RATE LIMIT TRƯỚC KHI VÀO LUỒNG ---
-        // Giúp loại bỏ nhanh các request spam mà không cần phải chờ lấy Lock
         if (isRateLimited(bidderId)) {
             return new Response("FAIL", null, "Lỗi: Bạn thao tác quá nhanh. Vui lòng thử lại sau giây lát.");
         }
 
-        ReentrantLock lock = getLock(auctionId);
-        lock.lock(); // Bắt đầu chặn tất cả các Request khác truy cập vào cùng phiên đấu giá này
+        // SỬA ĐỔI: Sử dụng ConcurrencyHandler để lấy Lock thay vì tự quản lý Lock
+        ReentrantLock lock = ConcurrencyHandler.getInstance().getLockForAuction(auctionId);
+        
+        // --- CƠ CHẾ CHỐNG "LOST UPDATE" VÀ "HAI NGƯỜI CÙNG THẮNG" ---
+        // Khi Thread A (Client 1) đang thực thi đoạn code bên dưới, 
+        // Thread B (Client 2) gọi lệnh này sẽ bị block (đóng băng) lại, 
+        // chờ cho đến khi Thread A gọi lock.unlock() thì Thread B mới được đi tiếp.
+        lock.lock(); 
 
         try {
             // 1. Lấy thông tin mới nhất của phiên đấu giá trực tiếp từ Database
@@ -180,7 +186,8 @@ public class AuctionService {
             }
 
         } finally {
-            lock.unlock(); // Luôn giải phóng khóa dù có lỗi xảy ra hay không
+            // Giải phóng khóa để Client tiếp theo được vào đấu giá
+            lock.unlock(); 
         }
     }
     
@@ -189,7 +196,15 @@ public class AuctionService {
      */
     public Response placeAutoBid(Bid autoBid) {
         int auctionId = autoBid.getAuction_id();
-        ReentrantLock lock = getLock(auctionId);
+        
+        User bidder = userRepository.getUserById(autoBid.getBidder_id());
+        if (bidder != null && "BANNED".equalsIgnoreCase(bidder.getStatus())) {
+            System.out.println("[AUTO-BID] Hủy đặt giá tự động do User " + autoBid.getBidder_id() + " đã bị khóa tài khoản.");
+            return new Response("FAIL", null, "Lỗi: Tài khoản bị khóa.");
+        }
+
+        // SỬA ĐỔI: Sử dụng ConcurrencyHandler
+        ReentrantLock lock = ConcurrencyHandler.getInstance().getLockForAuction(auctionId);
         lock.lock(); 
 
         try {

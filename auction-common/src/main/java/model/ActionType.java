@@ -27,5 +27,5 @@ public enum ActionType {
     ADMIN_GET_ITEMS,
     ADMIN_APPROVE_ITEM,
     ADMIN_REJECT_ITEM,
-    ADMIN_STOP_AUCTION // Thêm hành động mới để dừng phiên đấu giá
+    ADMIN_GET_PENDING_ITEMS, ADMIN_STOP_AUCTION // Thêm hành động mới để dừng phiên đấu giá
 }

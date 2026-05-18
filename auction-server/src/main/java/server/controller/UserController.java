@@ -7,6 +7,8 @@ import model.User;
 import server.repository.AuctionRepository;
 import server.repository.ItemRepository;
 import server.repository.UserRepository;
+import server.network.AuctionServer;
+import server.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,16 +31,16 @@ public class UserController {
 
     public Response handleGoogleLoginAuth(String email, String name) {
         Response response = new Response();
-        
+
         // Kiểm tra xem user có tồn tại chưa (dùng email làm username)
         User user = userRepo.findUserByUsername(email);
-        
+
         if (user == null) {
             // User chưa tồn tại, tạo mới
             // Yêu cầu: "chỉnh lại, phương thức đăng nhập/ đăng kí qua google chỉ dành cho BIDDER"
             String defaultRole = "BIDDER";
             boolean isCreated = userRepo.createGoogleUser(email, defaultRole);
-            
+
             if (isCreated) {
                 user = userRepo.findUserByUsername(email);
                 LOGGER.log(Level.INFO, "New Google user registered successfully: ''{0}'' with role: {1}", new Object[]{email, defaultRole});
@@ -68,7 +70,7 @@ public class UserController {
                 response.setData(user);
             }
         }
-        
+
         return response;
     }
 
@@ -94,14 +96,7 @@ public class UserController {
             ActionType action = request.getAction();
 
             // Kiểm tra role dựa trên loại login request
-            boolean isLoginRequestValid = false;
-            if (action == ActionType.LOGIN_BIDDER) {
-                 isLoginRequestValid = "BIDDER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
-            } else if (action == ActionType.LOGIN_SELLER) {
-                 isLoginRequestValid = "SELLER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
-            } else if (action == ActionType.LOGIN_ADMIN) {
-                 isLoginRequestValid = "ADMIN".equalsIgnoreCase(role);
-            }
+            boolean isLoginRequestValid = isIsLoginRequestValid(action, role);
 
             if (isLoginRequestValid) {
                 // Đăng nhập thành công và đúng vai trò
@@ -123,6 +118,18 @@ public class UserController {
             response.setMessage("Sai tài khoản hoặc mật khẩu!");
         }
         return response;
+    }
+
+    private static boolean isIsLoginRequestValid(ActionType action, String role) {
+        boolean isLoginRequestValid = false;
+        if (action == ActionType.LOGIN_BIDDER) {
+             isLoginRequestValid = "BIDDER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
+        } else if (action == ActionType.LOGIN_SELLER) {
+             isLoginRequestValid = "SELLER".equalsIgnoreCase(role) || "BOTH".equalsIgnoreCase(role);
+        } else if (action == ActionType.LOGIN_ADMIN) {
+             isLoginRequestValid = "ADMIN".equalsIgnoreCase(role);
+        }
+        return isLoginRequestValid;
     }
 
     public Response handleRegister(Request request) {
@@ -152,9 +159,9 @@ public class UserController {
         return response;
     }
     
-    // =========================================================================
+    // ==========================================
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ USER
-    // =========================================================================
+    // ==========================================
     
     public Response handleGetAllUsers(Request request) {
         Response response = new Response();
@@ -202,30 +209,43 @@ public class UserController {
     public Response handleBanUser(Request request) {
          Response response = new Response();
          // Payload gửi lên có thể là ID của User (Integer)
-         Integer userIdToBan = (Integer) request.getPayload();
-         
-         boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
-         if (success) {
-             response.setStatus("SUCCESS");
-             response.setMessage("Đã khóa tài khoản thành công.");
+         Object payload = request.getPayload();
+         if (payload instanceof Integer userIdToBan) {
+
+             boolean success = userRepo.updateUserStatus(userIdToBan, "BANNED");
+             if (success) {
+                 response.setStatus("SUCCESS");
+                 response.setMessage("Đã khóa tài khoản thành công.");
+
+                 // Gửi yêu cầu FORCE_LOGOUT tới Client đang online
+                 AuctionServer.forceLogoutUser(userIdToBan);
+             } else {
+                 response.setStatus("FAIL");
+                 response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
+             }
          } else {
              response.setStatus("FAIL");
-             response.setMessage("Không thể khóa tài khoản, vui lòng thử lại.");
+             response.setMessage("Dữ liệu không hợp lệ.");
          }
          return response;
     }
     
     public Response handleUnbanUser(Request request) {
          Response response = new Response();
-         Integer userIdToUnban = (Integer) request.getPayload();
-         
-         boolean success = userRepo.updateUserStatus(userIdToUnban, "ACTIVE");
-         if (success) {
-             response.setStatus("SUCCESS");
-             response.setMessage("Đã mở khóa tài khoản thành công.");
+         Object payload = request.getPayload();
+         if (payload instanceof Integer userIdToUnban) {
+
+             boolean success = userRepo.updateUserStatus(userIdToUnban, "ACTIVE");
+             if (success) {
+                 response.setStatus("SUCCESS");
+                 response.setMessage("Đã mở khóa tài khoản thành công.");
+             } else {
+                 response.setStatus("FAIL");
+                 response.setMessage("Không thể mở khóa tài khoản, vui lòng thử lại.");
+             }
          } else {
              response.setStatus("FAIL");
-             response.setMessage("Không thể mở khóa tài khoản, vui lòng thử lại.");
+             response.setMessage("Dữ liệu không hợp lệ.");
          }
          return response;
     }

@@ -18,7 +18,7 @@ import server.controller.ItemController;
 import server.controller.UserController;
 
 public class ClientHandler implements Runnable {
-    private Socket socket;
+    private final Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
 
@@ -26,10 +26,10 @@ public class ClientHandler implements Runnable {
     private User loggedInUser = null;
 
     // Gọi các Controller ra để làm việc
-    private UserController userController = new UserController();
-    private ItemController itemController = new ItemController();
-    private BidController bidController = new BidController();
-    private AuctionController auctionController = new AuctionController();
+    private final UserController userController = new UserController();
+    private final ItemController itemController = new ItemController();
+    private final BidController bidController = new BidController();
+    private final AuctionController auctionController = new AuctionController();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -223,6 +223,10 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("ADMIN")) return itemController.handleRejectItem(request);
                 return unauthResponse();
 
+            case ADMIN_STOP_AUCTION:
+                if (checkAuthorization("ADMIN")) return auctionController.handleAdminStopAuction(request);
+                return unauthResponse();
+
             // ======================================================
             // CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION)
             // ======================================================
@@ -296,5 +300,14 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.err.println("Không thể gửi tin nhắn.");
         }
+    }
+
+    // Thêm các hàm phụ trợ cho quản lý session
+    public User getLoggedInUser() {
+        return loggedInUser;
+    }
+
+    public void clearSession() {
+        this.loggedInUser = null;
     }
 }
