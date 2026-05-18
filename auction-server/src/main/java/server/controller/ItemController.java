@@ -53,6 +53,7 @@ public class ItemController {
 
             if (generatedItemId > 0) {
                 newAuction.setItem_id(generatedItemId);
+                newAuction.setStatus("PENDING_APPROVAL"); // Set trạng thái chờ duyệt
                 boolean isAuctionSaved = auctionRepo.createAuction(newAuction);
 
                 if (isAuctionSaved) {
@@ -142,8 +143,7 @@ public class ItemController {
     
     public Response handleGetPendingItems() {
          Response response = new Response();
-         // SỬA LỖI: Gọi đúng hàm getAllAuctionsWithItems() thay vì getPendingItems()
-         List<Auction> pendingItems = itemRepo.getAllAuctionsWithItems(); // Hoặc tạo hàm mới nếu chỉ muốn lấy list pending
+         List<Auction> pendingItems = auctionRepo.getAuctionsByStatus("PENDING_APPROVAL");
          
          response.setStatus("SUCCESS");
          response.setMessage("Lấy danh sách sản phẩm chờ duyệt thành công.");
@@ -172,8 +172,6 @@ public class ItemController {
          
          boolean success = auctionRepo.updateStatus(auctionId, "REJECTED");
          if (success) {
-             // Có thể bạn muốn hủy luôn phiên đấu giá tương ứng
-             // auctionRepo.updateStatus(auctionId, "CANCELLED");
              response.setStatus("SUCCESS");
              response.setMessage("Đã từ chối sản phẩm.");
          } else {
