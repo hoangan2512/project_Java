@@ -51,7 +51,7 @@ public class ClientHandler implements Runnable {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
-            
+
             // --- GỬI PUBLIC KEY CHO CLIENT KHI VỪA KẾT NỐI ---
             // Yêu cầu Client lưu Public Key này để mã hóa mật khẩu trước khi gửi lên
             Response pubKeyResponse = new Response("PUBLIC_KEY", AuctionServer.serverPublicKeyStr, "Đây là khóa công khai của Server");
@@ -90,13 +90,13 @@ public class ClientHandler implements Runnable {
             try {
                 User userWithEncryptedPass = (User) request.getPayload();
                 String encryptedPass = userWithEncryptedPass.getPassword();
-                
+
                 // Dùng Private Key của Server để giải mã
                 String decryptedPass = RSA.decrypt(encryptedPass, AuctionServer.serverPrivateKey);
-                
+
                 // Cập nhật lại mật khẩu đã giải mã vào đối tượng User
                 userWithEncryptedPass.setPassword(decryptedPass);
-                
+
                 // Request bây giờ đã chứa mật khẩu dạng plain-text, sẵn sàng để Controller xử lý
             } catch (Exception e) {
                 System.err.println("Lỗi giải mã mật khẩu: " + e.getMessage());
@@ -132,31 +132,93 @@ public class ClientHandler implements Runnable {
                 this.loggedInUser = null; // Xóa session khi logout
                 return new Response("SUCCESS", null, "Đăng xuất thành công.");
 
+            case GOOGLE_LOGIN:
+                String codeReceived = (String) request.getPayload();
+
+                String clientId = "887547914295-i912u5c51mm9ur6s7kd1pr5kipmpcgka.apps.googleusercontent.com";
+                String clientSecret = "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";
+                String redirectUri = "http://localhost:8080";
+
+                try {
+                    // Gửi request POST trực tiếp lên Google Token API để đổi mã Code lấy thông tin payload
+                    com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse tokenResponse =
+                            new com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest(
+                                    new com.google.api.client.http.javanet.NetHttpTransport(),
+                                    com.google.api.client.json.gson.GsonFactory.getDefaultInstance(),
+                                    "https://oauth2.googleapis.com/token",
+                                    clientId,
+                                    clientSecret,
+                                    codeReceived,
+                                    redirectUri
+                            ).execute();
+
+                    // Trích xuất gói payload chứa thông tin người dùng được mã hóa
+                    com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = tokenResponse.parseIdToken();
+                    com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
+
+                    String email = payload.getEmail();
+                    String name = (String) payload.get("name");
+
+                    System.out.println("[SERVER] User đăng nhập Google: " + name + " (" + email + ")");
+
+                    // ========================================================
+                    // 🌟 KẾT NỐI NGHIỆP VỤ DATABASE QUA USERCONTROLLER
+                    // ========================================================
+                    Response authResponse = userController.handleGoogleLoginAuth(email, name);
+
+                    // Nếu đăng nhập/đăng ký thành công, lưu thông tin vào Session của Thread này
+                    if ("SUCCESS".equals(authResponse.getStatus()) && authResponse.getData() instanceof User) {
+                        this.loggedInUser = (User) authResponse.getData();
+                        System.out.println("=> Đã ghi nhận Session qua Google cho user: " + loggedInUser.getName());
+                    }
+
+                    // ĐÚNG KIẾN TRÚC: Return kết quả về để luồng chính ở hàm run() tự đẩy ra Socket
+                    return authResponse;
+
+                } catch (com.google.api.client.auth.oauth2.TokenResponseException e) {
+                    // ========================================================
+                    // CRITICAL FIX: BẪY LỖI CHUYÊN SÂU TỪ ENDPOINT CỦA GOOGLE
+                    // ========================================================
+                    System.err.println("[SERVER] Google OAuth API trả về lỗi cấu hình:");
+                    if (e.getDetails() != null) {
+                        System.err.println("  - Error: " + e.getDetails().getError());
+                        System.err.println("  - Description: " + e.getDetails().getErrorDescription());
+                    } else {
+                        System.err.println("  - Raw Content: " + e.getContent());
+                    }
+                    e.printStackTrace();
+
+                    String errorMsg = (e.getDetails() != null) ? e.getDetails().getErrorDescription() : e.getMessage();
+                    return new Response("FAILED", null, "Google từ chối cấp Token: " + errorMsg);
+
+                } catch (Exception e) {
+                    // Bắt các lỗi hệ thống khác (NullPointer, Network Timeout, IO,...)
+                    System.err.println("Lỗi xác thực Google OAuth tại Server: " + e.getMessage());
+                    e.printStackTrace();
+                    return new Response("FAILED", null, "Lỗi kết nối hệ thống Server: " + e.getMessage());
+                }
+
             // ======================================================
             // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
             // ======================================================
             case ADMIN_GET_ALL_USERS:
-                return userController.handleGetAllUsers(request);
-                
+                if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
+                return unauthResponse();
             case ADMIN_BAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
                 return unauthResponse();
-                
+
             case ADMIN_UNBAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
                 return unauthResponse();
-                
-            case ADMIN_GET_PENDING_ITEMS:
-                return itemController.handleGetPendingItems();
-                
             case ADMIN_APPROVE_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);
                 return unauthResponse();
-                
+
             case ADMIN_REJECT_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleRejectItem(request);
                 return unauthResponse();
-                
+
             case ADMIN_STOP_AUCTION:
                 if (checkAuthorization("ADMIN")) return auctionController.handleAdminStopAuction(request);
                 return unauthResponse();
@@ -167,7 +229,7 @@ public class ClientHandler implements Runnable {
             case CREATE_ITEM:
                 if (checkAuthorization("SELLER")) return itemController.handleCreateItem(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-                
+
             case CHECK_DUPLICATE_NAME:
                 if (checkAuthorization("SELLER")) return itemController.handleCheckDuplicateName(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
@@ -192,8 +254,8 @@ public class ClientHandler implements Runnable {
                 return auctionController.handleGetItemDetail(request);
             case CUSTOM_SEARCH:
                 return auctionController.handleCustomSearch(request);
-                
-            case AUCTION_END: 
+
+            case AUCTION_END:
                 return new Response("FAIL", null, "Client không có quyền kết thúc phiên đấu giá.");
 
             default:
@@ -235,12 +297,12 @@ public class ClientHandler implements Runnable {
             System.err.println("Không thể gửi tin nhắn.");
         }
     }
-    
+
     // Thêm các hàm phụ trợ cho quản lý session
     public User getLoggedInUser() {
         return loggedInUser;
     }
-    
+
     public void clearSession() {
         this.loggedInUser = null;
     }

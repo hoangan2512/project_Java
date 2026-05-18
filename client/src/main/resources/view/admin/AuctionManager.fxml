@@ -49,7 +49,7 @@
                 <Font name="System Bold" size="18.0" />
             </font>
         </Label>
-        <Label layoutX="620.0" layoutY="102.0" prefHeight="25.0" prefWidth="126.0" text="Curent price" textFill="WHITE">
+        <Label layoutX="620.0" layoutY="102.0" prefHeight="25.0" prefWidth="126.0" text="Current price" textFill="WHITE">
             <font>
                 <Font size="16.0" />
             </font>
@@ -96,7 +96,7 @@
                 <Font name="System Bold" size="16.0" />
             </font>
         </Button>
-        <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+        <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>

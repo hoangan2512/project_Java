@@ -34,6 +34,52 @@ public class UserRepository {
         }
     }
 
+    public User findUserByUsername(String username) {
+        // language=SQLite
+        String sql = "SELECT * FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String role = rs.getString("role");
+                    String storedHashedPassword = rs.getString("password");
+                    User user = User.createUser(
+                            role,
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            storedHashedPassword
+                    );
+                    user.setStatus(rs.getString("status"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error getting user by username: " + username, e);
+        }
+        return null;
+    }
+
+    public boolean createGoogleUser(String email, String role) {
+        // language=SQLite
+        String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+            pstmt.setString(2, ""); // No password for Google users
+            pstmt.setString(3, role);
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error adding Google user to the database", e);
+            return false;
+        }
+    }
+
     public boolean addUser(User user) {
         // language=SQLite
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";

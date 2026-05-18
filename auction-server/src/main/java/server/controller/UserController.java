@@ -4,19 +4,74 @@ import message.Request;
 import message.Response;
 import model.ActionType;
 import model.User;
+import server.repository.AuctionRepository;
+import server.repository.ItemRepository;
+import server.repository.UserRepository;
 import server.network.AuctionServer;
 import server.repository.UserRepository;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.List;
 
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
     private final UserRepository userRepo;
+    private final ItemRepository itemRepo;
+    private final AuctionRepository auctionRepo;
 
     public UserController() {
         this.userRepo = new UserRepository();
+        this.itemRepo = new ItemRepository();
+        this.auctionRepo = new AuctionRepository();
+    }
+
+    public Response handleGoogleLoginAuth(String email, String name) {
+        Response response = new Response();
+
+        // Kiểm tra xem user có tồn tại chưa (dùng email làm username)
+        User user = userRepo.findUserByUsername(email);
+
+        if (user == null) {
+            // User chưa tồn tại, tạo mới
+            // Yêu cầu: "chỉnh lại, phương thức đăng nhập/ đăng kí qua google chỉ dành cho BIDDER"
+            String defaultRole = "BIDDER";
+            boolean isCreated = userRepo.createGoogleUser(email, defaultRole);
+
+            if (isCreated) {
+                user = userRepo.findUserByUsername(email);
+                LOGGER.log(Level.INFO, "New Google user registered successfully: ''{0}'' with role: {1}", new Object[]{email, defaultRole});
+                response.setStatus("SUCCESS");
+                response.setMessage("Đăng ký & đăng nhập qua Google thành công!");
+                response.setData(user);
+            } else {
+                LOGGER.log(Level.SEVERE, "Failed to create Google user: ''{0}''", email);
+                response.setStatus("FAIL");
+                response.setMessage("Có lỗi xảy ra trong quá trình đăng ký tài khoản Google.");
+            }
+        } else {
+            // User đã tồn tại, kiểm tra trạng thái
+            if ("BANNED".equalsIgnoreCase(user.getStatus())) {
+                LOGGER.log(Level.WARNING, "Google Login failed: Account is banned. User: ''{0}''", email);
+                response.setStatus("FAIL");
+                response.setMessage("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+            } else if (!"BIDDER".equalsIgnoreCase(user.getRole()) && !"BOTH".equalsIgnoreCase(user.getRole())) {
+                // Đảm bảo user có role hợp lệ (chỉ BIDDER hoặc BOTH)
+                LOGGER.log(Level.WARNING, "Google Login failed: Invalid role. User: ''{0}''", email);
+                response.setStatus("FAIL");
+                response.setMessage("Tính năng đăng nhập bằng Google chỉ dành cho Bidder.");
+            } else {
+                LOGGER.log(Level.INFO, "Google Login successful for user: ''{0}''", email);
+                response.setStatus("SUCCESS");
+                response.setMessage("Đăng nhập qua Google thành công!");
+                response.setData(user);
+            }
+        }
+
+        return response;
     }
 
     public Response handleLogin(Request request) {
@@ -112,9 +167,42 @@ public class UserController {
         Response response = new Response();
         List<User> users = userRepo.getAllUsers();
         
+        List<Map<String, Object>> usersData = new ArrayList<>();
+        
+        for (User user : users) {
+            Map<String, Object> userDataMap = new HashMap<>();
+            userDataMap.put("user", user);
+            
+            // Đếm số lượng items và auctions cho seller (nếu role là SELLER hoặc BOTH)
+            int activeItemsCount = 0;
+            int rejectedItemsCount = 0;
+            int activeAuctionsCount = 0;
+            int suspendedAuctionsCount = 0;
+            int warningsCount = 0;
+            
+            if ("SELLER".equalsIgnoreCase(user.getRole()) || "BOTH".equalsIgnoreCase(user.getRole())) {
+                Map<String, Integer> itemCounts = itemRepo.countItemsBySellerId(user.getId());
+                activeItemsCount = itemCounts.getOrDefault("active", 0);
+                rejectedItemsCount = itemCounts.getOrDefault("rejected", 0);
+                
+                Map<String, Integer> auctionCounts = auctionRepo.countAuctionsBySellerId(user.getId());
+                activeAuctionsCount = auctionCounts.getOrDefault("active", 0);
+                suspendedAuctionsCount = auctionCounts.getOrDefault("suspended", 0);
+            }
+            warningsCount = rejectedItemsCount + suspendedAuctionsCount;
+            
+            userDataMap.put("itemsCount", activeItemsCount);
+            userDataMap.put("rejectedItemsCount", rejectedItemsCount);
+            userDataMap.put("auctionsCount", activeAuctionsCount);
+            userDataMap.put("suspendedAuctionsCount", suspendedAuctionsCount);
+            userDataMap.put("warningsCount", warningsCount);
+            
+            usersData.add(userDataMap);
+        }
+        
         response.setStatus("SUCCESS");
         response.setMessage("Lấy danh sách user thành công.");
-        response.setData(users);
+        response.setData(usersData);
         return response;
     }
     
@@ -128,7 +216,7 @@ public class UserController {
              if (success) {
                  response.setStatus("SUCCESS");
                  response.setMessage("Đã khóa tài khoản thành công.");
-                 
+
                  // Gửi yêu cầu FORCE_LOGOUT tới Client đang online
                  AuctionServer.forceLogoutUser(userIdToBan);
              } else {
