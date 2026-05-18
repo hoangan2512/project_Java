@@ -158,38 +158,4 @@ public class ItemRepository {
         return counts;
     }
 
-    public List<Item> getPendingItems() {
-        List<Item> pendingItemList = new ArrayList<>();
-        // language=SQLite
-        String sql = "SELECT * FROM items WHERE moderation_status = 'PENDING_APPROVAL'";
-
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            while (rs.next()) {
-                Item item = new Item();
-                item.setId(rs.getInt("id"));
-                item.setUser_prdID(rs.getString("user_prdID"));
-                item.setName(rs.getString("name"));
-                item.setDescription(rs.getString("description"));
-                item.setStarting_price(rs.getDouble("starting_price"));
-                item.setSeller_id(rs.getInt("seller_id"));
-                item.setImgPath(rs.getString("imgpath"));
-                item.setImgPath1(rs.getString("imgpath1"));
-                item.setImgPath2(rs.getString("imgpath2"));
-                item.setImgPath3(rs.getString("imgpath3"));
-                item.setImgPath4(rs.getString("imgpath4"));
-                item.setImgPath5(rs.getString("imgpath5"));
-                item.setImgPath6(rs.getString("imgpath6"));
-                item.setCategories(rs.getString("categories"));
-                item.setModeration_status(rs.getString("moderation_status"));
-
-                pendingItemList.add(item);
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi khi lấy danh sách sản phẩm chờ duyệt: " + e.getMessage());
-        }
-        return pendingItemList;
-    }
 }
