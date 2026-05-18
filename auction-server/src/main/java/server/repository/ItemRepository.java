@@ -49,50 +49,8 @@ public class ItemRepository {
             return -1;
         }
     }
-
-    /**
-     * Lấy toàn bộ danh sách sản phẩm (Dùng cho các mục đích quản lý/hiển thị chung)
-     */
-    public List<Item> getAllItems() {
-        List<Item> itemList = new ArrayList<>();
-        // language=SQLite
-        String sql = "SELECT * FROM items";
-        
-        // SỬA LỖI: Dùng try-with-resources cho Connection
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-             
-            while (rs.next()) {
-                Item currentItem = new Item();
-                currentItem.setId(rs.getInt("id"));
-                currentItem.setUser_prdID(rs.getString("user_prdID"));
-                currentItem.setName(rs.getString("name"));
-                currentItem.setDescription(rs.getString("description"));
-                currentItem.setStarting_price(rs.getDouble("starting_price"));
-                currentItem.setSeller_id(rs.getInt("seller_id"));
-                currentItem.setImgPath(rs.getString("imgpath"));
-                currentItem.setImgPath1(rs.getString("imgpath1"));
-                currentItem.setImgPath2(rs.getString("imgpath2"));
-                currentItem.setImgPath3(rs.getString("imgpath3"));
-                currentItem.setImgPath4(rs.getString("imgpath4"));
-                currentItem.setImgPath5(rs.getString("imgpath5"));
-                currentItem.setImgPath6(rs.getString("imgpath6"));
-                currentItem.setCategories(rs.getString("categories"));
-                currentItem.setModeration_status(rs.getString("moderation_status"));
-
-                itemList.add(currentItem);
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi khi lấy danh sách sản phẩm: " + e.getMessage());
-        }
-        return itemList;
-    }
-
-
-    /**
-     * Kiểm tra trùng lặp mã sản phẩm hoặc tên sản phẩm trong cùng danh mục
-     */
+     // Lấy toàn bộ danh sách sản phẩm (Dùng cho các mục đích quản lý/hiển thị chung)
+     // Kiểm tra trùng lặp mã sản phẩm hoặc tên sản phẩm trong cùng danh mục
     public String checkProductConflicts(String name, String categories, String userPrdId, int sellerId) {
         // 1. KIỂM TRA TRÙNG ID
         if (userPrdId != null && !userPrdId.trim().isEmpty()) {
@@ -171,22 +129,6 @@ public class ItemRepository {
             System.err.println("Lỗi khi lấy danh sách đấu giá: " + e.getMessage());
         }
         return auctionList;
-    }
-    
-    public boolean updateItemModerationStatus(int itemId, String status) {
-        // language=SQLite
-        String sql = "UPDATE items SET moderation_status = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             
-            pstmt.setString(1, status); // APPROVED hoặc REJECTED
-            pstmt.setInt(2, itemId);
-            
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-             System.err.println("Lỗi khi duyệt sản phẩm ID " + itemId + ": " + e.getMessage());
-             return false;
-        }
     }
 
     public Map<String, Integer> countItemsBySellerId(int sellerId) {
