@@ -142,20 +142,34 @@ public class ItemController {
     // ==========================================
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ ITEM
     // ==========================================
-    
+
     public Response handleApproveItem(Request request) {
-         Response response = new Response();
-         Integer auctionId = (Integer) request.getPayload();
-         
-         boolean success = auctionRepo.updateStatus(auctionId, "WAITING");
-         if (success) {
-             response.setStatus("SUCCESS");
-             response.setMessage("Đã phê duyệt sản phẩm thành công.");
-         } else {
-             response.setStatus("FAIL");
-             response.setMessage("Không thể phê duyệt sản phẩm.");
-         }
-         return response;
+        Response response = new Response();
+
+        // Phía Client đang gửi lên auctionId (Integer)
+        if (request.getPayload() instanceof Integer) {
+            int auctionId = (Integer) request.getPayload();
+
+            // 1. Cập nhật trạng thái kiểm duyệt của sản phẩm thành APPROVED
+            // Sử dụng hàm cập nhật gián tiếp qua bảng phụ thuộc bằng câu lệnh JOIN/Subquery
+            boolean isItemUpdated = itemRepo.updateStatus(auctionId, "APPROVED");
+
+            // 2. Kích hoạt trạng thái hoạt động cho phiên đấu giá (Chuyển sang WAITING để đợi đến giờ mở sàn)
+            boolean isAuctionUpdated = auctionRepo.updateStatus(auctionId, "WAITING");
+
+            if (isItemUpdated && isAuctionUpdated) {
+                response.setStatus("SUCCESS");
+                response.setMessage("Đã phê duyệt sản phẩm thành công lên hệ thống.");
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Không thể phê duyệt sản phẩm hoặc cập nhật phiên đấu giá.");
+            }
+        } else {
+            response.setStatus("FAIL");
+            response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu kiểu số nguyên Integer.");
+        }
+
+        return response;
     }
 
     public Response handleRejectItem(Request request) {
@@ -171,13 +185,14 @@ public class ItemController {
                 int auctionId = ((Number) payload[0]).intValue(); // Ép kiểu an toàn tránh lỗi Long/Integer qua Socket
                 String reasonText = (String) payload[1];
 
-                // 1. Thực hiện cập nhật trạng thái từ chối kiểm duyệt sản phẩm/phiên đấu giá
-                boolean success = auctionRepo.updateStatus(auctionId, "REJECTED");
-                if (success) {
-                    // Có thể bạn muốn hủy luôn phiên đấu giá tương ứng
-                    // auctionRepo.updateStatus(auctionId, "CANCELLED");
+                // 1. Thực hiện cập nhật trạng thái kiểm duyệt của sản phẩm thành REJECTED thông qua auctionId
+                boolean isItemUpdated = itemRepo.updateStatus(auctionId, "REJECTED");
 
-                    // 2. Thử lưu lý do từ chối vào bảng reasons (Bọc try-catch để an toàn luồng chính)
+                // 2. Đồng thời sửa lại trạng thái của phiên đấu giá (Auction) thành SUSPENDED
+                boolean isAuctionUpdated = auctionRepo.updateStatus(auctionId, "SUSPENDED");
+
+                if (isItemUpdated && isAuctionUpdated) {
+                    // 3. Thử lưu lý do từ chối vào bảng reasons
                     try {
                         Reason reason = new Reason();
                         reason.setTargetId(auctionId);
@@ -189,10 +204,10 @@ public class ItemController {
                     }
 
                     response.setStatus("SUCCESS");
-                    response.setMessage("Đã từ chối sản phẩm thành công kèm lý do.");
+                    response.setMessage("Đã từ chối sản phẩm thành công và đình chỉ phiên đấu giá liên quan.");
                 } else {
                     response.setStatus("FAIL");
-                    response.setMessage("Không thể từ chối sản phẩm, vui lòng thử lại.");
+                    response.setMessage("Không thể cập nhật trạng thái từ chối, vui lòng thử lại.");
                 }
             } else {
                 response.setStatus("FAIL");

@@ -192,4 +192,24 @@ public class ItemRepository {
         }
         return pendingItemList;
     }
+
+    public boolean updateStatus(int itemId, String newStatus) {
+        // language=SQLite
+        String sql = "UPDATE items SET moderation_status = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi cập nhật trạng thái sản phẩm (ID: " + itemId + "): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
