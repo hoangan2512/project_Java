@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane onMouseClicked="#handleRowClick" prefHeight="40.0" prefWidth="1028.0" style="-fx-background-color: black; -fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" stylesheets="@list.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.listController">
+<AnchorPane onMouseClicked="#handleRowClick" prefHeight="40.0" prefWidth="1028.0" style="-fx-background-color: black; -fx-border-width: 0 0 0.5 0; -fx-border-color: #8b8b8b;" stylesheets="@list.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.listController">
    <children>
       <HBox fx:id="seller_head" onMouseClicked="#handleRowClick" prefHeight="40.0" prefWidth="1028.0">
          <children>
