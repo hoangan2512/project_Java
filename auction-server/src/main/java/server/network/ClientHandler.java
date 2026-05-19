@@ -6,6 +6,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import message.Request;
 import message.Response;
@@ -22,6 +24,11 @@ public class ClientHandler implements Runnable {
     private ObjectInputStream in;
     private ObjectOutputStream out;
 
+    // --- HÀNG ĐỢI VÀ LUỒNG GỬI TIN BẤT ĐỒNG BỘ (WRITE THREAD) ---
+    private final BlockingQueue<Object> responseQueue = new LinkedBlockingQueue<>();
+    private Thread writeThread;
+    private volatile boolean isRunning = true;
+
     // --- BIẾN QUẢN LÝ SESSION (PHIÊN ĐĂNG NHẬP) ---
     private User loggedInUser = null;
 
@@ -36,7 +43,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void closeEverything() {
+        isRunning = false;
         AuctionServer.clients.remove(this);
+
+        if (writeThread != null) {
+            writeThread.interrupt(); // Đánh thức Write Thread nếu đang bị kẹt ở hàng đợi trống
+        }
+
         try {
             if (in != null) in.close();
             if (out != null) out.close();
@@ -46,32 +59,58 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Kích hoạt luồng chuyên trách gửi dữ liệu (Write Thread) độc lập
+     */
+    private void startWriteThread() {
+        writeThread = new Thread(() -> {
+            try {
+                while (isRunning && !Thread.currentThread().isInterrupted()) {
+                    // Chờ và lấy gói tin từ hàng đợi (Tự động block an toàn nếu hàng đợi trống)
+                    Object message = responseQueue.take();
+
+                    if (out != null) {
+                        out.writeObject(message);
+                        out.flush();
+                        out.reset(); // Xóa bộ nhớ đệm Object để tránh lỗi lưu cache tuần tự hóa
+                    }
+                }
+            } catch (InterruptedException e) {
+                // Luồng bị ngắt khi closeEverything() được gọi
+            } catch (IOException e) {
+                System.err.println("Lỗi luồng gửi dữ liệu (Write Thread) của Client: " +
+                        (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
+            }
+        });
+        writeThread.setName("WriteThread-" + socket.getRemoteSocketAddress());
+        writeThread.start();
+    }
+
     @Override
     public void run() {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // --- GỬI PUBLIC KEY CHO CLIENT KHI VỪA KẾT NỐI ---
-            // Yêu cầu Client lưu Public Key này để mã hóa mật khẩu trước khi gửi lên
-            Response pubKeyResponse = new Response("PUBLIC_KEY", AuctionServer.serverPublicKeyStr, "Đây là khóa công khai của Server");
-            out.writeObject(pubKeyResponse);
-            out.flush();
+            // 1. Kích hoạt luồng gửi dữ liệu độc lập trước
+            startWriteThread();
 
-            // Sửa lỗi cảnh báo: 'while' statement cannot complete without throwing an exception
-            // Thêm điều kiện kiểm tra isClosed để vòng lặp có thể kết thúc tự nhiên
-            while (!socket.isClosed()) {
+            // --- GỬI PUBLIC KEY CHO CLIENT KHI VỪA KẾT NỐI ---
+            Response pubKeyResponse = new Response("PUBLIC_KEY", AuctionServer.serverPublicKeyStr, "Đây là khóa công khai của Server");
+            sendMessage(pubKeyResponse);
+
+            // Vòng lặp luồng đọc dữ liệu chính (Read Thread)
+            while (isRunning && !socket.isClosed()) {
                 Request request = (Request) in.readObject();
                 System.out.println("Nhận yêu cầu: " + request.getAction() + " từ Client: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
 
                 // Giao việc cho hàm chia chọn
                 Response response = handleBusinessLogic(request);
 
-                out.writeObject(response);
-                out.flush();
+                // Đẩy gói tin phản hồi vào hàng đợi thay vì ghi trực tiếp vào Socket
+                sendMessage(response);
             }
         } catch (EOFException | SocketException e) {
-            // SocketException và EOFException là bình thường khi client chủ động ngắt kết nối
             System.err.println("Một Client đã ngắt kết nối. User: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Lỗi kết nối từ Client. User: " + (loggedInUser != null ? loggedInUser.getName() : "Khách ẩn danh"));
@@ -91,13 +130,8 @@ public class ClientHandler implements Runnable {
                 User userWithEncryptedPass = (User) request.getPayload();
                 String encryptedPass = userWithEncryptedPass.getPassword();
 
-                // Dùng Private Key của Server để giải mã
                 String decryptedPass = RSA.decrypt(encryptedPass, AuctionServer.serverPrivateKey);
-
-                // Cập nhật lại mật khẩu đã giải mã vào đối tượng User
                 userWithEncryptedPass.setPassword(decryptedPass);
-
-                // Request bây giờ đã chứa mật khẩu dạng plain-text, sẵn sàng để Controller xử lý
             } catch (Exception e) {
                 System.err.println("Lỗi giải mã mật khẩu: " + e.getMessage());
                 return new Response("FAIL", null, "Lỗi bảo mật: Không thể xác thực thông tin.");
@@ -129,7 +163,7 @@ public class ClientHandler implements Runnable {
                 } else {
                     System.out.println("=> Một Client ẩn danh vừa gửi yêu cầu Logout.");
                 }
-                this.loggedInUser = null; // Xóa session khi logout
+                this.loggedInUser = null;
                 return new Response("SUCCESS", null, "Đăng xuất thành công.");
 
             case GOOGLE_LOGIN:
@@ -165,7 +199,7 @@ public class ClientHandler implements Runnable {
                         System.out.println("=> Đã ghi nhận Session qua Google cho user: " + loggedInUser.getName());
                     }
 
-                    return authResponse; // CRITICAL FIX: Đã bổ sung return để chặn đứng rò rỉ switch-case!
+                    return authResponse;
 
                 } catch (com.google.api.client.auth.oauth2.TokenResponseException e) {
                     System.err.println("[SERVER] Google OAuth API trả về lỗi cấu hình:");
@@ -183,9 +217,9 @@ public class ClientHandler implements Runnable {
                     return new Response("FAILED", null, "Lỗi kết nối hệ thống Server: " + e.getMessage());
                 }
 
-            // ======================================================
-            // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
-            // ======================================================
+                // ======================================================
+                // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
+                // ======================================================
             case ADMIN_GET_ALL_USERS:
                 if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
                 return unauthResponse();
@@ -223,13 +257,12 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
 
-            // Thêm route cho REGISTER_AUTO_BID
             case REGISTER_AUTO_BID:
                 if (checkAuthorization("BIDDER")) return bidController.handleRegisterAutoBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá tự động!");
 
             // ======================================================
-            // CÁC HÀNH ĐỘNG CÔNG KHAI (KHÔNG CẦN ĐĂNG NHẬP ĐỂ XEM)
+            // CÁC HÀNH ĐỘNG CÔNG KHAI
             // ======================================================
             case GET_BID_HISTORY:
                 return bidController.handleGetBidHistory(request);
@@ -248,42 +281,32 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    /**
-     * Hàm phụ trợ để kiểm tra xem Client này đã đăng nhập chưa và có đúng vai trò yêu cầu không.
-     * Sửa lỗi: Trả về false nếu KHÔNG có quyền, true nếu CÓ quyền để câu lệnh if bên trên xuôi theo tự nhiên.
-     */
     private boolean checkAuthorization(String expectedRole) {
         if (this.loggedInUser == null) {
-            return false; // Chưa đăng nhập
+            return false;
         }
-        
-        // Admin có mọi quyền (nếu cần thiết) hoặc chỉ check chính xác role
         if ("ADMIN".equalsIgnoreCase(this.loggedInUser.getRole())) {
-             return true; 
+            return true;
         }
-        
         if ("BOTH".equalsIgnoreCase(this.loggedInUser.getRole())) {
-             return true; // Cho phép user có role BOTH thực hiện chức năng của cả Seller và Bidder
+            return true;
         }
-
-        // Sửa lỗi logic if có thể simplified
         return expectedRole == null || expectedRole.equalsIgnoreCase(this.loggedInUser.getRole());
     }
-    
+
     private Response unauthResponse() {
-         return new Response("FAIL", null, "Bạn không có quyền thực hiện chức năng này!");
+        return new Response("FAIL", null, "Bạn không có quyền thực hiện chức năng này!");
     }
 
+    /**
+     * NÂNG CẤP BẤT ĐỒNG BỘ: Đẩy gói tin vào hàng đợi an toàn Thread-safe.
+     * Hàm này phản hồi ngay lập tức, giải phóng luồng xử lý chính.
+     */
     public void sendMessage(Object msg) {
-        try {
-            out.writeObject(msg);
-            out.flush();
-        } catch (IOException e) {
-            System.err.println("Không thể gửi tin nhắn.");
-        }
+        if (msg == null) return;
+        responseQueue.offer(msg); // Thêm vào queue (không gây nghẽn luồng gọi)
     }
 
-    // Thêm các hàm phụ trợ cho quản lý session
     public User getLoggedInUser() {
         return loggedInUser;
     }
