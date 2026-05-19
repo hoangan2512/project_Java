@@ -85,51 +85,8 @@ public class ItemRepository {
 
         return "OK";
     }
-    
-    // ==========================================
+
     // CÁC HÀM DÀNH CHO ADMIN QUẢN LÝ ITEM
-    // ==========================================
-
-    public List<Auction> getAllAuctionsWithItems() {
-        List<Auction> auctionList = new ArrayList<>();
-        // Chọn rõ các cột hoặc dùng alias để tránh trùng tên 'id'
-        String sql = "SELECT a.id AS auction_id, a.current_price, a.status, a.start_time, a.end_time, " +
-                "i.id AS item_id, i.user_prdID, i.name, i.description, i.starting_price, " +
-                "i.seller_id, i.imgpath, i.categories, i.moderation_status " +
-                "FROM auctions a INNER JOIN items i ON a.item_id = i.id";
-
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            while (rs.next()) {
-                // 1. Đọc dữ liệu bảng items
-                Item currentItem = new Item();
-                currentItem.setId(rs.getInt("item_id"));
-                currentItem.setUser_prdID(rs.getString("user_prdID"));
-                currentItem.setName(rs.getString("name"));
-                currentItem.setDescription(rs.getString("description"));
-                currentItem.setStarting_price(rs.getDouble("starting_price"));
-                currentItem.setSeller_id(rs.getInt("seller_id"));
-                currentItem.setImgPath(rs.getString("imgpath"));
-                currentItem.setCategories(rs.getString("categories"));
-                currentItem.setModeration_status(rs.getString("moderation_status"));
-
-                // 2. Đọc dữ liệu bảng auctions
-                Auction auction = new Auction();
-                auction.setId(rs.getInt("auction_id"));
-
-                // Gắn Item vào trong Auction
-                auction.setItem(currentItem);
-
-                // Thêm Auction vào danh sách trả về
-                auctionList.add(auction);
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi khi lấy danh sách đấu giá: " + e.getMessage());
-        }
-        return auctionList;
-    }
 
     public Map<String, Integer> countItemsBySellerId(int sellerId) {
         Map<String, Integer> counts = new HashMap<>();
