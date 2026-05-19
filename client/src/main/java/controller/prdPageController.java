@@ -86,6 +86,9 @@ public class prdPageController {
     // Biến định dạng số tiền chung để dùng lại
     private final DecimalFormat currencyFormatter;
 
+    // Biến theo dõi số tiền đang được đề xuất ở Label currentPrice2
+    private double proposedBidAmount = 0;
+
     public prdPageController() {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
         symbols.setGroupingSeparator('.');
@@ -95,14 +98,21 @@ public class prdPageController {
     public void initialize() {
         addCurrencyFormat(bidAmount);
 
+        // --- GÁN SỰ KIỆN CHO NÚT TĂNG GIẢM GIÁ (+/-) ---
+        if (bid_increase != null) {
+            bid_increase.setOnAction(e -> handleBidIncrease());
+        }
+        if (bid_decrease != null) {
+            bid_decrease.setOnAction(e -> handleBidDecrease());
+        }
+
         // --- TÍNH NĂNG MỚI: TỰ ĐỘNG ĐIỀN GIÁ TỐI THIỂU KHI BẤM VÀO Ô NHẬP ---
         if (bidAmount != null) {
             bidAmount.setOnMousePressed(event -> {
                 // Chỉ điền tự động nếu ô đang trống và phiên đấu giá đang hợp lệ
                 if ((bidAmount.getText() == null || bidAmount.getText().isEmpty()) && currentAuction != null) {
-                    double minInc = calculateMinimumIncrement(currentAuction.getCurrent_price());
-                    double minAllowedBid = currentAuction.getCurrent_price() + minInc;
-                    bidAmount.setText(currencyFormatter.format(minAllowedBid));
+                    // Lấy luôn số tiền đang được hiển thị ở currentPrice2
+                    bidAmount.setText(currencyFormatter.format(proposedBidAmount));
 
                     // Chuyển con trỏ chuột về cuối chuỗi để người dùng dễ gõ thêm
                     Platform.runLater(() -> bidAmount.positionCaret(bidAmount.getText().length()));
@@ -183,7 +193,7 @@ public class prdPageController {
     }
 
     // ==========================================
-    // LOGIC BƯỚC GIÁ TỐI THIỂU
+    // LOGIC BƯỚC GIÁ TỐI THIỂU & TĂNG GIẢM
     // ==========================================
 
     private double calculateMinimumIncrement(double currentPrice) {
@@ -198,6 +208,54 @@ public class prdPageController {
         } else {
             return 1000000;
         }
+    }
+
+    /**
+     * Xác định mức nhảy (step) cho 2 nút +/- tùy thuộc vào giá trị sản phẩm hiện tại
+     */
+    private double getBidStep(double currentPrice) {
+        if (currentPrice >= 1_000_000_000) {
+            return 10_000_000; // >= 1 Tỷ -> Nhảy 10 Triệu
+        } else if (currentPrice >= 100_000_000) {
+            return 1_000_000;  // >= 100 Triệu -> Nhảy 1 Triệu (Đã chuẩn hóa lỗi typo)
+        } else if (currentPrice >= 10_000_000) {
+            return 100_000;    // >= 10 Triệu -> Nhảy 100k
+        } else {
+            return 10_000;     // Dưới 10 Triệu -> Nhảy 10k
+        }
+    }
+
+    /**
+     * Nút [+] Tăng giá đề xuất
+     */
+    private void handleBidIncrease() {
+        if (currentAuction == null) return;
+        double step = getBidStep(currentAuction.getCurrent_price());
+        proposedBidAmount += step;
+
+        // Cập nhật lên UI
+        if (currentPrice2 != null) currentPrice2.setText(currencyFormatter.format(proposedBidAmount) + " ₫");
+        if (bidAmount != null) bidAmount.setText(currencyFormatter.format(proposedBidAmount));
+    }
+
+    /**
+     * Nút [-] Giảm giá đề xuất (Không bao giờ giảm dưới mức giá sàn tối thiểu)
+     */
+    private void handleBidDecrease() {
+        if (currentAuction == null) return;
+        double minAllowed = currentAuction.getCurrent_price() + calculateMinimumIncrement(currentAuction.getCurrent_price());
+        double step = getBidStep(currentAuction.getCurrent_price());
+
+        proposedBidAmount -= step;
+
+        // Khóa giới hạn (Clamp): Không cho giảm dưới giá bid tối thiểu
+        if (proposedBidAmount < minAllowed) {
+            proposedBidAmount = minAllowed;
+        }
+
+        // Cập nhật lên UI
+        if (currentPrice2 != null) currentPrice2.setText(currencyFormatter.format(proposedBidAmount) + " ₫");
+        if (bidAmount != null) bidAmount.setText(currencyFormatter.format(proposedBidAmount));
     }
 
     /**
@@ -281,13 +339,11 @@ public class prdPageController {
                         // Cập nhật lại Prompt text bước giá mới
                         updateBidPrompt();
 
-                        // Nếu user đang xem nhưng chưa đặt, có thể tự động clear ô nhập
-                        // để họ thấy được prompt text mới nhất.
+                        // Nếu user đang gõ dở giá cũ mà bị báo giá mới đè lên, tự động dọn sạch ô nhập
                         if (bidAmount.getText() != null && !bidAmount.getText().isEmpty()) {
                             long typedAmount = getRealPrice(bidAmount);
                             double newMinAllowed = newBid.getAmount() + calculateMinimumIncrement(newBid.getAmount());
 
-                            // Nếu mức giá họ đang gõ dở bị lỗi thời (thấp hơn sàn mới) thì tự clear đi
                             if (typedAmount < newMinAllowed) {
                                 bidAmount.clear();
                                 showErrorInBidAmount("Price updated by another user!");
@@ -342,10 +398,21 @@ public class prdPageController {
         pause.play();
     }
 
+    /**
+     * SỬA ĐỔI: Đồng bộ hóa luôn biến proposedBidAmount và giao diện currentPrice2
+     */
     private void updateCurrentPriceLabel(double price) {
         if (currentPrice != null) {
             currentPrice.setText(currencyFormatter.format(price) + " ₫");
-            currentPrice2.setText(currencyFormatter.format(price) + " ₫");
+        }
+
+        // Khi giá Server thay đổi, ép currentPrice2 bằng đúng giá trị sàn tối thiểu mới
+        if (currentAuction != null) {
+            double minInc = calculateMinimumIncrement(price);
+            proposedBidAmount = price + minInc;
+            if (currentPrice2 != null) {
+                currentPrice2.setText(currencyFormatter.format(proposedBidAmount) + " ₫");
+            }
         }
     }
 
