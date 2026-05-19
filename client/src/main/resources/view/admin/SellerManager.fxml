@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@manager.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.SellerManagerController">
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@manager.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.SellerManagerController">
    <children>
       <Label fx:id="username" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="190.0" layoutY="51.0" prefHeight="27.0" prefWidth="262.0" style="-fx-text-fill: white;" text="seller2" textFill="WHITE">
          <font>
@@ -171,7 +171,7 @@
          <children>
             <ScrollPane layoutX="1.0" layoutY="1.0" prefHeight="278.0" prefWidth="374.0" style="-fx-background-color: black;">
               <content>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="298.0" prefWidth="1028.0" style="-fx-background-color: black;">
+                <AnchorPane minHeight="298.0" minWidth="0.0" prefWidth="1028.0" style="-fx-background-color: black;">
                      <children>
                         <StackPane prefHeight="45.0" prefWidth="1028.0">
                            <children>
