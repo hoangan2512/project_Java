@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import model.SearchCriteria;
 
 import java.io.IOException;
@@ -140,5 +141,34 @@ public class SceneSwitchController {
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
+    }
+
+    public void openWinner(Object data) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/winner.fxml"));
+            Parent root = loader.load();
+
+            Stage popupStage = new Stage();
+            popupStage.setTitle("BidHub: Winner");
+
+            // KHÓA cửa sổ chính bên dưới, bắt buộc tương tác với Popup trước
+            popupStage.initModality(Modality.APPLICATION_MODAL);
+
+            // Tự động tìm cửa sổ chính đang mở để làm Owner (giúp khóa nền chuẩn hơn)
+            Window owner = Stage.getWindows().stream().filter(Window::isShowing).findFirst().orElse(null);
+            if (owner != null) {
+                popupStage.initOwner(owner);
+            }
+
+            Scene scene = new Scene(root);
+            popupStage.setScene(scene);
+
+            // Hiển thị popup lên màn hình
+            popupStage.show();
+
+        } catch (Exception e) {
+            System.err.println("Lỗi khi mở popup winner: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
