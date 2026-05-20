@@ -31,33 +31,65 @@
     -fx-text-fill: orange;
 }
 
-.custom-price-chart .plot-content {
-    -fx-background-color: #2b2b2b;
+/* Nền của toàn bộ biểu đồ (Trong suốt để tiệp với nền đen của App) */
+.chart {
+    -fx-padding: 10px;
+    -fx-background-color: transparent;
 }
 
-/* 2. Đặt màu cho đường line chính thành màu cam */
-.custom-price-chart .default-color0.chart-series-line {
-    -fx-stroke: #ff8c00; /* Màu cam đậm (darkorange) */
-    -fx-stroke-width: 2px; /* Độ dày của đường kẻ */
+/* Khu vực vẽ lưới đồ thị (Plot Area) */
+.chart-plot-background {
+    -fx-background-color: #121212; /* Đen nhám sâu, phong cách TradingView */
+    -fx-background-radius: 5px;
 }
 
-/* 3. Đặt màu và kiểu dáng cho các biểu tượng (symbols) trên đường kẻ */
-.custom-price-chart .default-color0.chart-line-symbol {
-    -fx-background-color:  #ff8e1f, white; /* Màu cam ở ngoài, màu trắng ở trong */
-    -fx-background-radius: 5px; /* Làm cho biểu tượng thành hình tròn */
-    -fx-padding: 5px; /* Kích thước của biểu tượng */
+/* --- ĐƯỜNG LƯỚI (GRID LINES) --- */
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: #2a2a2a; /* Màu xám rất tối, không làm rối mắt */
+    -fx-stroke-dash-array: 2 4; /* Nét đứt (Bỏ dòng này nếu thích nét liền) */
 }
 
-/* 4. Ẩn lưới nền (grid lines) nếu cần (tùy chọn) */
-.custom-price-chart .chart-vertical-grid-lines,
-.custom-price-chart .chart-horizontal-grid-lines {
-    -fx-stroke: transparent;
+/* --- TRỤC X & Y (AXIS) --- */
+.axis {
+    -fx-tick-label-fill: #a0a0a0; /* Chữ số màu xám sáng */
+    -fx-font-family: "Segoe UI", sans-serif; /* Font chữ gọn gàng */
+    -fx-font-size: 11px;
 }
 
-/* 5. Ẩn trục X và Y nếu Scene Builder chưa làm hết (tùy chọn) */
-.custom-price-chart .axis {
-    -fx-tick-mark-visible: false;
-    -fx-tick-labels-visible: false;
+/* Các vạch chia nhỏ trên trục */
+.axis-tick-mark,
+.axis-minor-tick-mark {
+    -fx-stroke: #333333;
+}
+
+/* Ẩn bớt đường viền trục ngoài cùng cho hiện đại */
+.axis:bottom {
+    -fx-border-color: #333333 transparent transparent transparent;
+}
+.axis:left {
+    -fx-border-color: transparent #333333 transparent transparent;
+}
+
+/* --- ĐƯỜNG BIỂU ĐỒ (LINE & SYMBOLS) --- */
+
+/* Đường thẳng nối các điểm (Màu cam) */
+.default-color0.chart-series-line {
+    -fx-stroke: #ff8e1f;
+    -fx-stroke-width: 2.5px; /* Dày dặn một chút cho nổi bật */
+}
+
+/* Các chấm tròn (Điểm giá) */
+.default-color0.chart-line-symbol {
+    -fx-background-color: #ff8e1f, #121212; /* Viền màu cam, ruột màu đen tiệp với nền */
+    -fx-background-insets: 0, 2; /* Độ dày của viền cam là 2px */
+    -fx-background-radius: 5px; /* Bo tròn tuyệt đối */
+    -fx-padding: 4px; /* Kích thước của chấm tròn */
+}
+
+/* Hiệu ứng hover cho chấm tròn (Tùy chọn) */
+.default-color0.chart-line-symbol:hover {
+    -fx-background-color: #ffffff, #ff8e1f; /* Đổi sang viền trắng, ruột cam khi di chuột vào */
 }
 
 .btn {

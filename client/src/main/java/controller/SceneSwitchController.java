@@ -143,31 +143,24 @@ public class SceneSwitchController {
         stage.show();
     }
 
-    public void openWinner(Object data) {
+    public void openWinner(String productName) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/winner.fxml"));
+            // 1. Load file FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/winner.fxml")); // Sửa lại đường dẫn fxml cho đúng
             Parent root = loader.load();
 
-            Stage popupStage = new Stage();
-            popupStage.setTitle("BidHub: Winner");
+            // 2. LẤY CONTROLLER VÀ TRUYỀN DỮ LIỆU VÀO
+            winnerController controller = loader.getController();
+            controller.setProductName(productName);
 
-            // KHÓA cửa sổ chính bên dưới, bắt buộc tương tác với Popup trước
-            popupStage.initModality(Modality.APPLICATION_MODAL);
-
-            // Tự động tìm cửa sổ chính đang mở để làm Owner (giúp khóa nền chuẩn hơn)
-            Window owner = Stage.getWindows().stream().filter(Window::isShowing).findFirst().orElse(null);
-            if (owner != null) {
-                popupStage.initOwner(owner);
-            }
-
-            Scene scene = new Scene(root);
-            popupStage.setScene(scene);
-
-            // Hiển thị popup lên màn hình
-            popupStage.show();
+            // 3. Hiển thị Popup
+            Stage stage = new Stage();
+            stage.setTitle("Chúc mừng!");
+            stage.setScene(new Scene(root));
+            stage.show();
 
         } catch (Exception e) {
-            System.err.println("Lỗi khi mở popup winner: " + e.getMessage());
+            System.out.println("Lỗi khi mở popup winner: " + e.getMessage());
             e.printStackTrace();
         }
     }

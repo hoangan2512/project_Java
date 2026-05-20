@@ -131,9 +131,15 @@ public class ClientSocket {
     private static void handleAuctionWon(Response res) {
         System.out.println("[WINNER NOTIFICATION]: " + res.getMessage());
 
-        // Do hàm này đã được bọc trong Platform.runLater từ startListenerThread(),
-        // code ở đây chạy an toàn trực tiếp trên luồng UI mà không lo crash ứng dụng.
-        sceneSwitcher.openWinner(null);
+        // Lấy tên sản phẩm từ Response (Giả sử Server gửi String trong trường data)
+        // Nếu data là Object khác, bạn cần ép kiểu (cast) cho đúng
+        String productName = "Sản phẩm không xác định";
+        if (res.getData() != null) {
+            productName = String.valueOf(res.getData());
+        }
+
+        // Truyền productName vào thay vì truyền null
+        sceneSwitcher.openWinner(productName);
     }
 
     // Hàm cung cấp Public Key cho các Controller (ví dụ lúc đăng nhập/đăng ký)

@@ -3,7 +3,7 @@ package controller;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDateTime;
-import java.util.Locale;
+import java.util.ArrayList;
 import java.util.List;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.ZoneOffset;
 
 import java.io.IOException;
+import java.util.Locale;
 
 public class prdPageController {
 
@@ -46,7 +47,7 @@ public class prdPageController {
     @FXML
     private ImageView prdImage;
     @FXML
-    private Label prdName, prd_description;
+    private Label prdName, prd_description, auction_id;
     @FXML
     private TextField bidAmount, ceilling_price, price_step;
     @FXML
@@ -90,9 +91,13 @@ public class prdPageController {
 
     // Biến theo dõi số tiền đang được đề xuất ở Label currentPrice2
     private double proposedBidAmount = 0;
-    
+
     // Series cho biểu đồ giá
     private XYChart.Series<Number, Number> priceSeries;
+
+    // --- BIẾN PHỤC VỤ GIÃN BIỂU ĐỒ THÔNG MINH ---
+    private final List<Double> fakeXList = new ArrayList<>();
+    private final List<Long> realTimeList = new ArrayList<>();
 
     public prdPageController() {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
@@ -119,12 +124,8 @@ public class prdPageController {
         // --- TÍNH NĂNG MỚI: TỰ ĐỘNG ĐIỀN GIÁ TỐI THIỂU KHI BẤM VÀO Ô NHẬP ---
         if (bidAmount != null) {
             bidAmount.setOnMousePressed(event -> {
-                // Chỉ điền tự động nếu ô đang trống và phiên đấu giá đang hợp lệ
                 if ((bidAmount.getText() == null || bidAmount.getText().isEmpty()) && currentAuction != null) {
-                    // Lấy luôn số tiền đang được hiển thị ở currentPrice2
                     bidAmount.setText(currencyFormatter.format(proposedBidAmount));
-
-                    // Chuyển con trỏ chuột về cuối chuỗi để người dùng dễ gõ thêm
                     Platform.runLater(() -> bidAmount.positionCaret(bidAmount.getText().length()));
                 }
             });
@@ -169,23 +170,76 @@ public class prdPageController {
             auto_bid_status_btn.setOnAction(e -> handleAutoBidToggle());
         }
     }
-    
+
+    // --- HÀM HỖ TRỢ THUẬT TOÁN BIỂU ĐỒ ---
+    private String formatTime(long epoch) {
+        LocalDateTime dateTime = LocalDateTime.ofEpochSecond(epoch, 0, ZoneOffset.ofHours(7));
+        return dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    }
+
+    private XYChart.Data<Number, Number> createSmartPoint(long realTime, double price) {
+        if (fakeXList.isEmpty()) {
+            fakeXList.add(0.0);
+            realTimeList.add(realTime);
+            return new XYChart.Data<>(0.0, price);
+        }
+
+        long lastReal = realTimeList.get(realTimeList.size() - 1);
+        double lastFake = fakeXList.get(fakeXList.size() - 1);
+
+        long deltaReal = realTime - lastReal;
+        if (deltaReal < 0) deltaReal = 0;
+
+        // Ép khoảng cách: Nhỏ nhất 60s, Lớn nhất 30 phút (1800s)
+        double deltaFake = Math.max(60.0, Math.min(1800.0, deltaReal));
+        double newFakeX = lastFake + deltaFake;
+
+        fakeXList.add(newFakeX);
+        realTimeList.add(realTime);
+
+        return new XYChart.Data<>(newFakeX, price);
+    }
+
     private void initPriceChart() {
         if (prcieChart != null) {
-            prcieChart.setAnimated(false); // Tắt animation để vẽ nhanh hơn
-            prcieChart.setCreateSymbols(true); // Hiển thị các chấm trên đường
-            prcieChart.setLegendVisible(false); // Ẩn chú thích
-            
-            // Định dạng trục X (Thời gian)
+            // Nạp file CSS vào biểu đồ (Nếu bạn đã thêm ở file FXML rồi thì có thể xóa dòng này)
+            try {
+                prcieChart.getStylesheets().add(getClass().getResource("/css/chart-style.css").toExternalForm());
+            } catch (Exception e) {
+                System.out.println("Lưu ý: Không tìm thấy file /css/chart-style.css. Vui lòng kiểm tra lại đường dẫn nếu biểu đồ hiển thị sai màu.");
+            }
+
+            prcieChart.setAnimated(false);
+            prcieChart.setCreateSymbols(true);
+            prcieChart.setLegendVisible(false);
+
+            // Định dạng trục X với cơ chế dịch thông minh
             NumberAxis xAxis = (NumberAxis) prcieChart.getXAxis();
             xAxis.setAutoRanging(true);
             xAxis.setForceZeroInRange(false);
+            xAxis.setMinorTickVisible(false); // Ẩn vạch chia phụ
+
             xAxis.setTickLabelFormatter(new StringConverter<>() {
                 @Override
                 public String toString(Number object) {
-                    long timestamp = object.longValue();
-                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(timestamp, 0, ZoneOffset.ofHours(7));
-                    return dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                    double x_tick = object.doubleValue();
+                    if (fakeXList.isEmpty()) return "";
+
+                    if (x_tick <= fakeXList.get(0)) return formatTime(realTimeList.get(0));
+                    if (x_tick >= fakeXList.get(fakeXList.size() - 1)) return formatTime(realTimeList.get(realTimeList.size() - 1));
+
+                    for (int i = 0; i < fakeXList.size() - 1; i++) {
+                        double x1 = fakeXList.get(i);
+                        double x2 = fakeXList.get(i + 1);
+                        if (x_tick >= x1 && x_tick <= x2) {
+                            long t1 = realTimeList.get(i);
+                            long t2 = realTimeList.get(i + 1);
+                            double ratio = (x_tick - x1) / (x2 - x1);
+                            long interp = t1 + (long)(ratio * (t2 - t1));
+                            return formatTime(interp);
+                        }
+                    }
+                    return "";
                 }
 
                 @Override
@@ -193,9 +247,8 @@ public class prdPageController {
                     return 0;
                 }
             });
-            xAxis.setTickLabelFill(javafx.scene.paint.Color.WHITE);
 
-            // Định dạng trục Y (Giá)
+            // Định dạng trục Y
             NumberAxis yAxis = (NumberAxis) prcieChart.getYAxis();
             yAxis.setAutoRanging(true);
             yAxis.setForceZeroInRange(false);
@@ -215,13 +268,9 @@ public class prdPageController {
                     return 0;
                 }
             });
-            yAxis.setTickLabelFill(javafx.scene.paint.Color.WHITE);
 
             priceSeries = new XYChart.Series<>();
             prcieChart.getData().add(priceSeries);
-            
-            // Styling cho đường line và chấm
-            prcieChart.lookup(".chart-series-line").setStyle("-fx-stroke: #ff8e1f; -fx-stroke-width: 2px;");
         }
     }
 
@@ -230,7 +279,10 @@ public class prdPageController {
         boolean showChart = price_chart_btn != null && price_chart_btn.isSelected();
         boolean showAutoBid = auto_bid_btn != null && auto_bid_btn.isSelected();
 
-        if (prd_description != null) prd_description.setVisible(showDesc);
+        if (prd_description != null) {
+            prd_description.setVisible(showDesc);
+            auction_id.setVisible(showDesc);
+        }
         if (priceC != null) priceC.setVisible(showChart);
         if (auto_bid != null) auto_bid.setVisible(showAutoBid);
     }
@@ -323,10 +375,6 @@ public class prdPageController {
         }
     }
 
-    // ==========================================
-    // LOGIC BƯỚC GIÁ TỐI THIỂU & TĂNG GIẢM
-    // ==========================================
-
     private double calculateMinimumIncrement(double currentPrice) {
         if (currentPrice < 100000) {
             return 10000;
@@ -341,37 +389,27 @@ public class prdPageController {
         }
     }
 
-    /**
-     * Xác định mức nhảy (step) cho 2 nút +/- tùy thuộc vào giá trị sản phẩm hiện tại
-     */
     private double getBidStep(double currentPrice) {
         if (currentPrice >= 1_000_000_000) {
-            return 10_000_000; // >= 1 Tỷ -> Nhảy 10 Triệu
+            return 10_000_000;
         } else if (currentPrice >= 100_000_000) {
-            return 1_000_000;  // >= 100 Triệu -> Nhảy 1 Triệu (Đã chuẩn hóa lỗi typo)
+            return 1_000_000;
         } else if (currentPrice >= 10_000_000) {
-            return 100_000;    // >= 10 Triệu -> Nhảy 100k
+            return 100_000;
         } else {
-            return 10_000;     // Dưới 10 Triệu -> Nhảy 10k
+            return 10_000;
         }
     }
 
-    /**
-     * Nút [+] Tăng giá đề xuất
-     */
     private void handleBidIncrease() {
         if (currentAuction == null) return;
         double step = getBidStep(currentAuction.getCurrent_price());
         proposedBidAmount += step;
 
-        // Cập nhật lên UI
         if (currentPrice2 != null) currentPrice2.setText(currencyFormatter.format(proposedBidAmount) + " ₫");
         if (bidAmount != null) bidAmount.setText(currencyFormatter.format(proposedBidAmount));
     }
 
-    /**
-     * Nút [-] Giảm giá đề xuất (Không bao giờ giảm dưới mức giá sàn tối thiểu)
-     */
     private void handleBidDecrease() {
         if (currentAuction == null) return;
         double minAllowed = currentAuction.getCurrent_price() + calculateMinimumIncrement(currentAuction.getCurrent_price());
@@ -379,19 +417,14 @@ public class prdPageController {
 
         proposedBidAmount -= step;
 
-        // Khóa giới hạn (Clamp): Không cho giảm dưới giá bid tối thiểu
         if (proposedBidAmount < minAllowed) {
             proposedBidAmount = minAllowed;
         }
 
-        // Cập nhật lên UI
         if (currentPrice2 != null) currentPrice2.setText(currencyFormatter.format(proposedBidAmount) + " ₫");
         if (bidAmount != null) bidAmount.setText(currencyFormatter.format(proposedBidAmount));
     }
 
-    /**
-     * Cập nhật chữ chìm (PromptText) hướng dẫn số tiền tối thiểu cần nhập
-     */
     private void updateBidPrompt() {
         if (currentAuction != null && bidAmount != null) {
             double current = currentAuction.getCurrent_price();
@@ -414,7 +447,6 @@ public class prdPageController {
             double minInc = calculateMinimumIncrement(currentPriceValue);
             double minAllowedBid = currentPriceValue + minInc;
 
-            // KIỂM TRA BƯỚC GIÁ HỢP LỆ
             if (realBidAmount >= minAllowedBid) {
                 Bid newBid = new Bid();
                 newBid.setAuction_id(currentAuction.getId());
@@ -457,6 +489,11 @@ public class prdPageController {
 
         String status = res.getStatus();
 
+        if ("SUCCESS".equals(status) && res.getData() instanceof List) {
+            handleGetBidHistoryResponse(res);
+            return;
+        }
+
         if ("NOTIFY_NEW_PRICE".equals(status)) {
             if (res.getData() instanceof Bid newBid) {
 
@@ -466,17 +503,14 @@ public class prdPageController {
                         currentAuction.setCurrent_price(newBid.getAmount());
                         updateCurrentPriceLabel(newBid.getAmount());
 
-                        // Thêm điểm dữ liệu mới vào biểu đồ
+                        // Thêm điểm vào biểu đồ sử dụng Smart Point
                         if (priceSeries != null && newBid.getBid_time() != null) {
                             long timestamp = newBid.getBid_time().toEpochSecond(ZoneOffset.ofHours(7));
-                            XYChart.Data<Number, Number> newData = new XYChart.Data<>(timestamp, newBid.getAmount());
-                            priceSeries.getData().add(newData);
+                            priceSeries.getData().add(createSmartPoint(timestamp, newBid.getAmount()));
                         }
 
-                        // Cập nhật lại Prompt text bước giá mới
                         updateBidPrompt();
 
-                        // Nếu user đang gõ dở giá cũ mà bị báo giá mới đè lên, tự động dọn sạch ô nhập
                         if (bidAmount.getText() != null && !bidAmount.getText().isEmpty()) {
                             long typedAmount = getRealPrice(bidAmount);
                             double newMinAllowed = newBid.getAmount() + calculateMinimumIncrement(newBid.getAmount());
@@ -515,38 +549,49 @@ public class prdPageController {
             }
         }
     }
-    
+
     // --- XỬ LÝ NHẬN LỊCH SỬ ĐẤU GIÁ (GET_BID_HISTORY) ---
     public void handleGetBidHistoryResponse(Response res) {
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             if (res.getData() instanceof List<?> rawList) {
                 Platform.runLater(() -> {
-                    if (priceSeries != null) {
-                        priceSeries.getData().clear();
-                        
-                        // Thêm điểm giá khởi điểm (Start Price)
+                    if (prcieChart != null && !rawList.isEmpty()) {
+
+                        // Dọn dẹp bộ nhớ đệm thuật toán trước khi load lịch sử
+                        fakeXList.clear();
+                        realTimeList.clear();
+                        List<XYChart.Data<Number, Number>> newChartData = new ArrayList<>();
+
+                        // Thêm điểm giá khởi điểm
                         if (currentAuction != null && currentAuction.getStart_time() != null) {
                             long startTimestamp = currentAuction.getStart_time().toEpochSecond(ZoneOffset.ofHours(7));
-                            priceSeries.getData().add(new XYChart.Data<>(startTimestamp, currentAuction.getItem().getStarting_price()));
+                            newChartData.add(createSmartPoint(startTimestamp, currentAuction.getItem().getStarting_price()));
                         }
-                        
-                        // Thêm các điểm giá từ lịch sử
+
+                        // Thêm lịch sử với Smart Point
                         for (Object obj : rawList) {
                             if (obj instanceof Bid b) {
                                 if (b.getBid_time() != null) {
                                     long timestamp = b.getBid_time().toEpochSecond(ZoneOffset.ofHours(7));
-                                    XYChart.Data<Number, Number> data = new XYChart.Data<>(timestamp, b.getAmount());
-                                    priceSeries.getData().add(data);
+                                    newChartData.add(createSmartPoint(timestamp, b.getAmount()));
                                 }
                             }
                         }
-                        
-                        System.out.println("Đã tải lịch sử biểu đồ giá với " + rawList.size() + " lượt đặt.");
+
+                        XYChart.Series<Number, Number> newSeries = new XYChart.Series<>();
+                        newSeries.getData().addAll(newChartData);
+
+                        prcieChart.getData().clear();
+                        prcieChart.getData().add(newSeries);
+
+                        priceSeries = newSeries;
+
+                        System.out.println("Đã vẽ lại biểu đồ với " + rawList.size() + " lượt đặt cũ.");
                     }
                 });
             }
         } else {
-             System.err.println("Không thể tải lịch sử đấu giá: " + (res != null ? res.getMessage() : "null"));
+            System.err.println("Không thể tải lịch sử đấu giá: " + (res != null ? res.getMessage() : "null"));
         }
     }
 
@@ -566,15 +611,11 @@ public class prdPageController {
         pause.play();
     }
 
-    /**
-     * SỬA ĐỔI: Đồng bộ hóa luôn biến proposedBidAmount và giao diện currentPrice2
-     */
     private void updateCurrentPriceLabel(double price) {
         if (currentPrice != null) {
             currentPrice.setText(currencyFormatter.format(price) + " ₫");
         }
 
-        // Khi giá Server thay đổi, ép currentPrice2 bằng đúng giá trị sàn tối thiểu mới
         if (currentAuction != null) {
             double minInc = calculateMinimumIncrement(price);
             proposedBidAmount = price + minInc;
@@ -643,14 +684,13 @@ public class prdPageController {
         String imagePath = auction.getItem().getImgPath();
         byte[] imageBytes = auction.getItem().getImageBytes();
         String descriptionText = auction.getItem().getDescription();
+        int auctionID = auction.getId();
 
         if (prdName != null) {
             prdName.setText(name);
         }
 
         updateCurrentPriceLabel(price);
-
-        // Hiển thị bước giá tối thiểu lần đầu tiên khi load giao diện
         updateBidPrompt();
 
         if (countdownTimer != null) countdownTimer.stop();
@@ -763,30 +803,27 @@ public class prdPageController {
 
         if (prd_description != null && descriptionText != null) {
             prd_description.setText(descriptionText);
+            auction_id.setText("Auction ID: " + auctionID);
         }
 
         System.out.println("Displaying: " + name + " - Auction Status: " + status);
-        
-        // --- YÊU CẦU LỊCH SỬ ĐẤU GIÁ (GET_BID_HISTORY) TỪ SERVER ĐỂ VẼ BIỂU ĐỒ ---
+
         if (auction.getId() > 0) {
-             Request req = new Request(auction.getId(), ActionType.GET_BID_HISTORY);
-             try {
-                 // Gửi request bất đồng bộ hoặc đồng bộ tùy hệ thống, ở đây tôi dùng luồng mới 
-                 // hoặc ClientSocket nếu nó đã hỗ trợ xử lý sau
-                 // Tạm thời dùng luồng mới để tránh block UI
-                 new Thread(() -> {
-                     try {
-                         Response res = ClientSocket.sendRequest(req);
-                         if (res != null) {
-                             handleGetBidHistoryResponse(res);
-                         }
-                     } catch (Exception e) {
-                         System.err.println("Lỗi khi yêu cầu lịch sử đấu giá: " + e.getMessage());
-                     }
-                 }).start();
-             } catch (Exception e) {
-                 e.printStackTrace();
-             }
+            Request req = new Request(auction.getId(), ActionType.GET_BID_HISTORY);
+            try {
+                new Thread(() -> {
+                    try {
+                        Response res = ClientSocket.sendRequest(req);
+                        if (res != null) {
+                            handleGetBidHistoryResponse(res);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Lỗi khi yêu cầu lịch sử đấu giá: " + e.getMessage());
+                    }
+                }).start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -872,14 +909,10 @@ public class prdPageController {
     }
 
     private void run() {
-        if (timeLeft != null) {
-            timeLeft.setText("Started - Refreshing...");
-            auctiontime_status.setText("Auction Started - Refreshing");
+        if (currentAuction != null) {
+            currentAuction.setStatus("RUNNING");
         }
-        if (Bid != null) {
-            Bid.setDisable(false);
-            Bid.setText("Place Bid");
-        }
-        if (bidAmount != null) bidAmount.setDisable(false);
+
+        restartRunningCountdown();
     }
 }

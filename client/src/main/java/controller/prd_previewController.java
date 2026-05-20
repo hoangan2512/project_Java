@@ -33,16 +33,19 @@ public class prd_previewController {
 
     private Runnable toPrdPage;
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
-    
+
     private Timeline countdownTimer;
     private long remainingSeconds;
 
-    // PHƯƠNG THỨC MỚI: Hỗ trợ nạp ảnh qua mảng byte (truyền qua mạng)
-    public void setData(String name, long price, long time, String imagePath, String status, String sellerNameStr, byte[] imageBytes) {
+    // BIẾN MỚI: Lưu thời gian kết thúc để dùng khi tự động chuyển trạng thái
+    private long timeToEndSeconds;
+
+    // PHƯƠNG THỨC ĐÃ CẬP NHẬT: Thêm tham số 'long timeToEnd'
+    public void setData(String name, long price, long timeToStart, long timeToEnd, String imagePath, String status, String sellerNameStr, byte[] imageBytes) {
         if (prdName != null) {
             prdName.setText(name);
         }
-        
+
         if (sellerName != null) {
             if (sellerNameStr != null && !sellerNameStr.isEmpty()) {
                 sellerName.setText("by " + sellerNameStr);
@@ -51,89 +54,53 @@ public class prd_previewController {
             }
         }
 
-        // --- BẮT ĐẦU ĐỊNH DẠNG TIỀN TỆ ---
         if (currentPrice != null) {
             DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
-            symbols.setGroupingSeparator('.'); // Thiết lập dấu phân cách là dấu chấm
-
-            // Mẫu định dạng: ###,### (ngăn cách mỗi 3 chữ số)
+            symbols.setGroupingSeparator('.');
             DecimalFormat formatter = new DecimalFormat("###,###", symbols);
-            String formattedPrice = formatter.format(price);
-
-            currentPrice.setText(formattedPrice + " ₫");
+            currentPrice.setText(formatter.format(price) + " ₫");
         }
-        // --- KẾT THÚC ĐỊNH DẠNG ---
 
         // --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN & TRẠNG THÁI ---
-        this.remainingSeconds = time;
+        this.remainingSeconds = timeToStart;
+        this.timeToEndSeconds = timeToEnd; // Lưu lại để xài sau
+
         if (countdownTimer != null) countdownTimer.stop();
 
         if ("WAITING".equals(status) || "UPCOMING".equals(status)) {
             updateUpcomingTimeLabel();
+
             if (remainingSeconds > 0) {
                 countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
                     remainingSeconds--;
                     updateUpcomingTimeLabel();
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
-                        if (auctionStatus != null) {
-                            auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
-                            auctionStatus.setText("Started - refreshing...");
-                        }
-                        if (Bid != null) {
-                            Bid.setDisable(false);
-                            Bid.setText("Start Biddding");
-                        }
+                        switchToRunningState(); // TỰ ĐỘNG CHUYỂN TRẠNG THÁI
                     }
                 }));
                 countdownTimer.setCycleCount(Timeline.INDEFINITE);
                 countdownTimer.play();
             } else {
-                if (auctionStatus != null) {
-                    auctionStatus.setStyle("-fx-background-color: rgba(61, 211, 91, 0.6); -fx-background-radius: 10px; -fx-text-fill: white;");
-                    auctionStatus.setText("Started - refreshing...");
-                }
-                if (Bid != null) {
-                    Bid.setDisable(false);
-                    Bid.setText("Start Biddding");
-                }
+                switchToRunningState();
             }
-            
+
             if (Bid != null) {
                 Bid.setText("Upcoming");
+                Bid.setDisable(true); // Nên khóa nút lúc chờ
             }
 
         } else if ("RUNNING".equals(status)) {
-            updateTimeLabel();
-            if (Bid != null) {
-                Bid.setDisable(false);
-                Bid.setText("Start Bidding");
-            }
-
-            if (remainingSeconds > 0) {
-                countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-                    remainingSeconds--;
-                    updateTimeLabel();
-                    if (remainingSeconds <= 0) {
-                        countdownTimer.stop();
-                        handleAuctionEnd();
-                    }
-                }));
-                countdownTimer.setCycleCount(Timeline.INDEFINITE);
-                countdownTimer.play();
-            } else {
-                handleAuctionEnd();
-            }
+            // Nếu vừa vào đã là RUNNING, time truyền vào thực chất là thời gian kết thúc
+            this.remainingSeconds = (timeToEnd > 0) ? timeToEnd : timeToStart;
+            startRunningCountdown();
         } else {
-            // FINISHED
             handleAuctionEnd();
         }
-        // --- KẾT THÚC BỘ ĐẾM THỜI GIAN ---
 
         // --- BẮT ĐẦU LOAD ẢNH ---
         if (prdImage != null) {
             if (imageBytes != null && imageBytes.length > 0) {
-                // Cách mới: Dựng ảnh từ dữ liệu nhị phân do Server truyền sang
                 try {
                     ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
                     Image image = new Image(bis);
@@ -142,7 +109,6 @@ public class prd_previewController {
                     System.out.println("Lỗi khi load ảnh từ byte array: " + e.getMessage());
                 }
             } else if (imagePath != null && !imagePath.trim().isEmpty()) {
-                // Cách cũ: Fallback dự phòng đọc thẳng từ đĩa (local)
                 try {
                     File imgFile = new File("auction-server/src/main/resources" + imagePath);
                     if (imgFile.exists()) {
@@ -161,15 +127,51 @@ public class prd_previewController {
         }
     }
 
-    // Giữ lại hàm cũ để tránh lỗi tương thích ở những chỗ khác chưa truyền mảng byte
-    public void setData(String name, long price, long time, String imagePath, String status, String sellerNameStr) {
-        setData(name, price, time, imagePath, status, sellerNameStr, null);
+    // HÀM MỚI: Xử lý tự động chuyển sang chế độ đếm ngược kết thúc
+    private void switchToRunningState() {
+        if (Bid != null) {
+            Bid.setDisable(false);
+            Bid.setText("Start Bidding");
+        }
+        // Gán thời gian hiện tại bằng tổng thời gian phiên đấu giá diễn ra
+        this.remainingSeconds = this.timeToEndSeconds;
+        startRunningCountdown();
     }
 
-    public void setData(String name, long price, long time, String imagePath, String status) {
-        setData(name, price, time, imagePath, status, "Unknown", null);
+    // HÀM MỚI: Chạy đồng hồ đếm ngược chờ kết thúc
+    private void startRunningCountdown() {
+        updateTimeLabel();
+        if (Bid != null) {
+            Bid.setDisable(false);
+            Bid.setText("Start Bidding");
+        }
+
+        if (countdownTimer != null) countdownTimer.stop();
+
+        if (remainingSeconds > 0) {
+            countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                remainingSeconds--;
+                updateTimeLabel();
+                if (remainingSeconds <= 0) {
+                    countdownTimer.stop();
+                    handleAuctionEnd();
+                }
+            }));
+            countdownTimer.setCycleCount(Timeline.INDEFINITE);
+            countdownTimer.play();
+        } else {
+            handleAuctionEnd();
+        }
     }
-    
+
+    // Các hàm Overload cũ giữ nguyên phòng hờ lỗi
+    public void setData(String name, long price, long timeToStart, long timeToEnd, String imagePath, String status, String sellerNameStr) {
+        setData(name, price, timeToStart, timeToEnd, imagePath, status, sellerNameStr, null);
+    }
+    public void setData(String name, long price, long time, String imagePath, String status) {
+        setData(name, price, time, 0, imagePath, status, "Unknown", null);
+    }
+
     private void updateTimeLabel() {
         if (auctionStatus != null && remainingSeconds >= 0) {
             long hours = remainingSeconds / 3600;
@@ -191,7 +193,7 @@ public class prd_previewController {
             auctionStatus.setText(timeString);
         }
     }
-    
+
     private void handleAuctionEnd() {
         if (auctionStatus != null) {
             auctionStatus.setStyle("-fx-background-color: rgba(0, 0, 0, 0.6); -fx-background-radius: 10px;  -fx-text-fill: #b5b4b4;");
@@ -199,18 +201,22 @@ public class prd_previewController {
         }
         if (Bid != null) {
             Bid.setText("Ended");
-            // Vẫn cho phép vào xem trang chi tiết để xem ai thắng, nhưng nút Bid ở trong sẽ bị khóa
         }
     }
 
-    // Hàm này để MainPage truyền lệnh vào
     public void setOnBidAction(Runnable action) {
         this.toPrdPage = action;
     }
 
     public void handleBidBtn(MouseEvent event) {
         if (toPrdPage != null) {
-            toPrdPage.run(); // Kích hoạt lệnh mà MainPage đã giao
+            toPrdPage.run();
+        }
+    }
+
+    public void stopTimer() {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
         }
     }
 }
