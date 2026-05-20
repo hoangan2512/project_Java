@@ -16,32 +16,32 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1280.0" style="-fx-background-color: #000000;" styleClass="root" stylesheets="@prdPage.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.prdPageController">
     <children>
         <ToggleButton fx:id="auto_bid_btn" layoutX="929.0" layoutY="490.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="141.0" style="-fx-border-color: grey; -fx-border-width: 1; -fx-cursor: hand;" styleClass="filter-btn" text="Auto-bid">
-         <font>
-            <Font name="System Bold" size="12.0" />
-         </font></ToggleButton>
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font></ToggleButton>
         <ToggleButton fx:id="price_chart_btn" layoutX="801.0" layoutY="490.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="122.0" styleClass="filter-btn" text="Price chart" textFill="WHITE">
-         <font>
-            <Font name="System Bold" size="12.0" />
-         </font></ToggleButton>
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font></ToggleButton>
         <ToggleButton fx:id="description_btn" layoutX="673.0" layoutY="490.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="122.0" styleClass="filter-btn" text="Description">
-         <font>
-            <Font name="System Bold" size="12.0" />
-         </font></ToggleButton>
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font></ToggleButton>
         <StackPane fx:id="imgPane" layoutX="90.0" layoutY="80.0" prefHeight="304.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
             <children>
                 <ImageView fx:id="prdImage" fitHeight="304.0" fitWidth="540.0" pickOnBounds="true" preserveRatio="true" />
-            <StackPane fx:id="imgPane1" prefHeight="304.0" prefWidth="540.0" styleClass="product-name-card">
-               <children>
-                    <Label fx:id="prdName" alignment="BOTTOM_LEFT" prefHeight="82.0" prefWidth="526.0" styleClass="product-name-label" text="Product name" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
-                        <font>
-                            <Font name="Segoe UI Bold" size="30.0" />
-                        </font>
-                     <StackPane.margin>
-                        <Insets bottom="5.0" left="7.0" />
-                     </StackPane.margin>
-                    </Label>
-               </children>
-            </StackPane>
+                <StackPane fx:id="imgPane1" prefHeight="304.0" prefWidth="540.0" styleClass="product-name-card">
+                    <children>
+                        <Label fx:id="prdName" alignment="BOTTOM_LEFT" prefHeight="82.0" prefWidth="526.0" styleClass="product-name-label" text="Product name" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
+                            <font>
+                                <Font name="Segoe UI Bold" size="30.0" />
+                            </font>
+                            <StackPane.margin>
+                                <Insets bottom="5.0" left="7.0" />
+                            </StackPane.margin>
+                        </Label>
+                    </children>
+                </StackPane>
             </children>
         </StackPane>
         <Label fx:id="currentPrice" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="535.0" layoutY="413.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="100 USD" textFill="WHITE">
@@ -58,9 +58,9 @@
             <font>
                 <Font size="16.0" />
             </font>
-         <padding>
-            <Insets right="13.0" />
-         </padding>
+            <padding>
+                <Insets right="13.0" />
+            </padding>
         </TextField>
         <Label fx:id="auctiontime_status" alignment="CENTER" layoutX="764.0" layoutY="80.0" prefHeight="35.0" prefWidth="350.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Auction Ends In" textFill="WHITE">
             <font>
@@ -78,12 +78,12 @@
                     <padding>
                         <Insets left="10.0" top="5.0" />
                     </padding>
-               <font>
-                  <Font size="15.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets left="2.0" top="2.0" />
-               </StackPane.margin>
+                    <font>
+                        <Font size="15.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets left="2.0" top="2.0" />
+                    </StackPane.margin>
                 </Label>
                 <AnchorPane fx:id="priceC" prefHeight="173.0" prefWidth="540.0" style="-fx-background-color: transparent; -fx-background-radius: 0;" visible="false">
                     <children>
@@ -135,106 +135,106 @@
                 <Font name="System Bold" size="24.0" />
             </font>
         </Button>
-      <Label layoutX="90.0" layoutY="414.0" prefHeight="25.0" prefWidth="126.0" text="Current price" textFill="WHITE">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <Line endX="100.0" layoutX="535.0" layoutY="505.0" startX="-445.0" stroke="WHITE" strokeWidth="0.5" />
-      <Label layoutX="90.0" layoutY="455.0" prefHeight="25.0" prefWidth="126.0" text="Your bid" textFill="WHITE">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <StackPane layoutX="707.0" layoutY="135.0" prefHeight="120.0" prefWidth="130.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #8c4600 0%, #ff8e1f 50%, #8c4600 100%); -fx-border-radius: 20; -fx-border-width: 1;">
-         <children>
-            <Label alignment="CENTER" prefHeight="25.0" prefWidth="80.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Hours" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
-               <font>
-                  <Font size="14.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="7.0" />
-               </StackPane.margin>
-            </Label>
-            <Label fx:id="hours_left" alignment="CENTER" prefHeight="50.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
-               <font>
-                  <Font name="System Bold" size="34.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="10.0" />
-               </StackPane.margin>
-            </Label>
-         </children>
-      </StackPane>
-      <AnchorPane layoutX="90.0" layoutY="519.0" style="-fx-border-color: linear-gradient(to right, #b8b8b8 0%, #ffffff 50%, #b8b8b8 100%); -fx-border-width: 0.75; -fx-border-radius: 7;">
-         <children>
-            <Label fx:id="currentPrice2" alignment="CENTER" contentDisplay="RIGHT" layoutX="66.0" prefHeight="35.0" prefWidth="250.0" style="-fx-background-color: transparent;" text="100 USD" textFill="WHITE">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Label>
-            <Button fx:id="bid_decrease" layoutX="322.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="54.0" style="-fx-background-radius: 0;" styleClass="decrease_btn" text="-" textFill="#e8a05c">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Button>
-            <Button fx:id="bid_increase" mnemonicParsing="false" prefHeight="27.0" prefWidth="54.0" style="-fx-background-radius: 0;" styleClass="increase_btn" text="+" textFill="#f5a254">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Button>
-         </children>
-      </AnchorPane>
-      <StackPane layoutX="875.0" layoutY="135.0" prefHeight="120.0" prefWidth="130.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #8c4600 0%, #ff8e1f 50%, #8c4600 100%); -fx-border-radius: 20; -fx-border-width: 1;">
-         <children>
-            <Label alignment="CENTER" prefHeight="25.0" prefWidth="80.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Minutes" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
-               <font>
-                  <Font size="14.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="7.0" />
-               </StackPane.margin>
-            </Label>
-            <Label fx:id="mins_left" alignment="CENTER" prefHeight="40.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
-               <font>
-                  <Font name="System Bold" size="34.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="10.0" />
-               </StackPane.margin>
-            </Label>
-         </children>
-      </StackPane>
-      <StackPane layoutX="1045.0" layoutY="135.0" prefHeight="120.0" prefWidth="130.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #8c4600 0%, #ff8e1f 50%, #8c4600 100%); -fx-border-radius: 20; -fx-border-width: 1;">
-         <children>
-            <Label alignment="CENTER" prefHeight="25.0" prefWidth="80.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Seconds" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
-               <font>
-                  <Font size="16.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="7.0" />
-               </StackPane.margin>
-            </Label>
-            <Label fx:id="seconds_left" alignment="CENTER" prefHeight="40.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
-               <font>
-                  <Font name="System Bold" size="34.0" />
-               </font>
-               <StackPane.margin>
-                  <Insets bottom="10.0" />
-               </StackPane.margin>
-            </Label>
-         </children>
-      </StackPane>
-      <Label alignment="CENTER" layoutX="852.0" layoutY="169.0" prefHeight="53.0" prefWidth="6.0" text=":" textFill="WHITE">
-         <font>
-            <Font name="System Bold" size="36.0" />
-         </font>
-      </Label>
-      <Label alignment="CENTER" layoutX="1020.0" layoutY="169.0" prefHeight="53.0" prefWidth="6.0" text=":" textFill="WHITE">
-         <font>
-            <Font name="System Bold" size="36.0" />
-         </font>
-      </Label>
-      <Line endX="86.0" layoutX="1123.0" layoutY="293.0" startX="-450.0" stroke="WHITE" strokeWidth="0.5" />
+        <Label layoutX="90.0" layoutY="414.0" prefHeight="25.0" prefWidth="126.0" text="Current price" textFill="WHITE">
+            <font>
+                <Font size="16.0" />
+            </font>
+        </Label>
+        <Line endX="100.0" layoutX="535.0" layoutY="505.0" startX="-445.0" stroke="WHITE" strokeWidth="0.5" />
+        <Label layoutX="90.0" layoutY="455.0" prefHeight="25.0" prefWidth="126.0" text="Your bid" textFill="WHITE">
+            <font>
+                <Font size="16.0" />
+            </font>
+        </Label>
+        <StackPane layoutX="707.0" layoutY="135.0" prefHeight="120.0" prefWidth="130.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #8c4600 0%, #ff8e1f 50%, #8c4600 100%); -fx-border-radius: 20; -fx-border-width: 1;">
+            <children>
+                <Label alignment="CENTER" prefHeight="25.0" prefWidth="80.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Hours" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets bottom="7.0" />
+                    </StackPane.margin>
+                </Label>
+                <Label fx:id="hours_left" alignment="CENTER" prefHeight="50.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
+                    <font>
+                        <Font name="System Bold" size="34.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets bottom="10.0" />
+                    </StackPane.margin>
+                </Label>
+            </children>
+        </StackPane>
+        <AnchorPane layoutX="90.0" layoutY="519.0" style="-fx-border-color: linear-gradient(to right, #b8b8b8 0%, #ffffff 50%, #b8b8b8 100%); -fx-border-width: 0.75; -fx-border-radius: 7;">
+            <children>
+                <Label fx:id="currentPrice2" alignment="CENTER" contentDisplay="RIGHT" layoutX="66.0" prefHeight="35.0" prefWidth="250.0" style="-fx-background-color: transparent;" text="100 USD" textFill="WHITE">
+                    <font>
+                        <Font name="System Bold" size="16.0" />
+                    </font>
+                </Label>
+                <Button fx:id="bid_decrease" layoutX="322.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="54.0" style="-fx-background-radius: 0;" styleClass="decrease_btn" text="-" textFill="#e8a05c">
+                    <font>
+                        <Font name="System Bold" size="16.0" />
+                    </font>
+                </Button>
+                <Button fx:id="bid_increase" mnemonicParsing="false" prefHeight="27.0" prefWidth="54.0" style="-fx-background-radius: 0;" styleClass="increase_btn" text="+" textFill="#f5a254">
+                    <font>
+                        <Font name="System Bold" size="16.0" />
+                    </font>
+                </Button>
+            </children>
+        </AnchorPane>
+        <StackPane layoutX="875.0" layoutY="135.0" prefHeight="120.0" prefWidth="130.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #8c4600 0%, #ff8e1f 50%, #8c4600 100%); -fx-border-radius: 20; -fx-border-width: 1;">
+            <children>
+                <Label alignment="CENTER" prefHeight="25.0" prefWidth="80.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Minutes" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets bottom="7.0" />
+                    </StackPane.margin>
+                </Label>
+                <Label fx:id="mins_left" alignment="CENTER" prefHeight="40.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
+                    <font>
+                        <Font name="System Bold" size="34.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets bottom="10.0" />
+                    </StackPane.margin>
+                </Label>
+            </children>
+        </StackPane>
+        <StackPane layoutX="1045.0" layoutY="135.0" prefHeight="120.0" prefWidth="130.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #8c4600 0%, #ff8e1f 50%, #8c4600 100%); -fx-border-radius: 20; -fx-border-width: 1;">
+            <children>
+                <Label alignment="CENTER" prefHeight="25.0" prefWidth="80.0" style="-fx-text-fill: linear-gradient(to right, #ffffff 0%, #ffffff 80%, #d8d8d8 92%, #a8a8a8 100%);" text="Seconds" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
+                    <font>
+                        <Font size="16.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets bottom="7.0" />
+                    </StackPane.margin>
+                </Label>
+                <Label fx:id="seconds_left" alignment="CENTER" prefHeight="40.0" prefWidth="100.0" style="-fx-text-fill: linear-gradient(from 40% 0% to 60% 100%, #ffffff 0%, #ffffff 33%, #d8d8d8 60%, #a8a8a8 100%);" text="00" textFill="WHITE" StackPane.alignment="CENTER">
+                    <font>
+                        <Font name="System Bold" size="34.0" />
+                    </font>
+                    <StackPane.margin>
+                        <Insets bottom="10.0" />
+                    </StackPane.margin>
+                </Label>
+            </children>
+        </StackPane>
+        <Label alignment="CENTER" layoutX="852.0" layoutY="169.0" prefHeight="53.0" prefWidth="6.0" text=":" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="36.0" />
+            </font>
+        </Label>
+        <Label alignment="CENTER" layoutX="1020.0" layoutY="169.0" prefHeight="53.0" prefWidth="6.0" text=":" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="36.0" />
+            </font>
+        </Label>
+        <Line endX="86.0" layoutX="1123.0" layoutY="293.0" startX="-450.0" stroke="WHITE" strokeWidth="0.5" />
     </children>
 </AnchorPane>

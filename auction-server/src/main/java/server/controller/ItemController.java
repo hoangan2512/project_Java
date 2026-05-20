@@ -56,6 +56,7 @@ public class ItemController {
 
             if (generatedItemId > 0) {
                 newAuction.setItem_id(generatedItemId);
+                newAuction.setStatus("PENDING_APPROVAL"); // Set trạng thái chờ duyệt
                 boolean isAuctionSaved = auctionRepo.createAuction(newAuction);
 
                 if (isAuctionSaved) {

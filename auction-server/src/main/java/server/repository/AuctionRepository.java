@@ -112,7 +112,7 @@ public class AuctionRepository {
         return null;
     }
 
-    private List<Auction> getAuctionsByStatus(String status) {
+    public List<Auction> getAuctionsByStatus(String status) {
         List<Auction> auctions = new ArrayList<>();
         // ĐÃ SỬA TẠI ĐÂY: Giải quyết triệt để lỗi sập của luồng TimeManager bằng cách dùng BASE_SELECT_SQL
         String sql = BASE_SELECT_SQL + " WHERE a.status = ?";
