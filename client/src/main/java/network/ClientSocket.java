@@ -136,52 +136,145 @@ public class ClientSocket {
         System.out.println("[OAUTH2] Đang mở Server ngầm tại port " + port + " để đợi Google...");
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            // Vòng lặp liên tục để bỏ qua các request rác (như /favicon.ico) từ trình duyệt
             while (true) {
                 try (Socket browserSocket = serverSocket.accept();
                      BufferedReader reader = new BufferedReader(new InputStreamReader(browserSocket.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
                      PrintWriter writer = new PrintWriter(new OutputStreamWriter(browserSocket.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8), true)) {
 
                     String requestLine = reader.readLine();
-                    System.out.println("[OAUTH2] Trình duyệt gửi yêu cầu: " + requestLine);
+                    if (requestLine == null || requestLine.isEmpty()) continue;
 
-                    if (requestLine == null || requestLine.isEmpty()) {
-                        continue;
-                    }
-
-                    // Kiểm tra xem request này có thực sự chứa mã xác thực không
                     if (requestLine.contains("code=")) {
-                        // 1. Tách lấy phần chuỗi nằm sau "code="
-                        String codeParam = requestLine.split("code=")[1];
-
-                        // 2. Cắt bỏ phần " HTTP/1.1" ở cuối dòng
-                        codeParam = codeParam.split(" ")[0];
-
-                        // 3. QUAN TRỌNG: Loại bỏ tất cả các tham số dư thừa đi kèm phía sau dấu &
-                        if (codeParam.contains("&")) {
-                            codeParam = codeParam.split("&")[0];
-                        }
-
-                        // 4. QUAN TRỌNG: Giải mã URL Encoding (Biến %2F ngược lại thành dấu / )
+                        String codeParam = requestLine.split("code=")[1].split(" ")[0];
+                        if (codeParam.contains("&")) codeParam = codeParam.split("&")[0];
                         String authorizationCode = java.net.URLDecoder.decode(codeParam, "UTF-8");
 
                         System.out.println("[OAUTH2] Đã bóc tách mã Code sạch thành công: " + authorizationCode);
 
-                        // Trả lời một trang HTML thân thiện hiển thị trên trình duyệt của User
                         writer.println("HTTP/1.1 200 OK");
                         writer.println("Content-Type: text/html; charset=UTF-8");
                         writer.println();
-                        writer.println("<html><body style='font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #121212; color: white;'>");
-                        writer.println("<h2 style='color: #FF9800;'>BidHub</h2>");
-                        writer.println("<h3>Đăng nhập bằng Google thành công!</h3>");
-                        writer.println("<p style='color: #4CAF50;'>Bạn có thể đóng tab trình duyệt này và quay lại ứng dụng.</p>");
-                        writer.println("</body></html>");
+
+                        String htmlResponse = """
+                    <!DOCTYPE html>
+                    <html lang="vi">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>BidHub - Google Auth</title>
+                        <style>
+                            body, html {
+                                margin: 0;
+                                padding: 0;
+                                width: 100%;
+                                height: 100%;
+                                overflow: hidden;
+                                background-color: #0b0b12;
+                            }
+
+                            /* Container chính bao phủ toàn màn hình, dùng Flexbox căn giữa */
+                            .frame {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                width: 100vw;
+                                height: 100vh;
+                                background: url('https://i.postimg.cc/jj4vbsW9/background.png') no-repeat center center;
+                                background-size: cover;
+                                box-sizing: border-box;
+                            }
+
+                            /* Khối bọc Logo và Nội dung để quản lý khoảng cách bằng Flexbox, KHÔNG DÙNG absolute độc lập */
+                            .main-container {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                width: 90%;
+                                max-width: 900px;
+                                text-align: center;
+                                margin-bottom: 60px; /* Chừa không gian cho footer ở đáy */
+                            }
+
+                            /* Logo co giãn theo tỉ lệ */
+                            .logo {
+                                width: 15vw;
+                                min-width: 180px;
+                                max-width: 275px;
+                                height: auto;
+                                aspect-ratio: 275/124; /* Giữ nguyên tỉ lệ ảnh gốc */
+                                background: url('https://i.postimg.cc/VNW48Yrf/logo-project-2-removebg.png') no-repeat center center;
+                                background-size: contain;
+                                margin-bottom: 5vh; /* Khoảng cách động từ logo xuống chữ */
+                            }
+
+                            /* Khối text nhóm riêng để không bao giờ đè lên nhau */
+                            .text-group {
+                                display: flex;
+                                flex-direction: column;
+                                gap: 2vh; /* Tạo khoảng cách giãn tự động giữa các dòng */
+                            }
+
+                            .text-style {
+                                font-family: 'Google Sans Flex', 'Segoe UI', system-ui, sans-serif;
+                                font-style: normal;
+                                color: #FFFFFF;
+                                text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+                                margin: 0;
+                            }
+
+                            /* Tiêu đề lớn co giãn linh hoạt theo chiều rộng màn hình */
+                            .success-text {
+                                font-weight: 700;
+                                font-size: calc(18px + 1vw); /* Tự động phóng to/thu nhỏ mượt mà */
+                                line-height: 1.3;
+                                word-break: break-word;
+                            }
+
+                            /* Dòng chữ phụ */
+                            .redirect-text {
+                                font-weight: 300;
+                                font-size: calc(14px + 0.3vw);
+                                line-height: 1.5;
+                                color: rgba(255, 255, 255, 0.8);
+                            }
+
+                            /* Footer cố định ở đáy */
+                            .footer-text {
+                                position: absolute;
+                                bottom: 25px;
+                                left: 0;
+                                width: 100%;
+                                text-align: center;
+                                font-family: 'Google Sans Flex', sans-serif;
+                                font-weight: 300;
+                                font-size: 14px;
+                                color: rgba(255, 255, 255, 0.5);
+                                text-shadow: 0 1px 5px rgba(0,0,0,0.3);
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="frame">
+                            <div class="main-container">
+                                <div class="logo"></div>
+                                <div class="text-group">
+                                    <h1 class="text-style success-text">Successfully linked Google account to BidHub (‾◡◝)</h1>
+                                    <p class="text-style redirect-text">Redirecting to the app, you can close this page in a few seconds.</p>
+                                </div>
+                            </div>
+                            <div class="footer-text">A Product of Team 14</div>
+                        </div>
+                    </body>
+                    </html>
+                    """;
+
+                        writer.print(htmlResponse);
                         writer.flush();
 
-                        // Trả mã code sạch về cho luồng xử lý chính gửi lên Server
                         return authorizationCode;
                     } else {
-                        // Nếu là request rác (như favicon.ico), trả về 404 và tiếp tục vòng lặp đợi kết nối tiếp theo
                         writer.println("HTTP/1.1 404 Not Found");
                         writer.println();
                         writer.flush();

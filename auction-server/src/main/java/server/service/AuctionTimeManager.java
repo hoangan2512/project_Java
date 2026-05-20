@@ -3,9 +3,11 @@ package server.service;
 import message.Response;
 import model.Auction;
 import model.Item;
+import model.Bid;
 import server.network.AuctionServer;
 import server.repository.AuctionRepository;
 import server.repository.ItemRepository;
+import server.repository.BidRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +31,7 @@ public class AuctionTimeManager implements AutoCloseable {
 
     private final AuctionRepository auctionRepository;
     private final ItemRepository itemRepository;
+    private final BidRepository bidRepository; // Thêm BidRepository để check kết quả
     private final ScheduledExecutorService scheduler;
     private final long checkIntervalSeconds;
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -52,7 +55,6 @@ public class AuctionTimeManager implements AutoCloseable {
         }
 
         this.auctionRepository = auctionRepository;
-        this.itemRepository = itemRepository;
         this.checkIntervalSeconds = checkIntervalSeconds;
         this.scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "auction-time-manager");
@@ -131,7 +133,7 @@ public class AuctionTimeManager implements AutoCloseable {
     }
 
     private void manageAuctionSchedules() {
-        // 1. Kiểm tra và mở các phiên đấu giá đã đến giờ (Từ WAITING -> RUNNING)
+        // 1. Kiểm tra và mở các phiên đấu giá đã đến giờ
         List<Auction> waitingAuctions = auctionRepository.getWaitingAuctions();
         for (Auction auction : waitingAuctions) {
             Item item = itemRepository.getItemById(auction.getItem_id());
@@ -144,12 +146,10 @@ public class AuctionTimeManager implements AutoCloseable {
                         notifyAuctionStarted(auction); // Phát Broadcast cho Client biết phiên đã bắt đầu
                     }
                 }
-            } else {
-                auctionRepository.updateStatus(auction.getId(), PENDING_APPROVAL_STATUS);
             }
         }
 
-        // 2. Kiểm tra và đóng các phiên đấu giá đã hết hạn (Từ RUNNING -> FINISHED)
+        // 2. Kiểm tra và đóng các phiên đấu giá đã hết hạn
         List<Auction> activeAuctions = auctionRepository.getActiveAuctions();
         for (Auction auction : activeAuctions) {
             if (!isExpired(auction)) {
@@ -159,11 +159,14 @@ public class AuctionTimeManager implements AutoCloseable {
             boolean updated = auctionRepository.updateStatus(auction.getId(), FINISHED_STATUS);
             if (updated) {
                 auction.setStatus(FINISHED_STATUS);
-                
-                // Khi phiên đấu giá kết thúc thực sự, xóa nó khỏi danh sách gia hạn trong bộ nhớ
                 extendedEndTimes.remove(auction.getId());
-                
+
+                // Gửi thông báo kết thúc cho toàn bộ hệ thống
                 notifyAuctionFinished(auction);
+
+                // KIỂM TRA VÀ GỬI THÔNG BÁO CHO NGƯỜI CHIẾN THẮNG
+                notifyAuctionWinner(auction);
+
                 LOGGER.log(Level.INFO, "Auction {0} finished automatically.", auction.getId());
             }
         }
@@ -185,5 +188,34 @@ public class AuctionTimeManager implements AutoCloseable {
                 "Auction has ended."
         );
         AuctionServer.broadcast(response);
+    }
+
+    /**
+     * Tìm người trả giá cao nhất khi phiên kết thúc và gửi thông báo đích danh
+     */
+    private void notifyAuctionWinner(Auction auction) {
+        Bid highestBid = bidRepository.getHighestBid(auction.getId());
+
+        // Nếu phiên đấu giá kết thúc mà KHÔNG CÓ AI bid, thì bỏ qua không làm gì cả
+        if (highestBid == null) {
+            LOGGER.log(Level.INFO, "Auction {0} kết thúc mà không có lượt trả giá nào.", auction.getId());
+            return;
+        }
+
+        // Lấy ID người chiến thắng và mức giá cuối cùng
+        int winnerId = highestBid.getBidder_id();
+        double winningAmount = highestBid.getAmount();
+
+        // Đóng gói thông báo
+        Response winNotification = new Response(
+                "AUCTION_WON",
+                auction,
+                "Chúc mừng! Bạn đã chiến thắng phiên đấu giá với mức giá " + winningAmount
+        );
+
+        // Gọi hàm sendMessageToUser của AuctionServer để gửi đích danh
+        AuctionServer.sendMessageToUser(winnerId, winNotification);
+
+        LOGGER.log(Level.INFO, "Đã gửi thông báo chiến thắng cho User ID {0} tại Auction {1}", new Object[]{winnerId, auction.getId()});
     }
 }

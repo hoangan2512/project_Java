@@ -99,6 +99,29 @@ public class AuctionServer {
         }
     }
 
+    public static void sendMessageToUser(int userId, Object message) {
+        boolean isOnline = false;
+
+        for (ClientHandler client : clients) {
+            // Kiểm tra client này đã đăng nhập chưa và có khớp ID không
+            if (client.getLoggedInUser() != null && client.getLoggedInUser().getID() == userId) {
+                client.sendMessage(message);
+                isOnline = true;
+
+                // Lưu ý: Nếu hệ thống cho phép 1 tài khoản đăng nhập trên nhiều máy cùng lúc,
+                // hãy BỎ 'break;' để máy nào cũng nhận được thông báo.
+                // Nếu chỉ 1 máy, giữ 'break;' để tối ưu hiệu năng.
+                // break;
+            }
+        }
+
+        if (!isOnline) {
+            LOGGER.info("User ID " + userId + " hiện không online. Thông báo chưa được gửi trực tiếp qua socket.");
+            // (Tùy chọn) Tại đây bạn có thể gọi hàm lưu thông báo vào Database (bảng notifications)
+            // để lần tới khi user đăng nhập vào, họ sẽ đọc được.
+        }
+    }
+
     /**
      * Tìm ClientHandler của một User ID cụ thể và ép đăng xuất.
      */
