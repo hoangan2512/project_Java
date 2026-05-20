@@ -4,11 +4,15 @@ import message.Request;
 import message.Response;
 import model.AutoBidConfig;
 import model.Bid;
+import server.repository.BidRepository;
 import server.service.AuctionService;
 import server.service.AutoBidManager;
 
+import java.util.List;
+
 public class BidController {
     private final AuctionService auctionService = new AuctionService();
+    private final BidRepository bidRepo = new BidRepository();
 
     public Response handleBid(Request request) {
         Bid bid = (Bid) request.getPayload();
@@ -28,6 +32,22 @@ public class BidController {
     }
 
     public Response handleGetBidHistory(Request request) {
-        return new Response("ERROR", null, "Get bid history not implemented in BidController.");
+        try {
+            int auctionId = (Integer) request.getPayload();
+
+            // Gọi thẳng Repository
+            List<Bid> history = bidRepo.getBidHistory(auctionId);
+
+            if (history != null) {
+                // Đảo ngược mảng để Client vẽ biểu đồ không bị ngược
+                java.util.Collections.reverse(history);
+                return new Response("SUCCESS", history, "Lấy lịch sử đấu giá thành công.");
+            } else {
+                return new Response("FAIL", null, "Không tìm thấy lịch sử.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response("ERROR", null, "Lỗi server.");
+        }
     }
 }

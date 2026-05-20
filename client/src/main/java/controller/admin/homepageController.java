@@ -191,6 +191,13 @@ public class homepageController {
                     try {
                         List<Auction> auctionList = (List<Auction>) res.getData();
 
+                        // SẮP XẾP DANH SÁCH THEO THỨ TỰ: PENDING -> APPROVED -> REJECTED
+                        auctionList.sort((a1, a2) -> {
+                            int weight1 = getModerationWeight(a1.getItem());
+                            int weight2 = getModerationWeight(a2.getItem());
+                            return Integer.compare(weight1, weight2);
+                        });
+
                         Locale localeVN = new Locale("vi", "VN");
                         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
 
@@ -235,6 +242,29 @@ public class homepageController {
                 }
             });
         }).start();
+    }
+
+    /**
+     * Hàm hỗ trợ gán trọng số cho trạng thái duyệt.
+     * Số càng nhỏ (1) thì càng được xếp lên đầu tiên.
+     */
+    private int getModerationWeight(Item item) {
+        if (item == null || item.getModeration_status() == null) {
+            return 4; // Nếu null hoặc không xác định thì ném xuống cuối
+        }
+
+        // Chuyển về viết hoa toàn bộ để dễ so sánh, tránh lỗi do sai khác chữ hoa/thường
+        String status = String.valueOf(item.getModeration_status()).toUpperCase();
+
+        if (status.contains("PENDING")) {
+            return 1;
+        } else if (status.contains("APPROVE")) {
+            return 2;
+        } else if (status.contains("REJECT")) {
+            return 3;
+        }
+
+        return 4; // Các trạng thái khác (nếu có) sẽ nằm ở cuối
     }
 
     private void fetchAuctions() {

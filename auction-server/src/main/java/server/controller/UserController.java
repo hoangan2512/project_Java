@@ -150,10 +150,18 @@ public class UserController {
         boolean isRegistered = userRepo.addUser(newUser);
 
         if (isRegistered) {
-            LOGGER.log(Level.INFO, "New user registered successfully: ''{0}'' with role: {1}", new Object[]{newUser.getName(), newUser.getRole()});
-            response.setStatus("SUCCESS");
-            response.setMessage("Đăng ký thành công!");
-            response.setData(newUser);
+            // Lấy lại thông tin user đầy đủ từ DB (bao gồm cả ID vừa được tạo)
+            User registeredUser = userRepo.findUserByUsername(newUser.getName());
+            if (registeredUser != null) {
+                LOGGER.log(Level.INFO, "New user registered successfully: ''{0}'' with role: {1}", new Object[]{registeredUser.getName(), registeredUser.getRole()});
+                response.setStatus("SUCCESS");
+                response.setMessage("Đăng ký thành công!");
+                response.setData(registeredUser); // Trả về user đầy đủ thông tin
+            } else {
+                LOGGER.log(Level.SEVERE, "Registration failed for username: ''{0}''. Could not retrieve user after creation.", newUser.getName());
+                response.setStatus("FAIL");
+                response.setMessage("Có lỗi xảy ra trong quá trình đăng ký (không thể lấy thông tin user).");
+            }
         } else {
             LOGGER.log(Level.SEVERE, "Registration failed for username: ''{0}'' due to a database error.", newUser.getName());
             response.setStatus("FAIL");

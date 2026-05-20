@@ -47,10 +47,12 @@ public class mainPageController {
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
     private static mainPageController instance;
-    
+
+    // BIẾN MỚI: Bộ nhớ đệm giữ lại màn hình Search để không phải tạo mới mỗi khi bấm
+    private Parent customSearchNodeCached;
     private customSearchController currentCustomSearchController;
+
     private prdPageController currentPrdPageController;
-    
     private SearchCriteria lastSearchCriteria = null;
 
     public static mainPageController getInstance() {
@@ -66,149 +68,162 @@ public class mainPageController {
             Image search_img = new Image(getClass().getResourceAsStream("/image/search_icon1.png"));
             searchBtn.setFill(new ImagePattern(search_img));
         } catch (Exception e) {
-            System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
+            System.out.println("Không tìm thấy ảnh avatar!");
         }
         instance = this;
         updateAvatarUI();
 
-        // Load giao diện tìm kiếm mặc định
+        // CACHE MÀN HÌNH TÌM KIẾM ĐÚNG 1 LẦN DUY NHẤT VÀO RAM
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
-            Parent customSearchNode = loader.load();
-
+            customSearchNodeCached = loader.load();
             currentCustomSearchController = loader.getController();
+
             if (currentCustomSearchController != null) {
                 currentCustomSearchController.hideFilterButton();
-                currentCustomSearchController.setSearchCriteria(null); 
+                currentCustomSearchController.setSearchCriteria(null);
             }
-
-            currentPrdPageController = null; 
-            prdPagePane.getChildren().setAll(customSearchNode);
+            currentPrdPageController = null;
+            prdPagePane.getChildren().setAll(customSearchNodeCached);
             prdPagePane.setVisible(true);
-
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Lỗi: Không load được file customSearch.fxml làm mặc định");
         }
 
         transitionPane.setVisible(false);
     }
 
+    // --- CÁC HÀM XỬ LÝ CHUYỂN TRANG ĐÃ ĐƯỢC TỐI ƯU HÓA (KHÔNG DÙNG FXML LOADER NỮA) ---
+
     public void loadCustomSearchPane(SearchCriteria criteria) {
         this.lastSearchCriteria = criteria;
-        
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
-            Parent customSearchNode = loader.load();
 
-            currentCustomSearchController = loader.getController();
-            currentPrdPageController = null;
-
-            if (currentCustomSearchController != null) {
-                currentCustomSearchController.setSearchCriteria(criteria);
-            }
-
-            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
-            customSearchNode.setOpacity(0.0);
-            prdPagePane.getChildren().setAll(customSearchNode);
-            prdPagePane.setVisible(true);
-            
-            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
-            fadeIn.setFromValue(0.0);
-            fadeIn.setToValue(1.0);
-            fadeIn.setDelay(Duration.millis(50));
-            fadeIn.play();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Lỗi: Không load được file customSearch.fxml");
+        // Tái sử dụng node đã được cache ở initialize
+        currentPrdPageController = null;
+        if (currentCustomSearchController != null) {
+            currentCustomSearchController.setSearchCriteria(criteria);
         }
+
+        switchToCachedSearchNode();
+    }
+
+    public void handleBidHub(MouseEvent event) {
+        this.lastSearchCriteria = null;
+
+        currentPrdPageController = null;
+        if (currentCustomSearchController != null) {
+            currentCustomSearchController.hideFilterButton();
+            currentCustomSearchController.setSearchCriteria(null);
+        }
+
+        switchToCachedSearchNode();
+    }
+
+    public void goBackToSearch() {
+        currentPrdPageController = null;
+        if (currentCustomSearchController != null) {
+            currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
+        }
+
+        switchToCachedSearchNode();
+    }
+
+    // Hàm phụ trợ dùng chung cho 3 nút trên để nhét Node vào Pane mượt mà
+    private void switchToCachedSearchNode() {
+        if (customSearchNodeCached == null) return;
+
+        prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
+        customSearchNodeCached.setOpacity(0.0);
+
+        if (!prdPagePane.getChildren().contains(customSearchNodeCached)) {
+            prdPagePane.getChildren().setAll(customSearchNodeCached);
+        }
+        prdPagePane.setVisible(true);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNodeCached);
+        fadeIn.setFromValue(0.0);
+        fadeIn.setToValue(1.0);
+        fadeIn.play();
     }
 
     public void fillProductPage(Auction auction) {
-        // --- HIỆU ỨNG GẠT MÀU MỚI ---
-        
-        // Khôi phục lại độ mờ về 100% (Rất quan trọng cho lần click thứ 2 trở đi vì trước đó nó bị Fade về 0)
         transitionPane.setOpacity(1.0);
-        
-        // Bật và đặt màu cho lớp hiệu ứng
         transitionPane.setVisible(true);
-        transitionPane.toFront(); // Đảm bảo lớp gạt màu nằm trên cùng
+        transitionPane.toFront();
 
-        // Đặt vị trí bắt đầu ở ngoài màn hình bên trái
         double paneWidth = prdPagePane.getWidth() > 0 ? prdPagePane.getWidth() : 1500;
         transitionPane.setTranslateX(-paneWidth);
 
-        // 1. Tạo hiệu ứng gạt vào (Slide-in)
-        // Kéo dài thời gian ra một chút (450ms) để nhìn thấy rõ hiệu ứng Rất Chậm - Nhanh - Rất Chậm
         TranslateTransition wipeIn = new TranslateTransition(Duration.millis(450), transitionPane);
         wipeIn.setToX(0);
-
-        // CUSTOM SPLINE: Điểm x1, y1, x2, y2 -> Tạo độ võng cực gắt (Bắt đầu rất chậm -> Phóng cực nhanh ở giữa -> Kết thúc rất chậm)
         wipeIn.setInterpolator(Interpolator.SPLINE(0.65, 0.0, 0.35, 1.0));
 
-        // 2. Gán hành động sau khi gạt xong
         wipeIn.setOnFinished(e -> {
-            // BẮT ĐẦU LOAD DỮ LIỆU MỚI (SAU KHI MÀN HÌNH ĐÃ BỊ CHE)
             try {
+                // Trang chi tiết thay đổi cục bộ rất nhiều nên ta vẫn load FXML bình thường
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/productPage.fxml"));
                 Parent prdPageNode = loader.load();
                 currentPrdPageController = loader.getController();
-                currentCustomSearchController = null;
 
                 if (currentPrdPageController != null) {
                     currentPrdPageController.setData(auction);
                 }
-                // Thay thế nội dung bên dưới lớp hiệu ứng
+
+                // Gỡ giao diện search ra, đưa giao diện sản phẩm vào
                 prdPagePane.getChildren().setAll(prdPageNode);
 
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
 
-            // 3. Tạo độ trễ "ngâm" màu cam
             PauseTransition hold = new PauseTransition(Duration.millis(200));
             hold.setOnFinished(ev -> {
-                // 4. Tạo hiệu ứng mờ dần lớp hiệu ứng để lộ nội dung mới
                 FadeTransition fadeOut = new FadeTransition(Duration.millis(400), transitionPane);
                 fadeOut.setFromValue(1.0);
                 fadeOut.setToValue(0.0);
-
                 fadeOut.setOnFinished(evt -> {
-                    transitionPane.setVisible(false); // Tắt đi sau khi xong
-                    transitionPane.setTranslateX(-paneWidth); // Đẩy lại về vị trí chờ
+                    transitionPane.setVisible(false);
+                    transitionPane.setTranslateX(-paneWidth);
                 });
                 fadeOut.play();
             });
             hold.play();
         });
 
-        // Chạy hiệu ứng gạt vào
         wipeIn.play();
     }
 
+    // --- HÀM BẮT SỰ KIỆN TỪ SERVER ĐÃ ĐƯỢC TỐI ƯU CỦA BẠN ---
     public void refreshData(Response res) {
-        if (currentCustomSearchController != null) {
-            System.out.println("Đang làm mới danh sách sản phẩm...");
-            currentCustomSearchController.refresh();
-        } else if (currentPrdPageController != null) {
-            System.out.println("Đang làm mới trang chi tiết sản phẩm...");
+        if (res == null) return;
+
+        String status = res.getStatus();
+
+        if (currentCustomSearchController != null && prdPagePane.getChildren().contains(customSearchNodeCached)) {
+            if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_START".equals(status) || "AUCTION_END".equals(status) || "AUCTION_EXTENDED".equals(status)) {
+                if (res.getData() instanceof Auction updatedAuction) {
+                    currentCustomSearchController.updateSingleAuction(updatedAuction);
+                }
+            }
+            else {
+                currentCustomSearchController.refresh();
+            }
+        }
+        else if (currentPrdPageController != null) {
             currentPrdPageController.handleBroadcast(res);
         }
     }
 
     public void refreshData() {
-        refreshData(null);
+        if (currentCustomSearchController != null) {
+            currentCustomSearchController.refresh();
+        }
     }
 
+    // Các hàm xử lý click khác giữ nguyên...
     @FXML
     public void handleAvatarClick(MouseEvent event) {
-        try {
-            sceneSwitcher.openSignInPopup(null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Lỗi chuyển cảnh");
-        }
+        try { sceneSwitcher.openSignInPopup(null); } catch (IOException e) {}
     }
 
     public void handleSearchBtnClick(MouseEvent event) {
@@ -216,7 +231,6 @@ public class mainPageController {
         if (searchText == null || searchText.trim().isEmpty()) {
             searchBar.requestFocus();
         } else {
-            System.out.println("searching: " + searchText);
             SearchCriteria criteria = new SearchCriteria();
             criteria.setKeyword(searchText.trim());
             loadCustomSearchPane(criteria);
@@ -224,90 +238,18 @@ public class mainPageController {
     }
 
     public void handleSellerHub(MouseEvent event) {
-        try {
-            sceneSwitcher.switchToSellerSignIn(event);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Lỗi chuyển cảnh");
-        }
+        try { sceneSwitcher.switchToSellerSignIn(event); } catch (IOException e) {}
     }
 
     public void updateAvatarUI() {
         if (SessionManager.getInstance().isBidder()) {
             userAvatar.setStroke(Color.GREEN);
-            User user = SessionManager.getInstance().getCurrentUser();
-            System.out.println("Logged In: " + user.getUsername());
         } else {
-            System.out.println("Status: Waiting for login");
             userAvatar.setStroke(Color.RED);
         }
     }
 
-    public void handleBidHub(MouseEvent event) {
-        this.lastSearchCriteria = null;
-        
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
-            Parent customSearchNode = loader.load();
-
-            currentCustomSearchController = loader.getController();
-            currentPrdPageController = null;
-
-            if (currentCustomSearchController != null) {
-                currentCustomSearchController.hideFilterButton();
-                currentCustomSearchController.setSearchCriteria(null); 
-            }
-
-            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
-            customSearchNode.setOpacity(0.0);
-            prdPagePane.getChildren().setAll(customSearchNode);
-            prdPagePane.setVisible(true);
-            
-            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
-            fadeIn.setFromValue(0.0);
-            fadeIn.setToValue(1.0);
-            fadeIn.setDelay(Duration.millis(50));
-            fadeIn.play();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void goBackToSearch() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
-            Parent customSearchNode = loader.load();
-
-            currentCustomSearchController = loader.getController();
-            currentPrdPageController = null;
-
-            if (currentCustomSearchController != null) {
-                currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
-            }
-
-            prdPagePane.setStyle("-fx-background-color:  #1E1E1E;");
-            customSearchNode.setOpacity(0.0);
-            prdPagePane.getChildren().setAll(customSearchNode);
-            prdPagePane.setVisible(true);
-            
-            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), customSearchNode);
-            fadeIn.setFromValue(0.0);
-            fadeIn.setToValue(1.0);
-            fadeIn.setDelay(Duration.millis(50));
-            fadeIn.play();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void handleCustomSearch(ActionEvent event) {
-        try {
-            sceneSwitcher.openFilter(null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Lỗi chuyển cảnh");
-        }
+        try { sceneSwitcher.openFilter(null); } catch (IOException e) {}
     }
 }
