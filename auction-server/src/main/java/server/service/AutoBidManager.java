@@ -3,6 +3,7 @@ package server.service;
 import model.AutoBidConfig;
 import model.Bid;
 import server.repository.AuctionRepository;
+import server.repository.BidRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -65,10 +66,14 @@ public class AutoBidManager {
         List<AutoBidConfig> configs = autoBids.get(auctionId);
         if (configs == null || configs.isEmpty()) return;
 
+        // KIỂM TRA ĐIỀU KIỆN QUAN TRỌNG: Chỉ nâng giá nếu người đang giữ giá cao nhất KHÔNG PHẢI là người có Auto-Bid này
+        int highestBidderId = getHighestBidderIdFromDB(auctionId);
+
         double systemMinIncrement = auctionService.getMinimumIncrement(currentPrice);
 
-        // Lọc ra những người có khả năng tự động trả giá
+        // Lọc ra những người có khả năng tự động trả giá (Loại trừ luôn người đang giữ đỉnh bảng)
         List<AutoBidConfig> eligibleConfigs = configs.stream()
+                .filter(c -> c.getBidderId() != highestBidderId) // QUAN TRỌNG: Loại bỏ người đang top 1
                 .filter(c -> {
                     double requiredNextBid = currentPrice + Math.max(c.getIncrement(), systemMinIncrement);
                     return c.getMaxBid() >= requiredNextBid;
@@ -76,10 +81,11 @@ public class AutoBidManager {
                 .toList();
 
         if (eligibleConfigs.isEmpty()) {
-            System.out.println("[AUTO-BID] Kết thúc: Không còn ai đủ điều kiện đua giá cho Auction " + auctionId);
+            System.out.println("[AUTO-BID] Kết thúc: Không còn ai đủ điều kiện hoặc cần thiết phải đua giá cho Auction " + auctionId);
             return; // Thoát đệ quy
         }
 
+        // Lấy người đầu tiên trong danh sách hợp lệ (nhờ đã sort theo thời gian đăng ký)
         AutoBidConfig winnerConfig = eligibleConfigs.getFirst();
 
         double actualIncrement = Math.max(winnerConfig.getIncrement(), systemMinIncrement);
@@ -100,7 +106,7 @@ public class AutoBidManager {
         if ("SUCCESS".equals(response.getStatus())) {
             System.out.println("[AUTO-BID] User " + winnerConfig.getBidderId() + " tự động trả giá: " + nextBidAmount);
             
-            // Thay vì dùng while(true) và Thread.sleep(100), ta lập lịch cho lần chạy tiếp theo sau 100ms
+            // Lập lịch cho lần chạy tiếp theo sau 100ms
             final double nextPrice = nextBidAmount;
             scheduler.schedule(() -> executeNextAutoBid(auctionId, nextPrice, auctionService), 100, TimeUnit.MILLISECONDS);
             
@@ -120,5 +126,11 @@ public class AutoBidManager {
          AuctionRepository repo = new AuctionRepository();
          model.Auction auction = repo.getAuctionById(auctionId);
          return auction != null ? auction.getCurrent_price() : 0;
+    }
+    
+    private int getHighestBidderIdFromDB(int auctionId) {
+         BidRepository repo = new BidRepository();
+         Bid highestBid = repo.getHighestBid(auctionId);
+         return highestBid != null ? highestBid.getBidder_id() : -1;
     }
 }
