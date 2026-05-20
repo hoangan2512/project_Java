@@ -2,9 +2,11 @@ package server.service;
 
 import message.Response;
 import model.Auction;
+import model.Item;
 import model.Bid;
 import server.network.AuctionServer;
 import server.repository.AuctionRepository;
+import server.repository.ItemRepository;
 import server.repository.BidRepository;
 
 import java.time.LocalDateTime;
@@ -21,39 +23,48 @@ public class AuctionTimeManager implements AutoCloseable {
     private static final Logger LOGGER = Logger.getLogger(AuctionTimeManager.class.getName());
     private static final String FINISHED_STATUS = "FINISHED";
     private static final String RUNNING_STATUS = "RUNNING";
+    private static final String PENDING_APPROVAL_STATUS = "PENDING_APPROVAL";
     private static final long DEFAULT_CHECK_INTERVAL_SECONDS = 5;
 
+    // Singleton instance để AuctionService có thể gọi tới
     private static AuctionTimeManager instance;
 
     private final AuctionRepository auctionRepository;
+    private final ItemRepository itemRepository;
     private final BidRepository bidRepository; // Thêm BidRepository để check kết quả
     private final ScheduledExecutorService scheduler;
     private final long checkIntervalSeconds;
     private final AtomicBoolean started = new AtomicBoolean(false);
 
+    // Lưu trữ thời gian kết thúc (đã gia hạn) của các phiên đấu giá trong RAM để truy xuất nhanh
     private final ConcurrentHashMap<Integer, LocalDateTime> extendedEndTimes = new ConcurrentHashMap<>();
 
     public AuctionTimeManager() {
-        this(new AuctionRepository(), DEFAULT_CHECK_INTERVAL_SECONDS);
+        this(new AuctionRepository(), new ItemRepository(), DEFAULT_CHECK_INTERVAL_SECONDS);
     }
 
-    public AuctionTimeManager(AuctionRepository auctionRepository, long checkIntervalSeconds) {
+    public AuctionTimeManager(AuctionRepository auctionRepository, ItemRepository itemRepository, long checkIntervalSeconds) {
         if (auctionRepository == null) {
             throw new IllegalArgumentException("auctionRepository must not be null");
+        }
+        if (itemRepository == null) {
+            throw new IllegalArgumentException("itemRepository must not be null");
         }
         if (checkIntervalSeconds <= 0) {
             throw new IllegalArgumentException("checkIntervalSeconds must be greater than 0");
         }
 
         this.auctionRepository = auctionRepository;
-        this.bidRepository = new BidRepository(); // Khởi tạo BidRepo
+        this.bidRepository = new BidRepository();
+        this.itemRepository = itemRepository;
         this.checkIntervalSeconds = checkIntervalSeconds;
         this.scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "auction-time-manager");
             thread.setDaemon(true);
             return thread;
         });
-
+        
+        // Gán instance để có thể gọi từ ngoài vào
         instance = this;
     }
 
@@ -97,7 +108,9 @@ public class AuctionTimeManager implements AutoCloseable {
     public void close() {
         stop();
     }
-
+    /**
+     * Phương thức cho phép các Service khác (như AuctionService) dời lịch kết thúc của một phiên đấu giá.
+     */
     public void extendAuction(int auctionId, LocalDateTime newEndTime) {
         extendedEndTimes.put(auctionId, newEndTime);
     }
@@ -105,8 +118,9 @@ public class AuctionTimeManager implements AutoCloseable {
     public boolean isExpired(Auction auction) {
         if (auction == null) return true;
 
+        // Ưu tiên lấy thời gian kết thúc đã được gia hạn từ bộ nhớ cache
         LocalDateTime endTime = extendedEndTimes.getOrDefault(auction.getId(), auction.getEnd_time());
-
+        
         if (endTime == null) return true;
 
         return !LocalDateTime.now().isBefore(endTime);
@@ -124,12 +138,23 @@ public class AuctionTimeManager implements AutoCloseable {
         // 1. Kiểm tra và mở các phiên đấu giá đã đến giờ
         List<Auction> waitingAuctions = auctionRepository.getWaitingAuctions();
         for (Auction auction : waitingAuctions) {
-            if (auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
-                boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
-                if (updated) {
-                    auction.setStatus(RUNNING_STATUS);
-                    LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
-                    notifyAuctionStarted(auction);
+            Item item = itemRepository.getItemById(auction.getItem_id());
+            if (item != null) {
+                if ("PENDING_APPROVAL".equals(item.getModeration_status())) {
+                    // Cập nhật trạng thái auction thành PENDING_APPROVAL
+                    boolean updated = auctionRepository.updateStatus(auction.getId(), PENDING_APPROVAL_STATUS);
+                    if (updated) {
+                         auction.setStatus(PENDING_APPROVAL_STATUS);
+                         LOGGER.log(Level.INFO, "Auction {0} set to PENDING_APPROVAL because item is pending.", auction.getId());
+                    }
+                } else if ("APPROVED".equals(item.getModeration_status()) && auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
+                     // Nếu item đã APPROVED và đến giờ, thì mới mở phiên đấu giá
+                     boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
+                     if (updated) {
+                         auction.setStatus(RUNNING_STATUS);
+                         LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
+                         notifyAuctionStarted(auction);
+                     }
                 }
             }
         }
@@ -156,7 +181,6 @@ public class AuctionTimeManager implements AutoCloseable {
             }
         }
     }
-
     private void notifyAuctionStarted(Auction auction) {
         Response response = new Response(
                 "AUCTION_START",

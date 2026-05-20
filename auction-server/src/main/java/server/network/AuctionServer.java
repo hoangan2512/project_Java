@@ -34,7 +34,7 @@ public class AuctionServer {
         LOGGER.info("Initializing database tables if not exist...");
         // Gọi hàm main của class Main để chạy các lệnh CREATE TABLE IF NOT EXISTS
         // Đây là cách fix nhanh, chuẩn nhất là tách phần khởi tạo bảng ra một hàm riêng
-        server.Main.main(new String[]{}); 
+        server.Main.main(new String[]{});
 
         // 1. Kết nối cơ sở dữ liệu
         LOGGER.info("Connecting to the database...");
@@ -131,7 +131,7 @@ public class AuctionServer {
                 // Gửi thông báo ép đăng xuất tới Client này
                 Response forceLogoutResponse = new Response("FORCE_LOGOUT", null, "Tài khoản của bạn đã bị khóa bởi Admin.");
                 client.sendMessage(forceLogoutResponse);
-                
+
                 // Hủy session ở phía Server
                 client.clearSession();
                 LOGGER.info("Đã ép đăng xuất (Force Logout) đối với User ID: " + userId);
