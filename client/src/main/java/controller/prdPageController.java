@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDateTime;
 import java.util.Locale;
+import java.util.List;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 
@@ -14,6 +15,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -30,6 +32,9 @@ import model.ActionType;
 import message.Request;
 import message.Response;
 import network.ClientSocket;
+import javafx.util.StringConverter;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 
 import java.io.IOException;
 
@@ -52,11 +57,7 @@ public class prdPageController {
     @FXML
     private Label timeLeft, hours_left, mins_left, seconds_left, auctiontime_status;
     @FXML
-    private LineChart<Number, Number> priceChart;
-    @FXML
-    private NumberAxis xAxis;
-    @FXML
-    private NumberAxis yAxis;
+    private LineChart<Number, Number> prcieChart;
     @FXML
     private Button backBtn;
 
@@ -88,6 +89,9 @@ public class prdPageController {
 
     // Biến theo dõi số tiền đang được đề xuất ở Label currentPrice2
     private double proposedBidAmount = 0;
+    
+    // Series cho biểu đồ giá
+    private XYChart.Series<Number, Number> priceSeries;
 
     public prdPageController() {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
@@ -97,6 +101,9 @@ public class prdPageController {
 
     public void initialize() {
         addCurrencyFormat(bidAmount);
+
+        // Khởi tạo biểu đồ
+        initPriceChart();
 
         // --- GÁN SỰ KIỆN CHO NÚT TĂNG GIẢM GIÁ (+/-) ---
         if (bid_increase != null) {
@@ -172,6 +179,61 @@ public class prdPageController {
                     auto_bid_status_btn.setText("Inactive");
                 }
             });
+        }
+    }
+    
+    private void initPriceChart() {
+        if (prcieChart != null) {
+            prcieChart.setAnimated(false); // Tắt animation để vẽ nhanh hơn
+            prcieChart.setCreateSymbols(true); // Hiển thị các chấm trên đường
+            prcieChart.setLegendVisible(false); // Ẩn chú thích
+            
+            // Định dạng trục X (Thời gian)
+            NumberAxis xAxis = (NumberAxis) prcieChart.getXAxis();
+            xAxis.setAutoRanging(true);
+            xAxis.setForceZeroInRange(false);
+            xAxis.setTickLabelFormatter(new StringConverter<Number>() {
+                @Override
+                public String toString(Number object) {
+                    long timestamp = object.longValue();
+                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(timestamp, 0, ZoneOffset.ofHours(7));
+                    return dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                }
+
+                @Override
+                public Number fromString(String string) {
+                    return 0;
+                }
+            });
+            xAxis.setTickLabelFill(javafx.scene.paint.Color.WHITE);
+
+            // Định dạng trục Y (Giá)
+            NumberAxis yAxis = (NumberAxis) prcieChart.getYAxis();
+            yAxis.setAutoRanging(true);
+            yAxis.setForceZeroInRange(false);
+            yAxis.setTickLabelFormatter(new StringConverter<Number>() {
+                @Override
+                public String toString(Number object) {
+                    if (object.doubleValue() >= 1000000) {
+                         return String.format("%.1fM", object.doubleValue() / 1000000);
+                    } else if (object.doubleValue() >= 1000) {
+                         return String.format("%.0fK", object.doubleValue() / 1000);
+                    }
+                    return currencyFormatter.format(object.doubleValue());
+                }
+
+                @Override
+                public Number fromString(String string) {
+                    return 0;
+                }
+            });
+            yAxis.setTickLabelFill(javafx.scene.paint.Color.WHITE);
+
+            priceSeries = new XYChart.Series<>();
+            prcieChart.getData().add(priceSeries);
+            
+            // Styling cho đường line và chấm
+            prcieChart.lookup(".chart-series-line").setStyle("-fx-stroke: #ff8e1f; -fx-stroke-width: 2px;");
         }
     }
 
@@ -336,6 +398,13 @@ public class prdPageController {
                         currentAuction.setCurrent_price(newBid.getAmount());
                         updateCurrentPriceLabel(newBid.getAmount());
 
+                        // Thêm điểm dữ liệu mới vào biểu đồ
+                        if (priceSeries != null && newBid.getBid_time() != null) {
+                            long timestamp = newBid.getBid_time().toEpochSecond(ZoneOffset.ofHours(7));
+                            XYChart.Data<Number, Number> newData = new XYChart.Data<>(timestamp, newBid.getAmount());
+                            priceSeries.getData().add(newData);
+                        }
+
                         // Cập nhật lại Prompt text bước giá mới
                         updateBidPrompt();
 
@@ -379,6 +448,42 @@ public class prdPageController {
                     });
                 }
             }
+        }
+    }
+    
+    // --- XỬ LÝ NHẬN LỊCH SỬ ĐẤU GIÁ (GET_BID_HISTORY) ---
+    public void handleGetBidHistoryResponse(Response res) {
+        if (res != null && "SUCCESS".equals(res.getStatus())) {
+            if (res.getData() instanceof List) {
+                List<?> rawList = (List<?>) res.getData();
+                Platform.runLater(() -> {
+                    if (priceSeries != null) {
+                        priceSeries.getData().clear();
+                        
+                        // Thêm điểm giá khởi điểm (Start Price)
+                        if (currentAuction != null && currentAuction.getStart_time() != null) {
+                            long startTimestamp = currentAuction.getStart_time().toEpochSecond(ZoneOffset.ofHours(7));
+                            priceSeries.getData().add(new XYChart.Data<>(startTimestamp, currentAuction.getItem().getStarting_price()));
+                        }
+                        
+                        // Thêm các điểm giá từ lịch sử
+                        for (Object obj : rawList) {
+                            if (obj instanceof Bid) {
+                                Bid b = (Bid) obj;
+                                if (b.getBid_time() != null) {
+                                    long timestamp = b.getBid_time().toEpochSecond(ZoneOffset.ofHours(7));
+                                    XYChart.Data<Number, Number> data = new XYChart.Data<>(timestamp, b.getAmount());
+                                    priceSeries.getData().add(data);
+                                }
+                            }
+                        }
+                        
+                        System.out.println("Đã tải lịch sử biểu đồ giá với " + rawList.size() + " lượt đặt.");
+                    }
+                });
+            }
+        } else {
+             System.err.println("Không thể tải lịch sử đấu giá: " + (res != null ? res.getMessage() : "null"));
         }
     }
 
@@ -607,6 +712,28 @@ public class prdPageController {
         }
 
         System.out.println("Displaying: " + name + " - Auction Status: " + status);
+        
+        // --- YÊU CẦU LỊCH SỬ ĐẤU GIÁ (GET_BID_HISTORY) TỪ SERVER ĐỂ VẼ BIỂU ĐỒ ---
+        if (auction.getId() > 0) {
+             Request req = new Request(auction.getId(), ActionType.GET_BID_HISTORY);
+             try {
+                 // Gửi request bất đồng bộ hoặc đồng bộ tùy hệ thống, ở đây tôi dùng luồng mới 
+                 // hoặc ClientSocket nếu nó đã hỗ trợ xử lý sau
+                 // Tạm thời dùng luồng mới để tránh block UI
+                 new Thread(() -> {
+                     try {
+                         Response res = ClientSocket.sendRequest(req);
+                         if (res != null) {
+                             handleGetBidHistoryResponse(res);
+                         }
+                     } catch (Exception e) {
+                         System.err.println("Lỗi khi yêu cầu lịch sử đấu giá: " + e.getMessage());
+                     }
+                 }).start();
+             } catch (Exception e) {
+                 e.printStackTrace();
+             }
+        }
     }
 
     private void updateTimeLabel() {
