@@ -152,19 +152,34 @@ public class ItemController {
         if (request.getPayload() instanceof Integer) {
             int auctionId = (Integer) request.getPayload();
 
-            // 1. Cập nhật trạng thái kiểm duyệt của sản phẩm thành APPROVED
-            // Sử dụng hàm cập nhật gián tiếp qua bảng phụ thuộc bằng câu lệnh JOIN/Subquery
-            boolean isItemUpdated = itemRepo.updateStatus(auctionId, "APPROVED");
+            // 1. Fetch auction to get item_id
+            Auction auction = auctionRepo.getAuctionById(auctionId);
+            if (auction != null) {
+                // Check if the auction is suspended
+                if ("SUSPENDED".equals(auction.getStatus())) {
+                    response.setStatus("FAIL");
+                    response.setMessage("Phiên đấu giá đã bị đình chỉ và không thể phê duyệt lại.");
+                    return response;
+                }
 
-            // 2. Kích hoạt trạng thái hoạt động cho phiên đấu giá (Chuyển sang WAITING để đợi đến giờ mở sàn)
-            boolean isAuctionUpdated = auctionRepo.updateStatus(auctionId, "WAITING");
+                int itemId = auction.getItem_id();
 
-            if (isItemUpdated && isAuctionUpdated) {
-                response.setStatus("SUCCESS");
-                response.setMessage("Đã phê duyệt sản phẩm thành công lên hệ thống.");
+                // 2. Cập nhật trạng thái kiểm duyệt của sản phẩm thành APPROVED
+                boolean isItemUpdated = itemRepo.updateStatus(itemId, "APPROVED");
+
+                // 3. Kích hoạt trạng thái hoạt động cho phiên đấu giá (Chuyển sang WAITING để đợi đến giờ mở sàn)
+                boolean isAuctionUpdated = auctionRepo.updateStatus(auctionId, "WAITING");
+
+                if (isItemUpdated && isAuctionUpdated) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã phê duyệt sản phẩm thành công lên hệ thống.");
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể phê duyệt sản phẩm hoặc cập nhật phiên đấu giá.");
+                }
             } else {
                 response.setStatus("FAIL");
-                response.setMessage("Không thể phê duyệt sản phẩm hoặc cập nhật phiên đấu giá.");
+                response.setMessage("Không tìm thấy phiên đấu giá với ID: " + auctionId);
             }
         } else {
             response.setStatus("FAIL");
@@ -187,29 +202,38 @@ public class ItemController {
                 int auctionId = ((Number) payload[0]).intValue(); // Ép kiểu an toàn tránh lỗi Long/Integer qua Socket
                 String reasonText = (String) payload[1];
 
-                // 1. Thực hiện cập nhật trạng thái kiểm duyệt của sản phẩm thành REJECTED thông qua auctionId
-                boolean isItemUpdated = itemRepo.updateStatus(auctionId, "REJECTED");
+                // 1. Fetch auction to get item_id
+                Auction auction = auctionRepo.getAuctionById(auctionId);
+                if (auction != null) {
+                    int itemId = auction.getItem_id();
 
-                // 2. Đồng thời sửa lại trạng thái của phiên đấu giá (Auction) thành SUSPENDED
-                boolean isAuctionUpdated = auctionRepo.updateStatus(auctionId, "SUSPENDED");
+                    // 2. Thực hiện cập nhật trạng thái kiểm duyệt của sản phẩm thành REJECTED
+                    boolean isItemUpdated = itemRepo.updateStatus(itemId, "REJECTED");
 
-                if (isItemUpdated && isAuctionUpdated) {
-                    // 3. Thử lưu lý do từ chối vào bảng reasons
-                    try {
-                        Reason reason = new Reason();
-                        reason.setTargetId(auctionId);
-                        reason.setReasonType("ITEM_REJECTED");
-                        reason.setReason(reasonText);
-                        reasonRepo.addReason(reason);
-                    } catch (Exception e) {
-                        System.err.println("[SERVER WARNING] Không thể lưu lý do từ chối sản phẩm vào DB: " + e.getMessage());
+                    // 3. Đồng thời sửa lại trạng thái của phiên đấu giá (Auction) thành SUSPENDED
+                    boolean isAuctionUpdated = auctionRepo.updateStatus(auctionId, "SUSPENDED");
+
+                    if (isItemUpdated && isAuctionUpdated) {
+                        // 4. Thử lưu lý do từ chối vào bảng reasons
+                        try {
+                            Reason reason = new Reason();
+                            reason.setTargetId(auctionId);
+                            reason.setReasonType("ITEM_REJECTED");
+                            reason.setReason(reasonText);
+                            reasonRepo.addReason(reason);
+                        } catch (Exception e) {
+                            System.err.println("[SERVER WARNING] Không thể lưu lý do từ chối sản phẩm vào DB: " + e.getMessage());
+                        }
+
+                        response.setStatus("SUCCESS");
+                        response.setMessage("Đã từ chối sản phẩm thành công và đình chỉ phiên đấu giá liên quan.");
+                    } else {
+                        response.setStatus("FAIL");
+                        response.setMessage("Không thể cập nhật trạng thái từ chối, vui lòng thử lại.");
                     }
-
-                    response.setStatus("SUCCESS");
-                    response.setMessage("Đã từ chối sản phẩm thành công và đình chỉ phiên đấu giá liên quan.");
                 } else {
                     response.setStatus("FAIL");
-                    response.setMessage("Không thể cập nhật trạng thái từ chối, vui lòng thử lại.");
+                    response.setMessage("Không tìm thấy phiên đấu giá với ID: " + auctionId);
                 }
             } else {
                 response.setStatus("FAIL");

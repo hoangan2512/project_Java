@@ -12,7 +12,7 @@ import message.Response;
 import controller.mainPageController;
 
 public class ClientSocket {
-    private static final String SERVER_IP = "localhost";
+    private static final String SERVER_IP = "192.168.1.2";
     private static final Integer SERVER_PORT = 2810;
 
     private static Socket socket;

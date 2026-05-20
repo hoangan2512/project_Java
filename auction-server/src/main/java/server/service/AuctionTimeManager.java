@@ -55,6 +55,8 @@ public class AuctionTimeManager implements AutoCloseable {
         }
 
         this.auctionRepository = auctionRepository;
+        this.bidRepository = new BidRepository();
+        this.itemRepository = itemRepository;
         this.checkIntervalSeconds = checkIntervalSeconds;
         this.scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "auction-time-manager");
@@ -137,14 +139,22 @@ public class AuctionTimeManager implements AutoCloseable {
         List<Auction> waitingAuctions = auctionRepository.getWaitingAuctions();
         for (Auction auction : waitingAuctions) {
             Item item = itemRepository.getItemById(auction.getItem_id());
-            if (item != null && "APPROVED".equals(item.getModeration_status())) {
-                if (auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
-                    boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
+            if (item != null) {
+                if ("PENDING_APPROVAL".equals(item.getModeration_status())) {
+                    // Cập nhật trạng thái auction thành PENDING_APPROVAL
+                    boolean updated = auctionRepository.updateStatus(auction.getId(), PENDING_APPROVAL_STATUS);
                     if (updated) {
-                        auction.setStatus(RUNNING_STATUS);
-                        LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
-                        notifyAuctionStarted(auction); // Phát Broadcast cho Client biết phiên đã bắt đầu
+                         auction.setStatus(PENDING_APPROVAL_STATUS);
+                         LOGGER.log(Level.INFO, "Auction {0} set to PENDING_APPROVAL because item is pending.", auction.getId());
                     }
+                } else if ("APPROVED".equals(item.getModeration_status()) && auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
+                     // Nếu item đã APPROVED và đến giờ, thì mới mở phiên đấu giá
+                     boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
+                     if (updated) {
+                         auction.setStatus(RUNNING_STATUS);
+                         LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
+                         notifyAuctionStarted(auction);
+                     }
                 }
             }
         }
@@ -171,7 +181,6 @@ public class AuctionTimeManager implements AutoCloseable {
             }
         }
     }
-
     private void notifyAuctionStarted(Auction auction) {
         Response response = new Response(
                 "AUCTION_START",
