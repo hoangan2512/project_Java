@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import controller.SceneSwitchController;
 import javafx.application.Platform;
 
 import message.Request;
@@ -20,11 +22,14 @@ public class ClientSocket {
     private static ObjectInputStream in;
 
     private static final BlockingQueue<Response> responseQueue = new LinkedBlockingQueue<>();
-    
+
     // Biến lưu trữ Public Key của Server
     private static String serverPublicKey = null;
 
-    //Hàm ngắt kết nối socket
+    // Khởi tạo instance cho bộ chuyển scene
+    private static final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+
+    // Hàm ngắt kết nối socket
     public static void disconnect() {
         try {
             if (socket != null) socket.close();
@@ -57,7 +62,7 @@ public class ClientSocket {
     }
 
     public static synchronized Response sendRequest(Request request) {
-        if (socket == null || socket.isClosed()) {  //ktra kết nối socket
+        if (socket == null || socket.isClosed()) {  // Ktra kết nối socket
             if (!tryConnect()) {
                 return null;
             }
@@ -80,15 +85,23 @@ public class ClientSocket {
             try {
                 while (true) {
                     Response res = (Response) in.readObject();
-
                     String status = res.getStatus();
+
                     if ("PUBLIC_KEY".equals(status)) {
                         // Nhận Public Key từ Server ngay khi kết nối
                         serverPublicKey = (String) res.getData();
                         System.out.println("Đã nhận Public Key từ Server.");
-                    } else if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status) || "AUCTION_START".equals(status)) {
+                    }
+                    // 1. Nhánh xử lý các thông báo mang tính chất cập nhật dữ liệu chung (Broadcast)
+                    else if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status) || "AUCTION_START".equals(status)) {
                         Platform.runLater(() -> handleBroadcast(res));
-                    } else {
+                    }
+                    // 2. Nhánh xử lý khi nhận được tín hiệu thắng cuộc đích danh (Unicast)
+                    else if ("AUCTION_WON".equals(status)) {
+                        Platform.runLater(() -> handleAuctionWon(res));
+                    }
+                    // 3. Nhánh xử lý các phản hồi đồng bộ sau khi gửi Request lên
+                    else {
                         responseQueue.put(res);
                     }
                 }
@@ -106,7 +119,6 @@ public class ClientSocket {
         listenerThread.start();
     }
 
-
     private static void handleBroadcast(Response res) {
         System.out.println("[Server message]: " + res.getMessage() + " | Dữ liệu: " + res.getData());
 
@@ -115,7 +127,19 @@ public class ClientSocket {
             mainPageController.getInstance().refreshData(res);
         }
     }
-    
+
+    private static void handleAuctionWon(Response res) {
+        System.out.println("[WINNER NOTIFICATION]: " + res.getMessage());
+
+        // Do hàm này đã được bọc trong Platform.runLater từ startListenerThread(),
+        // code ở đây chạy an toàn trực tiếp trên luồng UI mà không lo crash ứng dụng.
+        if (sceneSwitcher != null) {
+            sceneSwitcher.openWinner(null);
+        } else {
+            System.err.println("ERROR: Biến 'sceneSwitcher' chưa được khởi tạo (null)!");
+        }
+    }
+
     // Hàm cung cấp Public Key cho các Controller (ví dụ lúc đăng nhập/đăng ký)
     public static String getServerPublicKey() {
         // Đợi một chút nếu chưa có (trường hợp vừa connect xong nhưng luồng Listener chưa kịp nhận)
@@ -136,6 +160,7 @@ public class ClientSocket {
         System.out.println("[OAUTH2] Đang mở Server ngầm tại port " + port + " để đợi Google...");
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
+            // Vòng lặp liên tục để phục vụ cả HTML và Favicon trước khi đóng Server
             while (true) {
                 try (Socket browserSocket = serverSocket.accept();
                      BufferedReader reader = new BufferedReader(new InputStreamReader(browserSocket.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
@@ -144,6 +169,23 @@ public class ClientSocket {
                     String requestLine = reader.readLine();
                     if (requestLine == null || requestLine.isEmpty()) continue;
 
+                    System.out.println("[OAUTH2] Trình duyệt gửi yêu cầu: " + requestLine);
+
+                    // =========================================================================
+                    // NHÁNH 1: XỬ LÝ ĐỔI ICON TRÊN TAB TRÌNH DUYỆT (FAVICON)
+                    // =========================================================================
+                    if (requestLine.contains("GET /favicon.ico")) {
+                        // Trả về lệnh Redirect (302) ép trình duyệt tự nhảy sang link logo Postimages để lấy icon
+                        writer.println("HTTP/1.1 302 Found");
+                        writer.println("Location: https://i.postimg.cc/VNW48Yrf/logo-project-2-removebg.png");
+                        writer.println();
+                        writer.flush();
+                        continue;
+                    }
+
+                    // =========================================================================
+                    // NHÁNH 2: XỬ LÝ KHI GOOGLE REDIRECT VỀ ĐỂ LẤY MÃ CODE VÀ TRẢ HTML
+                    // =========================================================================
                     if (requestLine.contains("code=")) {
                         String codeParam = requestLine.split("code=")[1].split(" ")[0];
                         if (codeParam.contains("&")) codeParam = codeParam.split("&")[0];
@@ -151,6 +193,7 @@ public class ClientSocket {
 
                         System.out.println("[OAUTH2] Đã bóc tách mã Code sạch thành công: " + authorizationCode);
 
+                        // Trả lời một trang HTML thân thiện hiển thị trên trình duyệt của User
                         writer.println("HTTP/1.1 200 OK");
                         writer.println("Content-Type: text/html; charset=UTF-8");
                         writer.println();
@@ -162,6 +205,9 @@ public class ClientSocket {
                         <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         <title>BidHub - Google Auth</title>
+                        
+                        <link rel="icon" type="image/png" href="https://i.postimg.cc/VNW48Yrf/logo-project-2-removebg.png">
+                        
                         <style>
                             body, html {
                                 margin: 0;
@@ -171,8 +217,6 @@ public class ClientSocket {
                                 overflow: hidden;
                                 background-color: #0b0b12;
                             }
-
-                            /* Container chính bao phủ toàn màn hình, dùng Flexbox căn giữa */
                             .frame {
                                 display: flex;
                                 flex-direction: column;
@@ -184,8 +228,6 @@ public class ClientSocket {
                                 background-size: cover;
                                 box-sizing: border-box;
                             }
-
-                            /* Khối bọc Logo và Nội dung để quản lý khoảng cách bằng Flexbox, KHÔNG DÙNG absolute độc lập */
                             .main-container {
                                 display: flex;
                                 flex-direction: column;
@@ -194,28 +236,23 @@ public class ClientSocket {
                                 width: 90%;
                                 max-width: 900px;
                                 text-align: center;
-                                margin-bottom: 60px; /* Chừa không gian cho footer ở đáy */
+                                margin-bottom: 60px;
                             }
-
-                            /* Logo co giãn theo tỉ lệ */
                             .logo {
                                 width: 15vw;
                                 min-width: 180px;
                                 max-width: 275px;
                                 height: auto;
-                                aspect-ratio: 275/124; /* Giữ nguyên tỉ lệ ảnh gốc */
+                                aspect-ratio: 275/124;
                                 background: url('https://i.postimg.cc/VNW48Yrf/logo-project-2-removebg.png') no-repeat center center;
                                 background-size: contain;
-                                margin-bottom: 5vh; /* Khoảng cách động từ logo xuống chữ */
+                                margin-bottom: 5vh;
                             }
-
-                            /* Khối text nhóm riêng để không bao giờ đè lên nhau */
                             .text-group {
                                 display: flex;
                                 flex-direction: column;
-                                gap: 2vh; /* Tạo khoảng cách giãn tự động giữa các dòng */
+                                gap: 2vh;
                             }
-
                             .text-style {
                                 font-family: 'Google Sans Flex', 'Segoe UI', system-ui, sans-serif;
                                 font-style: normal;
@@ -223,24 +260,18 @@ public class ClientSocket {
                                 text-shadow: 0 2px 10px rgba(0,0,0,0.6);
                                 margin: 0;
                             }
-
-                            /* Tiêu đề lớn co giãn linh hoạt theo chiều rộng màn hình */
                             .success-text {
                                 font-weight: 700;
-                                font-size: calc(18px + 1vw); /* Tự động phóng to/thu nhỏ mượt mà */
+                                font-size: calc(18px + 1vw);
                                 line-height: 1.3;
                                 word-break: break-word;
                             }
-
-                            /* Dòng chữ phụ */
                             .redirect-text {
                                 font-weight: 300;
                                 font-size: calc(14px + 0.3vw);
                                 line-height: 1.5;
                                 color: rgba(255, 255, 255, 0.8);
                             }
-
-                            /* Footer cố định ở đáy */
                             .footer-text {
                                 position: absolute;
                                 bottom: 25px;
@@ -272,6 +303,9 @@ public class ClientSocket {
 
                         writer.print(htmlResponse);
                         writer.flush();
+
+                        // Nghỉ 300ms ngắn để trình duyệt kịp gửi request lấy nốt Favicon trước khi đóng kết nối hoàn toàn
+                        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
 
                         return authorizationCode;
                     } else {
