@@ -15,7 +15,7 @@ public class ItemRepository {
      */
     public int addItem(Item item) {
         // language=SQLite
-        String sql = "INSERT INTO items (user_prdID, name, description, starting_price, seller_id, imgpath, imgpath1, imgpath2, imgpath3, imgpath4, imgpath5, imgpath6, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO items (user_prdID, name, description, starting_price, seller_id, imgpath, imgpath1, imgpath2, imgpath3, imgpath4, imgpath5, imgpath6, categories, moderation_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         // SỬA LỖI: Dùng try-with-resources cho Connection
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -33,6 +33,7 @@ public class ItemRepository {
             pstmt.setString(11, item.getImgPath5());
             pstmt.setString(12, item.getImgPath6());
             pstmt.setString(13, item.getCategories());
+            pstmt.setString(14, item.getModeration_status());
 
             int rows = pstmt.executeUpdate();
             if (rows > 0) {
@@ -49,8 +50,75 @@ public class ItemRepository {
             return -1;
         }
     }
-     // Lấy toàn bộ danh sách sản phẩm (Dùng cho các mục đích quản lý/hiển thị chung)
-     // Kiểm tra trùng lặp mã sản phẩm hoặc tên sản phẩm trong cùng danh mục
+    
+    public List<Item> getAllItems() {
+        List<Item> itemList = new ArrayList<>();
+        String sql = "SELECT * FROM items";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Item item = new Item();
+                item.setId(rs.getInt("id"));
+                item.setUser_prdID(rs.getString("user_prdID"));
+                item.setName(rs.getString("name"));
+                item.setDescription(rs.getString("description"));
+                item.setStarting_price(rs.getDouble("starting_price"));
+                item.setSeller_id(rs.getInt("seller_id"));
+                item.setImgPath(rs.getString("imgpath"));
+                item.setCategories(rs.getString("categories"));
+                item.setModeration_status(rs.getString("moderation_status"));
+                itemList.add(item);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách sản phẩm: " + e.getMessage());
+        }
+        return itemList;
+    }
+
+    public boolean updateItemModerationStatus(int itemId, String status) {
+        String sql = "UPDATE items SET moderation_status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setInt(2, itemId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public Item getItemById(int itemId) {
+        String sql = "SELECT * FROM items WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Item item = new Item();
+                    item.setId(rs.getInt("id"));
+                    item.setUser_prdID(rs.getString("user_prdID"));
+                    item.setName(rs.getString("name"));
+                    item.setDescription(rs.getString("description"));
+                    item.setStarting_price(rs.getDouble("starting_price"));
+                    item.setSeller_id(rs.getInt("seller_id"));
+                    item.setImgPath(rs.getString("imgpath"));
+                    item.setCategories(rs.getString("categories"));
+                    item.setModeration_status(rs.getString("moderation_status"));
+                    return item;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Lấy toàn bộ danh sách sản phẩm (Dùng cho các mục đích quản lý/hiển thị chung)
+    // Kiểm tra trùng lặp mã sản phẩm hoặc tên sản phẩm trong cùng danh mục
     public String checkProductConflicts(String name, String categories, String userPrdId, int sellerId) {
         // 1. KIỂM TRA TRÙNG ID
         if (userPrdId != null && !userPrdId.trim().isEmpty()) {
@@ -85,7 +153,7 @@ public class ItemRepository {
 
         return "OK";
     }
-    
+
     // ==========================================
     // CÁC HÀM DÀNH CHO ADMIN QUẢN LÝ ITEM
     // ==========================================

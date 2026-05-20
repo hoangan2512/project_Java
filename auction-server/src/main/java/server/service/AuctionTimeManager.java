@@ -2,8 +2,10 @@ package server.service;
 
 import message.Response;
 import model.Auction;
+import model.Item;
 import server.network.AuctionServer;
 import server.repository.AuctionRepository;
+import server.repository.ItemRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,12 +21,14 @@ public class AuctionTimeManager implements AutoCloseable {
     private static final Logger LOGGER = Logger.getLogger(AuctionTimeManager.class.getName());
     private static final String FINISHED_STATUS = "FINISHED";
     private static final String RUNNING_STATUS = "RUNNING";
+    private static final String PENDING_APPROVAL_STATUS = "PENDING_APPROVAL";
     private static final long DEFAULT_CHECK_INTERVAL_SECONDS = 5;
 
     // Singleton instance để AuctionService có thể gọi tới
     private static AuctionTimeManager instance;
 
     private final AuctionRepository auctionRepository;
+    private final ItemRepository itemRepository;
     private final ScheduledExecutorService scheduler;
     private final long checkIntervalSeconds;
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -33,18 +37,22 @@ public class AuctionTimeManager implements AutoCloseable {
     private final ConcurrentHashMap<Integer, LocalDateTime> extendedEndTimes = new ConcurrentHashMap<>();
 
     public AuctionTimeManager() {
-        this(new AuctionRepository(), DEFAULT_CHECK_INTERVAL_SECONDS);
+        this(new AuctionRepository(), new ItemRepository(), DEFAULT_CHECK_INTERVAL_SECONDS);
     }
 
-    public AuctionTimeManager(AuctionRepository auctionRepository, long checkIntervalSeconds) {
+    public AuctionTimeManager(AuctionRepository auctionRepository, ItemRepository itemRepository, long checkIntervalSeconds) {
         if (auctionRepository == null) {
             throw new IllegalArgumentException("auctionRepository must not be null");
+        }
+        if (itemRepository == null) {
+            throw new IllegalArgumentException("itemRepository must not be null");
         }
         if (checkIntervalSeconds <= 0) {
             throw new IllegalArgumentException("checkIntervalSeconds must be greater than 0");
         }
 
         this.auctionRepository = auctionRepository;
+        this.itemRepository = itemRepository;
         this.checkIntervalSeconds = checkIntervalSeconds;
         this.scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "auction-time-manager");
@@ -126,13 +134,18 @@ public class AuctionTimeManager implements AutoCloseable {
         // 1. Kiểm tra và mở các phiên đấu giá đã đến giờ (Từ WAITING -> RUNNING)
         List<Auction> waitingAuctions = auctionRepository.getWaitingAuctions();
         for (Auction auction : waitingAuctions) {
-            if (auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
-                boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
-                if (updated) {
-                    auction.setStatus(RUNNING_STATUS);
-                    LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
-                    notifyAuctionStarted(auction); // Phát Broadcast cho Client biết phiên đã bắt đầu
+            Item item = itemRepository.getItemById(auction.getItem_id());
+            if (item != null && "APPROVED".equals(item.getModeration_status())) {
+                if (auction.getStart_time() != null && !LocalDateTime.now().isBefore(auction.getStart_time())) {
+                    boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
+                    if (updated) {
+                        auction.setStatus(RUNNING_STATUS);
+                        LOGGER.log(Level.INFO, "Auction {0} started automatically.", auction.getId());
+                        notifyAuctionStarted(auction); // Phát Broadcast cho Client biết phiên đã bắt đầu
+                    }
                 }
+            } else {
+                auctionRepository.updateStatus(auction.getId(), PENDING_APPROVAL_STATUS);
             }
         }
 
