@@ -26,6 +26,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import model.AutoBidConfig;
 import model.Auction;
 import model.Bid;
 import model.ActionType;
@@ -47,7 +48,7 @@ public class prdPageController {
     @FXML
     private Label prdName, prd_description;
     @FXML
-    private TextField bidAmount;
+    private TextField bidAmount, ceilling_price, price_step;
     @FXML
     private StackPane imgPane;
     @FXML
@@ -55,7 +56,7 @@ public class prdPageController {
     @FXML
     private Button Bid, bid_increase, bid_decrease;
     @FXML
-    private Label timeLeft, hours_left, mins_left, seconds_left, auctiontime_status;
+    private Label timeLeft, hours_left, mins_left, seconds_left, auctiontime_status, auto_bid_status;
     @FXML
     private LineChart<Number, Number> prcieChart;
     @FXML
@@ -101,6 +102,8 @@ public class prdPageController {
 
     public void initialize() {
         addCurrencyFormat(bidAmount);
+        addCurrencyFormat(ceilling_price);
+        addCurrencyFormat(price_step);
 
         // Khởi tạo biểu đồ
         initPriceChart();
@@ -162,23 +165,8 @@ public class prdPageController {
 
         // --- LOGIC ĐỔI MÀU NÚT TRẠNG THÁI AUTO-BID ---
         if (auto_bid_status_btn != null) {
-            if (auto_bid_status_btn.isSelected()) {
-                auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: #3dd35b;");
-                auto_bid_status_btn.setText("Active");
-            } else {
-                auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: grey;");
-                auto_bid_status_btn.setText("Inactive");
-            }
-
-            auto_bid_status_btn.setOnAction(e -> {
-                if (auto_bid_status_btn.isSelected()) {
-                    auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: #3dd35b;");
-                    auto_bid_status_btn.setText("Active");
-                } else {
-                    auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: grey;");
-                    auto_bid_status_btn.setText("Inactive");
-                }
-            });
+            updateAutoBidState(false, null);
+            auto_bid_status_btn.setOnAction(e -> handleAutoBidToggle());
         }
     }
     
@@ -192,7 +180,7 @@ public class prdPageController {
             NumberAxis xAxis = (NumberAxis) prcieChart.getXAxis();
             xAxis.setAutoRanging(true);
             xAxis.setForceZeroInRange(false);
-            xAxis.setTickLabelFormatter(new StringConverter<Number>() {
+            xAxis.setTickLabelFormatter(new StringConverter<>() {
                 @Override
                 public String toString(Number object) {
                     long timestamp = object.longValue();
@@ -211,13 +199,13 @@ public class prdPageController {
             NumberAxis yAxis = (NumberAxis) prcieChart.getYAxis();
             yAxis.setAutoRanging(true);
             yAxis.setForceZeroInRange(false);
-            yAxis.setTickLabelFormatter(new StringConverter<Number>() {
+            yAxis.setTickLabelFormatter(new StringConverter<>() {
                 @Override
                 public String toString(Number object) {
                     if (object.doubleValue() >= 1000000) {
-                         return String.format("%.1fM", object.doubleValue() / 1000000);
+                        return String.format("%.1fM", object.doubleValue() / 1000000);
                     } else if (object.doubleValue() >= 1000) {
-                         return String.format("%.0fK", object.doubleValue() / 1000);
+                        return String.format("%.0fK", object.doubleValue() / 1000);
                     }
                     return currencyFormatter.format(object.doubleValue());
                 }
@@ -245,6 +233,87 @@ public class prdPageController {
         if (prd_description != null) prd_description.setVisible(showDesc);
         if (priceC != null) priceC.setVisible(showChart);
         if (auto_bid != null) auto_bid.setVisible(showAutoBid);
+    }
+
+    private void handleAutoBidToggle() {
+        if (auto_bid_status_btn != null && auto_bid_status_btn.isSelected()) {
+            registerAutoBid();
+        } else {
+            unregisterAutoBid();
+        }
+    }
+
+    private void registerAutoBid() {
+        if (!SessionManager.getInstance().isBidder()) {
+            updateAutoBidState(false, "Sign in as bidder first.");
+            try {
+                sceneSwitcher.openSignInPopup(null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        if (currentAuction == null) {
+            updateAutoBidState(false, "No auction selected.");
+            return;
+        }
+
+        long maxBid = getRealPrice(ceilling_price);
+        long increment = getRealPrice(price_step);
+        double minAllowedBid = currentAuction.getCurrent_price() + calculateMinimumIncrement(currentAuction.getCurrent_price());
+
+        if (increment <= 0) {
+            updateAutoBidState(false, "Insert bid increment.");
+            return;
+        }
+        if (maxBid < minAllowedBid) {
+            updateAutoBidState(false, "Ceiling must be at least " + currencyFormatter.format(minAllowedBid));
+            return;
+        }
+
+        int bidderId = SessionManager.getInstance().getCurrentUser().getId();
+        AutoBidConfig config = new AutoBidConfig(currentAuction.getId(), bidderId, maxBid, increment);
+        Response response = ClientSocket.sendRequest(new Request(config, ActionType.REGISTER_AUTOBID));
+
+        if (response != null && "SUCCESS".equals(response.getStatus())) {
+            updateAutoBidState(true, response.getMessage());
+        } else {
+            String message = response != null ? response.getMessage() : "Cannot register auto-bid.";
+            updateAutoBidState(false, message);
+        }
+    }
+
+    private void unregisterAutoBid() {
+        if (currentAuction == null || !SessionManager.getInstance().isBidder()) {
+            updateAutoBidState(false, null);
+            return;
+        }
+
+        int bidderId = SessionManager.getInstance().getCurrentUser().getId();
+        AutoBidConfig config = new AutoBidConfig(currentAuction.getId(), bidderId, 0, 0);
+        Response response = ClientSocket.sendRequest(new Request(config, ActionType.UNREGISTER_AUTOBID));
+
+        if (response == null || !"SUCCESS".equals(response.getStatus())) {
+            updateAutoBidState(true, response != null ? response.getMessage() : "Cannot disable auto-bid.");
+            return;
+        }
+
+        updateAutoBidState(false, response.getMessage());
+    }
+
+    private void updateAutoBidState(boolean active, String statusMessage) {
+        if (auto_bid_status_btn != null) {
+            auto_bid_status_btn.setSelected(active);
+            auto_bid_status_btn.setText(active ? "Active" : "Inactive");
+        }
+        if (auto_bid_btn != null) {
+            String color = active ? "#3dd35b" : "grey";
+            auto_bid_btn.setStyle("-fx-border-width:2; -fx-border-radius:5; -fx-border-color: " + color + ";");
+        }
+        if (auto_bid_status != null) {
+            auto_bid_status.setText(statusMessage != null ? statusMessage : (active ? "Auto-bid active." : "Auto-bid inactive."));
+        }
     }
 
     @FXML
@@ -389,8 +458,7 @@ public class prdPageController {
         String status = res.getStatus();
 
         if ("NOTIFY_NEW_PRICE".equals(status)) {
-            if (res.getData() instanceof Bid) {
-                Bid newBid = (Bid) res.getData();
+            if (res.getData() instanceof Bid newBid) {
 
                 if (newBid.getAuction_id() == currentAuction.getId()) {
                     System.out.println("Cập nhật giá mới từ Server: " + newBid.getAmount());
@@ -422,8 +490,7 @@ public class prdPageController {
                 }
             }
         } else if ("AUCTION_END".equals(status)) {
-            if (res.getData() instanceof Auction) {
-                Auction endedAuction = (Auction) res.getData();
+            if (res.getData() instanceof Auction endedAuction) {
                 if (endedAuction.getId() == currentAuction.getId()) {
                     Platform.runLater(() -> {
                         handleAuctionEnd();
@@ -432,19 +499,17 @@ public class prdPageController {
                 }
             }
         } else if ("AUCTION_START".equals(status)) {
-            if (res.getData() instanceof Auction) {
-                Auction startedAuction = (Auction) res.getData();
+            if (res.getData() instanceof Auction startedAuction) {
                 if (startedAuction.getId() == currentAuction.getId()) {
+                    Platform.runLater(this::run);
+                }
+            }
+        } else if ("AUCTION_EXTENDED".equals(status)) {
+            if (res.getData() instanceof Auction extendedAuction) {
+                if (extendedAuction.getId() == currentAuction.getId() && extendedAuction.getEnd_time() != null) {
                     Platform.runLater(() -> {
-                        if (timeLeft != null) {
-                            timeLeft.setText("Started - Refreshing...");
-                            auctiontime_status.setText("Auction Started - Refreshing");
-                        }
-                        if (Bid != null) {
-                            Bid.setDisable(false);
-                            Bid.setText("Place Bid");
-                        }
-                        if (bidAmount != null) bidAmount.setDisable(false);
+                        currentAuction.setEnd_time(extendedAuction.getEnd_time());
+                        restartRunningCountdown();
                     });
                 }
             }
@@ -454,8 +519,7 @@ public class prdPageController {
     // --- XỬ LÝ NHẬN LỊCH SỬ ĐẤU GIÁ (GET_BID_HISTORY) ---
     public void handleGetBidHistoryResponse(Response res) {
         if (res != null && "SUCCESS".equals(res.getStatus())) {
-            if (res.getData() instanceof List) {
-                List<?> rawList = (List<?>) res.getData();
+            if (res.getData() instanceof List<?> rawList) {
                 Platform.runLater(() -> {
                     if (priceSeries != null) {
                         priceSeries.getData().clear();
@@ -468,8 +532,7 @@ public class prdPageController {
                         
                         // Thêm các điểm giá từ lịch sử
                         for (Object obj : rawList) {
-                            if (obj instanceof Bid) {
-                                Bid b = (Bid) obj;
+                            if (obj instanceof Bid b) {
                                 if (b.getBid_time() != null) {
                                     long timestamp = b.getBid_time().toEpochSecond(ZoneOffset.ofHours(7));
                                     XYChart.Data<Number, Number> data = new XYChart.Data<>(timestamp, b.getAmount());
@@ -522,6 +585,10 @@ public class prdPageController {
     }
 
     private long getRealPrice(TextField textField) {
+        if (textField == null) {
+            return 0;
+        }
+
         String text = textField.getText();
 
         if (text == null || text.trim().isEmpty()) {
@@ -539,12 +606,16 @@ public class prdPageController {
     }
 
     private void addCurrencyFormat(TextField textField) {
+        if (textField == null) {
+            return;
+        }
+
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null || newValue.isEmpty()) {
                 return;
             }
 
-            String numericString = newValue.replaceAll("[^\\d]", "");
+            String numericString = newValue.replaceAll("\\D", "");
 
             if (numericString.isEmpty()) {
                 textField.setText("");
@@ -616,30 +687,13 @@ public class prdPageController {
                     updateUpcomingTimeLabel();
                     if (remainingSeconds <= 0) {
                         countdownTimer.stop();
-                        if (timeLeft != null) {
-                            timeLeft.setText("Started - Refreshing...");
-                            auctiontime_status.setText("Auction Started - Refreshing");
-                        }
-                        if (Bid != null) {
-                            Bid.setDisable(false);
-                            Bid.setText("Place Bid");
-                        }
-                        if (bidAmount != null) bidAmount.setDisable(false);
+                        run();
                     }
                 }));
                 countdownTimer.setCycleCount(Timeline.INDEFINITE);
                 countdownTimer.play();
             } else {
-                if (timeLeft != null) {
-                    timeLeft.setText("Started - Refreshing...");
-                    auctiontime_status.setText("Auction Started - Refreshing");
-
-                }
-                if (Bid != null) {
-                    Bid.setDisable(false);
-                    Bid.setText("Place Bid");
-                }
-                if (bidAmount != null) bidAmount.setDisable(false);
+                run();
             }
 
             if (Bid != null) {
@@ -777,5 +831,55 @@ public class prdPageController {
             bidAmount.setPromptText("");
             bidAmount.setDisable(true);
         }
+    }
+
+    private void restartRunningCountdown() {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        if (currentAuction == null || currentAuction.getEnd_time() == null) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (!now.isBefore(currentAuction.getEnd_time())) {
+            handleAuctionEnd();
+            return;
+        }
+
+        remainingSeconds = java.time.Duration.between(now, currentAuction.getEnd_time()).getSeconds();
+        updateTimeLabel();
+
+        if (Bid != null) {
+            Bid.setDisable(false);
+            Bid.setText("Place Bid");
+        }
+        if (bidAmount != null) {
+            bidAmount.setDisable(false);
+        }
+
+        countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            remainingSeconds--;
+            updateTimeLabel();
+            if (remainingSeconds <= 0) {
+                countdownTimer.stop();
+                handleAuctionEnd();
+            }
+        }));
+        countdownTimer.setCycleCount(Timeline.INDEFINITE);
+        countdownTimer.play();
+    }
+
+    private void run() {
+        if (timeLeft != null) {
+            timeLeft.setText("Started - Refreshing...");
+            auctiontime_status.setText("Auction Started - Refreshing");
+        }
+        if (Bid != null) {
+            Bid.setDisable(false);
+            Bid.setText("Place Bid");
+        }
+        if (bidAmount != null) bidAmount.setDisable(false);
     }
 }

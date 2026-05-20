@@ -23,8 +23,7 @@ public class AuctionController {
     public Response handleCustomSearch(Request request) {
         Response response = new Response();
 
-        if (request.getPayload() instanceof SearchCriteria) {
-            SearchCriteria criteria = (SearchCriteria) request.getPayload();
+        if (request.getPayload() instanceof SearchCriteria criteria) {
 
             // 1. Lấy danh sách các phiên đấu giá
             List<Auction> results = auctionRepo.searchAdvanced(criteria);
@@ -76,24 +75,6 @@ public class AuctionController {
         return response;
     }
 
-    public Response handleAuctionEnd(Request request) {
-        Response response = new Response();
-        Object winnerData = request.getPayload();
-
-        // TODO: Lưu lịch sử người chiến thắng vào DB
-
-        response.setStatus("SUCCESS");
-        response.setMessage("Phiên đấu giá đã kết thúc! Người thắng cuộc là: " + winnerData);
-
-        // Tương tự Bid, bạn có thể tạo lệnh Broadcast ở đây để báo cho cả Server biết phiên này đã kết thúc
-        Response notifyEnd = new Response();
-        notifyEnd.setStatus("AUCTION_END");
-        notifyEnd.setMessage("Phiên đấu giá kết thúc, người thắng: " + winnerData);
-        AuctionServer.broadcast(notifyEnd);
-
-        return response;
-    }
-
     // ==========================================
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ PHIÊN ĐẤU GIÁ
     // ==========================================
@@ -102,12 +83,10 @@ public class AuctionController {
         Response response = new Response();
         
         // Cập nhật để nhận mảng Object chứa auctionId và lý do
-        if (request.getPayload() instanceof Object[]) {
-            Object[] payload = (Object[]) request.getPayload();
-            if (payload.length == 2 && payload[0] instanceof Integer && payload[1] instanceof String) {
+        if (request.getPayload() instanceof Object[] payload) {
+            if (payload.length == 2 && payload[0] instanceof Integer && payload[1] instanceof String reasonText) {
                 int auctionId = (Integer) payload[0];
-                String reasonText = (String) payload[1];
-                
+
                 boolean success = auctionRepo.stopAuction(auctionId);
                 
                 if (success) {

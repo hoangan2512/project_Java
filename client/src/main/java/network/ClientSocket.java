@@ -3,6 +3,7 @@ package network;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -14,7 +15,7 @@ import message.Response;
 import controller.mainPageController;
 
 public class ClientSocket {
-    private static final String SERVER_IP = "192.168.1.2";
+    private static final String SERVER_IP = "localhost";
     private static final Integer SERVER_PORT = 2810;
 
     private static Socket socket;
@@ -87,22 +88,21 @@ public class ClientSocket {
                     Response res = (Response) in.readObject();
                     String status = res.getStatus();
 
-                    if ("PUBLIC_KEY".equals(status)) {
-                        // Nhận Public Key từ Server ngay khi kết nối
-                        serverPublicKey = (String) res.getData();
-                        System.out.println("Đã nhận Public Key từ Server.");
-                    }
-                    // 1. Nhánh xử lý các thông báo mang tính chất cập nhật dữ liệu chung (Broadcast)
-                    else if ("NOTIFY_NEW_PRICE".equals(status) || "AUCTION_END".equals(status) || "AUCTION_START".equals(status)) {
-                        Platform.runLater(() -> handleBroadcast(res));
-                    }
-                    // 2. Nhánh xử lý khi nhận được tín hiệu thắng cuộc đích danh (Unicast)
-                    else if ("AUCTION_WON".equals(status)) {
-                        Platform.runLater(() -> handleAuctionWon(res));
-                    }
-                    // 3. Nhánh xử lý các phản hồi đồng bộ sau khi gửi Request lên
-                    else {
-                        responseQueue.put(res);
+                    switch (status) {
+                        case "PUBLIC_KEY" -> {
+                            // Nhận Public Key từ Server ngay khi kết nối
+                            serverPublicKey = (String) res.getData();
+                            System.out.println("Đã nhận Public Key từ Server.");
+                        }
+                        // 1. Nhánh xử lý các thông báo mang tính chất cập nhật dữ liệu chung (Broadcast)
+                        case "NOTIFY_NEW_PRICE", "AUCTION_END", "AUCTION_START", "AUCTION_EXTENDED" ->
+                                Platform.runLater(() -> handleBroadcast(res));
+
+                        // 2. Nhánh xử lý khi nhận được tín hiệu thắng cuộc đích danh (Unicast)
+                        case "AUCTION_WON" -> Platform.runLater(() -> handleAuctionWon(res));
+
+                        // 3. Nhánh xử lý các phản hồi đồng bộ sau khi gửi Request lên
+                        case null, default -> responseQueue.put(res);
                     }
                 }
             } catch (EOFException e) {
@@ -133,11 +133,7 @@ public class ClientSocket {
 
         // Do hàm này đã được bọc trong Platform.runLater từ startListenerThread(),
         // code ở đây chạy an toàn trực tiếp trên luồng UI mà không lo crash ứng dụng.
-        if (sceneSwitcher != null) {
-            sceneSwitcher.openWinner(null);
-        } else {
-            System.err.println("ERROR: Biến 'sceneSwitcher' chưa được khởi tạo (null)!");
-        }
+        sceneSwitcher.openWinner(null);
     }
 
     // Hàm cung cấp Public Key cho các Controller (ví dụ lúc đăng nhập/đăng ký)
@@ -189,7 +185,7 @@ public class ClientSocket {
                     if (requestLine.contains("code=")) {
                         String codeParam = requestLine.split("code=")[1].split(" ")[0];
                         if (codeParam.contains("&")) codeParam = codeParam.split("&")[0];
-                        String authorizationCode = java.net.URLDecoder.decode(codeParam, "UTF-8");
+                        String authorizationCode = java.net.URLDecoder.decode(codeParam, StandardCharsets.UTF_8);
 
                         System.out.println("[OAUTH2] Đã bóc tách mã Code sạch thành công: " + authorizationCode);
 
@@ -205,9 +201,9 @@ public class ClientSocket {
                         <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         <title>BidHub - Google Auth</title>
-                        
+                       \s
                         <link rel="icon" type="image/png" href="https://i.postimg.cc/VNW48Yrf/logo-project-2-removebg.png">
-                        
+                       \s
                         <style>
                             body, html {
                                 margin: 0;
@@ -299,7 +295,7 @@ public class ClientSocket {
                         </div>
                     </body>
                     </html>
-                    """;
+                   \s""";
 
                         writer.print(htmlResponse);
                         writer.flush();

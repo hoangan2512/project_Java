@@ -257,13 +257,17 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
 
-            case REGISTER_AUTO_BID:
+            case REGISTER_AUTOBID:
                 if (checkAuthorization("BIDDER")) return bidController.handleRegisterAutoBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá tự động!");
 
             // ======================================================
             // CÁC HÀNH ĐỘNG CÔNG KHAI
             // ======================================================
+            case UNREGISTER_AUTOBID:
+                if (checkAuthorization("BIDDER")) return bidController.handleUnregisterAutoBid(request);
+                return new Response("FAIL", null, "You are not allowed to use auto-bid.");
+
             case GET_BID_HISTORY:
                 return bidController.handleGetBidHistory(request);
             case GET_LIST:
