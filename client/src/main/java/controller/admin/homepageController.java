@@ -244,10 +244,6 @@ public class homepageController {
         }).start();
     }
 
-    /**
-     * Hàm hỗ trợ gán trọng số cho trạng thái duyệt.
-     * Số càng nhỏ (1) thì càng được xếp lên đầu tiên.
-     */
     private int getModerationWeight(Item item) {
         if (item == null || item.getModeration_status() == null) {
             return 4; // Nếu null hoặc không xác định thì ném xuống cuối
@@ -264,7 +260,7 @@ public class homepageController {
             return 3;
         }
 
-        return 4; // Các trạng thái khác (nếu có) sẽ nằm ở cuối
+        return 4;
     }
 
     private void fetchAuctions() {
@@ -277,6 +273,14 @@ public class homepageController {
                 if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
                     try {
                         List<model.Auction> auctions = (List<model.Auction>) res.getData();
+
+                        // SẮP XẾP DANH SÁCH THEO THỨ TỰ: RUNNING -> WAITING -> FINISHED -> REJECTED
+                        auctions.sort((a1, a2) -> {
+                            int weight1 = getAuctionStatusWeight(a1);
+                            int weight2 = getAuctionStatusWeight(a2);
+                            return Integer.compare(weight1, weight2);
+                        });
+
                         Locale localeVN = new Locale("vi", "VN");
                         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
 
@@ -316,6 +320,27 @@ public class homepageController {
                 }
             });
         }).start();
+    }
+
+    private int getAuctionStatusWeight(Auction auction) {
+        if (auction == null || auction.getStatus() == null) {
+            return 6;
+        }
+
+        String status = String.valueOf(auction.getStatus()).toUpperCase();
+
+        if (status.contains("PENDING_APPROVAL")) {
+            return 1;
+        } else if (status.contains("WAITING")) {
+            return 2;
+        } else if (status.contains("RUNNING")) {
+            return 3;
+        } else if (status.contains("FINISHED")) {
+            return 4;
+        } else if (status.contains("SUSPENDED")) {
+            return 5;
+        }
+        return 6;
     }
 
     public void handleBidHub(MouseEvent event) {

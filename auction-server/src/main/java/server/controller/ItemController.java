@@ -247,4 +247,40 @@ public class ItemController {
 
         return response;
     }
+
+    public Response handleDeleteItem(Request request) {
+        Response response = new Response();
+
+        try {
+            // Kiểm tra và ép kiểu an toàn ID gửi lên từ Client
+            if (request.getPayload() instanceof Number) {
+                int itemId = ((Number) request.getPayload()).intValue();
+
+                // BƯỚC 1: Xóa phiên đấu giá (Auction) trước để giải phóng khóa ngoại
+                // Lưu ý: Ta không cần kiểm tra kết quả trả về của hàm này vì có thể Item chưa kịp tạo Auction
+                auctionRepo.deleteAuctionByItemId(itemId);
+
+                // BƯỚC 2: Xóa sản phẩm (Item) sau khi đã xóa phiên liên quan
+                boolean isItemDeleted = itemRepo.deleteItemById(itemId);
+
+                if (isItemDeleted) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã xóa sản phẩm và phiên đấu giá thành công khỏi hệ thống.");
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể xóa sản phẩm. Có thể ID không tồn tại hoặc đã bị xóa trước đó.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý yêu cầu xóa Item!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi xóa sản phẩm.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
 }

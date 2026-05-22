@@ -343,4 +343,23 @@ public class AuctionRepository {
         }
         return counts;
     }
+
+    public boolean deleteAuctionByItemId(int itemId) {
+        // language=SQLite
+        String sql = "DELETE FROM auctions WHERE item_id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0; // Trả về true nếu có ít nhất 1 dòng bị xóa
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi xóa phiên đấu giá có Item ID " + itemId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

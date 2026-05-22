@@ -1,26 +1,157 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.TilePane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="587.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@../style.css" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.auction_managerController">
-    <content>
-        <VBox minHeight="585.0" style="-fx-background-color: #000000;">
-            <children>
-
-                <AnchorPane minHeight="80.0">
-                    <children>
-                        <Button fx:id="filter" layoutX="48.0" layoutY="24.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="100.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-border-color: #ff8e1f; -fx-border-width: 2; -fx-border-radius: 15; -fx-cursor: hand;" text="Filter" AnchorPane.leftAnchor="48.0" AnchorPane.topAnchor="24.0" />
-
-                    </children>
-                </AnchorPane>
-
-                <TilePane fx:id="productGrid" prefColumns="1" style="-fx-padding: 0 0 50 0; -fx-background-color: transparent;" />
-
-            </children>
-        </VBox>
-    </content>
-</ScrollPane>
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@../admin/manager.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.auction_managerController">
+   <children>
+      <StackPane fx:id="imgPane" layoutX="50.0" layoutY="50.0" prefHeight="304.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
+         <children>
+            <ImageView fx:id="prdImage" fitHeight="304.0" fitWidth="540.0" pickOnBounds="true" preserveRatio="true" />
+            <StackPane fx:id="imgPane1" prefHeight="304.0" prefWidth="540.0" styleClass="product-name-card">
+               <children>
+                  <Label fx:id="prdName" alignment="BOTTOM_LEFT" prefHeight="82.0" prefWidth="526.0" styleClass="product-name-label" text="Product name" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
+                     <font>
+                        <Font name="Segoe UI Bold" size="30.0" />
+                     </font>
+                     <StackPane.margin>
+                        <Insets bottom="5.0" left="7.0" />
+                     </StackPane.margin>
+                  </Label>
+               </children>
+            </StackPane>
+         </children>
+      </StackPane>
+      <Label fx:id="startingPrice" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="888.0" layoutY="102.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="100 USD" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label layoutX="620.0" layoutY="102.0" prefHeight="25.0" prefWidth="126.0" text="Current price" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Line endX="100.0" layoutX="888.0" layoutY="141.0" startX="-267.0" stroke="WHITE" strokeWidth="0.5" />
+      <Label fx:id="startDate" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="888.0" layoutY="154.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="dd/mm/yy" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label layoutX="620.0" layoutY="155.0" prefHeight="25.0" prefWidth="132.0" text="Auction start date" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="startTime" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="888.0" layoutY="191.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="00:00" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label layoutX="620.0" layoutY="192.0" prefHeight="25.0" prefWidth="132.0" text="Auction start time" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="duration" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="888.0" layoutY="226.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="00:00" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label layoutX="620.0" layoutY="227.0" prefHeight="25.0" prefWidth="132.0" text="Auction duration" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Line endX="100.0" layoutX="888.0" layoutY="268.0" startX="-267.0" stroke="WHITE" strokeWidth="0.5" />
+      <Label fx:id="Status" alignment="CENTER_RIGHT" layoutX="806.0" layoutY="284.0" prefHeight="26.0" prefWidth="183.0" text="RUNNING" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Label>
+      <Button fx:id="backBtn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="46.0" prefWidth="39.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ff8c21">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Button>
+      <AnchorPane fx:id="togglePane1" layoutX="618.0" layoutY="380.0" prefHeight="173.0" prefWidth="371.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-width: 1; -fx-background-radius: 0; -fx-border-radius: 0; -fx-background-color: transparent;">
+         <children>
+            <Label alignment="BOTTOM_LEFT" layoutX="10.0" prefHeight="26.0" prefWidth="362.0" styleClass="message-text" text="Reason for suspension (if any)" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
+               <font>
+                  <Font name="Segoe UI" size="15.0" />
+               </font>
+               <StackPane.margin>
+                  <Insets bottom="5.0" left="7.0" />
+               </StackPane.margin>
+            </Label>
+            <Label fx:id="reasonArea" alignment="TOP_LEFT" layoutY="24.0" prefHeight="149.0" prefWidth="369.0" textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="16.0" />
+               </font>
+               <padding>
+                  <Insets left="10.0" />
+               </padding>
+            </Label>
+         </children>
+      </AnchorPane>
+      <Label fx:id="currentTime" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="888.0" layoutY="67.0" prefHeight="27.0" prefWidth="101.0" style="-fx-text-fill: white;" text="00:00" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label layoutX="620.0" layoutY="67.0" prefHeight="25.0" prefWidth="126.0" text="Time remaining" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label layoutX="625.0" layoutY="284.0" prefHeight="25.0" prefWidth="132.0" text="Status" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label layoutX="624.0" layoutY="313.0" prefHeight="26.0" prefWidth="155.0" text="Product ID by Seller" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="prdIDbySeller" alignment="CENTER_RIGHT" layoutX="804.0" layoutY="313.0" prefHeight="26.0" prefWidth="183.0" text="36" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Label>
+      <AnchorPane fx:id="togglePane11" layoutX="50.0" layoutY="380.0" prefHeight="175.0" prefWidth="540.0" style="-fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-width: 1; -fx-background-radius: 0; -fx-border-radius: 0; -fx-background-color: transparent;">
+         <children>
+            <Label alignment="BOTTOM_LEFT" layoutX="10.0" prefHeight="26.0" prefWidth="526.0" styleClass="message-text" text="Product discription" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
+               <font>
+                  <Font name="Segoe UI" size="15.0" />
+               </font>
+               <StackPane.margin>
+                  <Insets bottom="5.0" left="7.0" />
+               </StackPane.margin>
+            </Label>
+            <TextArea fx:id="prd_description" layoutY="24.0" prefHeight="149.0" prefWidth="540.0" wrapText="true">
+               <font>
+                  <Font size="15.0" />
+               </font>
+            </TextArea>
+         </children>
+      </AnchorPane>
+      <Button fx:id="propose_delete" layoutX="619.0" layoutY="573.0" mnemonicParsing="false" onMouseClicked="#handleSuspendAuction" prefHeight="25.0" prefWidth="371.0" style="-fx-background-radius: 0; -fx-border-color: red;" styleClass="confirm_btn" text="Propose delete" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Button>
+      <Button fx:id="propose_changes" layoutX="50.0" layoutY="573.0" mnemonicParsing="false" onMouseClicked="#handleSuspendAuction" prefHeight="37.0" prefWidth="540.0" style="-fx-background-radius: 0; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);" styleClass="confirm_btn" text="Propose changes" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>

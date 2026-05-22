@@ -49,6 +49,15 @@ public class AuctionManagerController {
     public void setAuctionData(Auction auction) {
         if (auction == null) return;
 
+        // Reset UI components to their default state
+        if (reasonArea != null) {
+            reasonArea.clear();
+        }
+        if (suspend_btn != null) {
+            // Re-enable the button by default, then disable based on auction status
+            suspend_btn.setDisable(false);
+        }
+
         // Lưu lại thực thể để xử lý nghiệp vụ nút bấm bấm sau này (ví dụ: Stop/Cancel phiên)
         this.currentAuction = auction;
 
@@ -111,6 +120,11 @@ public class AuctionManagerController {
             } else if (prdImage != null) {
                 prdImage.setImage(null); // Xóa ảnh cũ nếu sản phẩm này không có ảnh
             }
+        }
+        
+        // Disable suspend button if auction is already suspended or finished
+        if (suspend_btn != null && ("SUSPENDED".equals(auction.getStatus()) || "FINISHED".equals(auction.getStatus()))) {
+            suspend_btn.setDisable(true);
         }
     }
 

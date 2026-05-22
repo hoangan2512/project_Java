@@ -253,6 +253,12 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("SELLER")) return itemController.handleCheckDuplicateName(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
 
+            case SELLER_DELETE_ITEM:
+                if (checkAuthorization("SELLER")) {
+                    return itemController.handleDeleteItem(request);
+                }
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+
             case BID:
                 if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
