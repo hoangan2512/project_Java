@@ -123,7 +123,14 @@ public class signInController {
             Status.setStyle("-fx-text-fill: green;");
             Status.setText("Account created successfully");
             PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
-            SessionManager.getInstance().setCurrentUser(newUser);
+            
+            // Cập nhật session user với dữ liệu được Server trả về (đã bao gồm ID thực từ Database)
+            User userFromServer = (User) res.getData();
+            if (userFromServer != null) {
+                SessionManager.getInstance().setCurrentUser(userFromServer);
+            } else {
+                SessionManager.getInstance().setCurrentUser(newUser);
+            }
 
             pause1.setOnFinished(e -> {
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

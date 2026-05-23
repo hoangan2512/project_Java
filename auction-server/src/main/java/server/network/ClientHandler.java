@@ -283,6 +283,10 @@ public class ClientHandler implements Runnable {
                 }
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
 
+            case SELLER_GET_REASON:
+                if (checkAuthorization("SELLER")) return itemController.handleGetRejectReason(request);
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+
             case BID:
                 if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
