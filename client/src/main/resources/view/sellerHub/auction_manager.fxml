@@ -10,7 +10,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@../admin/manager.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.auction_managerController">
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@../admin/manager.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.auction_managerController">
    <children>
       <StackPane fx:id="imgPane" layoutX="50.0" layoutY="50.0" prefHeight="304.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
          <children>
@@ -148,7 +148,7 @@
             <Font name="System Bold" size="16.0" />
          </font>
       </Button>
-      <Button fx:id="propose_changes" layoutX="50.0" layoutY="573.0" mnemonicParsing="false" onMouseClicked="#handleSuspendAuction" prefHeight="37.0" prefWidth="540.0" style="-fx-background-radius: 0; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);" styleClass="confirm_btn" text="Propose changes" textFill="WHITE">
+      <Button fx:id="propose_changes" layoutX="50.0" layoutY="573.0" mnemonicParsing="false" onAction="#handleProposeChanges" prefHeight="37.0" prefWidth="540.0" style="-fx-background-radius: 0; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);" styleClass="confirm_btn" text="Propose changes" textFill="WHITE">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>

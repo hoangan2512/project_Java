@@ -325,6 +325,16 @@ public class sellerHubController_homepage {
 
             if (isSaved) {
                 loadChildFXML("/view/sellerHub/new_item_page/prdOverview.fxml");
+                if (currentSubController instanceof prdOverview) {
+                    ((prdOverview) currentSubController).setOnPreviewCallback(() -> {
+                        // Khi bấm "Preview", kích hoạt nút "auction_manager" (Nút quản lý đấu giá)
+                        // Lệnh này sẽ tự động kích hoạt listener trong initialize() để bật auction_scroll,
+                        // auction_stack, ẩn các nút tạo mới và fetch dữ liệu từ Database.
+                        if (auction_manager != null) {
+                            auction_manager.setSelected(true);
+                        }
+                    });
+                }
                 NextBtn.setText("Back to product list");
                 Status.setVisible(false);
                 Status.setManaged(false);
@@ -337,6 +347,7 @@ public class sellerHubController_homepage {
             }
         } else if (currentSubController instanceof prdOverview) {
             loadChildFXML("/view/sellerHub/new_item_page/basicInfo.fxml");
+            NextBtn.setText("Next");
         }
     }
 

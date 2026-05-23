@@ -4,9 +4,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
 
 public class prdOverview {
 
@@ -15,13 +12,24 @@ public class prdOverview {
     @FXML
     private Button previewBtn;
 
+    // Biến lưu trữ hành động callback
+    private Runnable onPreviewCallback;
+
     public void initialize() {
         previewBtn.setVisible(true);
         InfoType.setVisible(true);
-
     }
 
-    public void handlePreviewBtn(ActionEvent event) {
+    // Hàm để Controller cha (sellerHubController_homepage) truyền hành động vào
+    public void setOnPreviewCallback(Runnable onPreviewCallback) {
+        this.onPreviewCallback = onPreviewCallback;
+    }
 
+    @FXML
+    public void handlePreviewBtn(ActionEvent event) {
+        // Nếu callback đã được cài đặt thì chạy nó
+        if (onPreviewCallback != null) {
+            onPreviewCallback.run();
+        }
     }
 }

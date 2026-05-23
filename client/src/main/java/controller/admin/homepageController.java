@@ -25,6 +25,7 @@ import network.ClientSocket;
 
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -191,11 +192,27 @@ public class homepageController {
                     try {
                         List<Auction> auctionList = (List<Auction>) res.getData();
 
-                        // SẮP XẾP DANH SÁCH THEO THỨ TỰ: PENDING -> APPROVED -> REJECTED
+                        // SẮP XẾP SONG SONG:
+                        // 1. Theo trạng thái (PENDING -> APPROVED -> REJECTED)
+                        // 2. Theo thời gian mở phiên (Sắp mở lên trước)
                         auctionList.sort((a1, a2) -> {
                             int weight1 = getModerationWeight(a1.getItem());
                             int weight2 = getModerationWeight(a2.getItem());
-                            return Integer.compare(weight1, weight2);
+
+                            // Nếu trạng thái khác nhau, ưu tiên sắp xếp theo trạng thái
+                            if (weight1 != weight2) {
+                                return Integer.compare(weight1, weight2);
+                            }
+
+                            // Nếu cùng trạng thái, so sánh thời gian bắt đầu (start_time)
+                            LocalDateTime time1 = a1.getStart_time();
+                            LocalDateTime time2 = a2.getStart_time();
+
+                            if (time1 == null && time2 == null) return 0;
+                            if (time1 == null) return 1;  // Dữ liệu lỗi/null đẩy xuống cuối
+                            if (time2 == null) return -1;
+
+                            return time1.compareTo(time2); // Thời gian sớm hơn sẽ đứng trước
                         });
 
                         Locale localeVN = new Locale("vi", "VN");
@@ -210,7 +227,6 @@ public class homepageController {
                                 AnchorPane listNode = loader.load();
                                 listController controller = loader.getController();
 
-                                // Đính kèm controller vào Node để phục vụ việc giải phóng tài nguyên
                                 listNode.setUserData(controller);
 
                                 String formattedPrice = currencyFormatter.format(item.getStarting_price());
@@ -274,11 +290,27 @@ public class homepageController {
                     try {
                         List<model.Auction> auctions = (List<model.Auction>) res.getData();
 
-                        // SẮP XẾP DANH SÁCH THEO THỨ TỰ: RUNNING -> WAITING -> FINISHED -> REJECTED
+                        // SẮP XẾP SONG SONG:
+                        // 1. Trạng thái: PENDING -> WAITING -> RUNNING -> FINISHED -> SUSPENDED
+                        // 2. Thời gian: Phiên nào chuẩn bị bắt đầu trước sẽ lên trước
                         auctions.sort((a1, a2) -> {
                             int weight1 = getAuctionStatusWeight(a1);
                             int weight2 = getAuctionStatusWeight(a2);
-                            return Integer.compare(weight1, weight2);
+
+                            // Nếu trạng thái khác nhau, ưu tiên sắp xếp theo trạng thái
+                            if (weight1 != weight2) {
+                                return Integer.compare(weight1, weight2);
+                            }
+
+                            // Nếu cùng trạng thái, so sánh thời gian bắt đầu
+                            LocalDateTime time1 = a1.getStart_time();
+                            LocalDateTime time2 = a2.getStart_time();
+
+                            if (time1 == null && time2 == null) return 0;
+                            if (time1 == null) return 1;  // Dữ liệu lỗi/null đẩy xuống cuối
+                            if (time2 == null) return -1;
+
+                            return time1.compareTo(time2); // Thời gian sớm hơn sẽ đứng trước
                         });
 
                         Locale localeVN = new Locale("vi", "VN");
@@ -290,7 +322,6 @@ public class homepageController {
                                 AnchorPane listNode = loader.load();
                                 listController controller = loader.getController();
 
-                                // Đính kèm controller vào Node cực kỳ quan trọng đối với luồng đếm ngược này
                                 listNode.setUserData(controller);
 
                                 String formattedPrice = currencyFormatter.format(auction.getCurrent_price());
@@ -306,7 +337,6 @@ public class homepageController {
                                 };
                                 controller.setRowData(rowData);
 
-                                // Kích hoạt bộ đếm ngược thời gian thực
                                 controller.startCountdown(auction.getStart_time(), auction.getEnd_time());
 
                                 controller.setOnRowClick(() -> {

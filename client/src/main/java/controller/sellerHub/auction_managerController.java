@@ -297,4 +297,48 @@ public class auction_managerController {
             });
         }).start();
     }
+
+    @FXML
+    private void handleProposeChanges(ActionEvent event) {
+        if (currentAuction == null) return;
+
+        String currentStatus = currentAuction.getStatus() != null ? currentAuction.getStatus().toUpperCase() : "";
+
+        // CHỈ GỌI SERVER KHI TRẠNG THÁI LÀ PENDING_APPROVAL
+        if ("PENDING_APPROVAL".equals(currentStatus)) {
+            String newDescription = prd_description != null ? prd_description.getText() : "";
+
+            // Vô hiệu hóa nút trong lúc chờ Server để tránh spam click
+            if (propose_changes != null) propose_changes.setDisable(true);
+            if (propose_delete != null) propose_delete.setDisable(true);
+
+            new Thread(() -> {
+                // Tạo Payload mảng [itemId, newDescription] theo đúng cấu trúc của ItemController
+                int itemId = currentAuction.getItem_id();
+                Object[] payload = new Object[]{itemId, newDescription};
+                Request request = new Request(payload, ActionType.UPDATE_ITEM_DESCRIPTION);
+
+                Response response = ClientSocket.sendRequest(request);
+
+                Platform.runLater(() -> {
+                    if (response != null && "SUCCESS".equals(response.getStatus())) {
+                        // Cập nhật thành công: Đặt lại mốc mô tả gốc
+                        originalDescription = newDescription;
+                        System.out.println("[AUCTION MANAGER] Đã cập nhật mô tả thành công.");
+                    } else {
+                        System.err.println("[AUCTION MANAGER] Cập nhật mô tả thất bại.");
+                    }
+
+                    // Dù thành công hay thất bại cũng gọi lại hàm này để refresh trạng thái nút
+                    // Nếu thành công -> Nút Save sẽ bị mờ đi (do text hiện tại == text gốc)
+                    // Nếu thất bại -> Nút Save sẽ sáng lại để user có thể bấm thử lại
+                    updateButtonStates(currentStatus);
+                });
+            }).start();
+
+        } else if ("WAITING".equals(currentStatus)) {
+            // TODO: Xử lý logic cho việc "Đề xuất thay đổi" khi phiên đã được duyệt (nếu cần sau này)
+            System.out.println("Tính năng Đề xuất thay đổi khi phiên đã lên sàn (WAITING) chưa được xử lý.");
+        }
+    }
 }

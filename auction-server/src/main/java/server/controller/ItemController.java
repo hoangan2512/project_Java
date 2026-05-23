@@ -283,4 +283,80 @@ public class ItemController {
 
         return response;
     }
+
+    public Response handleUpdateItemDescription(Request request) {
+        Response response = new Response();
+        Object payloadObj = request.getPayload();
+
+        try {
+            // Bắt buộc client phải gửi lên mảng Object [itemId, newDescription]
+            if (payloadObj instanceof Object[]) {
+                Object[] payload = (Object[]) payloadObj;
+
+                // Kiểm tra số lượng phần tử và kiểu dữ liệu
+                if (payload.length == 2 && payload[0] instanceof Number && payload[1] instanceof String) {
+                    int itemId = ((Number) payload[0]).intValue(); // Ép kiểu an toàn
+                    String newDescription = (String) payload[1];
+
+                    // Gọi hàm cập nhật mô tả dưới ItemRepository
+                    boolean isUpdated = itemRepo.updateItemDescription(itemId, newDescription);
+
+                    if (isUpdated) {
+                        response.setStatus("SUCCESS");
+                        response.setMessage("Cập nhật mô tả sản phẩm thành công.");
+                    } else {
+                        response.setStatus("FAIL");
+                        response.setMessage("Cập nhật thất bại. Không tìm thấy sản phẩm hoặc có lỗi xảy ra.");
+                    }
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Định dạng dữ liệu không hợp lệ. Yêu cầu mảng [Number, String].");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu payload không hợp lệ. Yêu cầu bắt buộc gửi dạng mảng Object[].");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý Update Item Description!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi cập nhật mô tả.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
+    public Response handleGetRejectReason(Request request) {
+        Response response = new Response();
+
+        try {
+            // Kiểm tra và ép kiểu an toàn ID gửi lên từ Client
+            if (request.getPayload() instanceof Number) {
+                int auctionId = ((Number) request.getPayload()).intValue();
+
+                // Lấy lý do mới nhất với reasonType là "ITEM_REJECTED"
+                // Do ở hàm handleRejectItem, targetId được lưu chính là auctionId
+                Reason latestReason = reasonRepo.getLatestReason(auctionId, "ITEM_REJECTED");
+
+                if (latestReason != null) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Lấy lý do từ chối thành công.");
+                    response.setData(latestReason.getReason()); // Chỉ trả về nội dung String cho Client dễ dùng
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không tìm thấy lý do từ chối nào cho phiên đấu giá này.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên Auction ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý yêu cầu lấy lý do từ chối!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi lấy lý do.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
 }

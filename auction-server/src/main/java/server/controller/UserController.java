@@ -285,4 +285,36 @@ public class UserController {
          }
          return response;
     }
+
+    public Response handleGetBanReason(Request request) {
+        Response response = new Response();
+
+        try {
+            // Kiểm tra và ép kiểu an toàn ID gửi lên từ Client
+            if (request.getPayload() instanceof Number) {
+                int userId = ((Number) request.getPayload()).intValue();
+
+                // Truy vấn vào ReasonRepository để lấy lý do mới nhất
+                Reason latestReason = reasonRepo.getLatestReason(userId, "USER_BANNED");
+
+                if (latestReason != null) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Lấy lý do khóa tài khoản thành công.");
+                    response.setData(latestReason.getReason()); // Chỉ trả về chuỗi nội dung lý do
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không tìm thấy lý do khóa cho tài khoản này.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên User ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý yêu cầu lấy lý do khóa tài khoản!", e);
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi lấy lý do khóa.");
+        }
+
+        return response;
+    }
 }

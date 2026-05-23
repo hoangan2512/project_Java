@@ -6,7 +6,6 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -24,8 +23,6 @@ import network.ClientSocket;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AuctionManagerController {
     @FXML
@@ -33,7 +30,7 @@ public class AuctionManagerController {
     @FXML
     private ImageView prdImage;
     @FXML
-    private Button suspend_btn;
+    private Button suspend_btn, delete;
     @FXML
     private Label currentTime, startingPrice, startDate, startTime, duration, prdName, prd_description;
 
@@ -41,32 +38,72 @@ public class AuctionManagerController {
     private Auction currentAuction;
     private Timeline liveClockTimeline;
 
-    public void initialize() {}
+    public void initialize() {
+        // ========================================================
+        // GẮN LISTENER ĐỂ CẬP NHẬT TRẠNG THÁI NÚT SUSPEND THEO THỜI GIAN THỰC
+        // ========================================================
+        if (reasonArea != null) {
+            reasonArea.textProperty().addListener((observable, oldValue, newValue) -> updateButtonStates());
+        }
+    }
+
+    /**
+     * Thuật toán bật/tắt các nút điều khiển dựa trên trạng thái và dữ liệu đầu vào
+     */
+    private void updateButtonStates() {
+        if (currentAuction == null) return;
+
+        String aucStatus = currentAuction.getStatus() != null ? currentAuction.getStatus().toUpperCase() : "";
+
+        // ==========================================
+        // LOGIC CHO NÚT SUSPEND (ĐÌNH CHỈ)
+        // ==========================================
+        if (suspend_btn != null) {
+            if ("SUSPENDED".equals(aucStatus) || "FINISHED".equals(aucStatus)) {
+                // Đã kết thúc hoặc đình chỉ thì khóa vĩnh viễn
+                suspend_btn.setDisable(true);
+            } else {
+                // Đang diễn ra hoặc chờ thì chỉ bật khi đã nhập lý do
+                String currentReason = reasonArea != null ? reasonArea.getText().trim() : "";
+                suspend_btn.setDisable(currentReason.isEmpty());
+            }
+        }
+
+        // ==========================================
+        // LOGIC CHO NÚT DELETE (XÓA)
+        // ==========================================
+        if (delete != null) {
+            Item item = currentAuction.getItem();
+            String modStatus = (item != null && item.getModeration_status() != null) ? item.getModeration_status().toUpperCase() : "";
+
+            // Chỉ được phép xóa khi Item hoặc Auction bị REJECTED
+            boolean isRejected = "REJECTED".equals(modStatus) || "REJECTED".equals(aucStatus);
+            delete.setDisable(!isRejected);
+        }
+    }
 
     /**
      * Hàm chính nhận dữ liệu từ homepageController truyền sang khi click vào dòng Auction
      */
     public void setAuctionData(Auction auction) {
         if (auction == null) return;
-
-        // Reset UI components to their default state
-        if (reasonArea != null) {
-            reasonArea.clear();
-        }
-        if (suspend_btn != null) {
-            // Re-enable the button by default, then disable based on auction status
-            suspend_btn.setDisable(false);
-        }
-
-        // Lưu lại thực thể để xử lý nghiệp vụ nút bấm bấm sau này (ví dụ: Stop/Cancel phiên)
         this.currentAuction = auction;
-
-        // Trích xuất đối tượng Item nằm trong Auction
         Item item = auction.getItem();
 
-        // ========================================================
-        // 1. BÓC TÁCH DỮ LIỆU THỜI GIAN CẤU HÌNH PHIÊN (START_TIME)
-        // ========================================================
+        // 1. Dọn dẹp & Đặt lại UI mặc định
+        if (reasonArea != null) {
+            reasonArea.clear();
+            reasonArea.setEditable(true);
+            reasonArea.setDisable(false);
+        }
+        if (suspend_btn != null) {
+            suspend_btn.setText("Suspend"); // Tên mặc định của nút
+        }
+        if (delete != null) {
+            delete.setText("Delete"); // Tên mặc định của nút
+        }
+
+        // 2. Bóc tách thời gian
         if (auction.getStart_time() != null) {
             LocalDateTime startDateTime = auction.getStart_time();
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -76,39 +113,21 @@ public class AuctionManagerController {
             if (startTime != null) startTime.setText(startDateTime.format(timeFormatter));
         }
 
-        // ========================================================
-        // 2. TÍNH TOÁN TỔNG THỜI GIAN DIỄN RA PHIÊN (DURATION DẠNG hh:mm)
-        // ========================================================
         if (auction.getStart_time() != null && auction.getEnd_time() != null) {
             java.time.Duration diff = java.time.Duration.between(auction.getStart_time(), auction.getEnd_time());
             long totalHours = diff.toHours();
             long minutes = diff.toMinutes() % 60;
-
-            if (duration != null) {
-                duration.setText(String.format("%02d:%02d", totalHours, minutes));
-            }
+            if (duration != null) duration.setText(String.format("%02d:%02d", totalHours, minutes));
         }
 
-        // ========================================================
-        // 3. KÍCH HOẠT ĐẾM NGƯỢC THỜI GIAN THỰC (CURRENT TIME PANE)
-        // ========================================================
         startLiveClock(auction.getStart_time(), auction.getEnd_time());
 
-        // ========================================================
-        // 4. BÓC TÁCH DỮ LIỆU VẬT PHẨM (ITEM)
-        // ========================================================
+        // 3. Bóc tách dữ liệu vật phẩm
         if (item != null) {
             if (prdName != null) prdName.setText(item.getName());
+            if (startingPrice != null) startingPrice.setText(String.format("%,.0f đ", item.getStarting_price()));
+            if (prd_description != null) prd_description.setText(item.getDescription() != null ? item.getDescription() : "Không có mô tả sản phẩm.");
 
-            if (startingPrice != null) {
-                startingPrice.setText(String.format("%,.0f đ", item.getStarting_price()));
-            }
-
-            if (prd_description != null) {
-                prd_description.setText(item.getDescription() != null ? item.getDescription() : "Không có mô tả sản phẩm.");
-            }
-
-            // Giải mã mảng byte ảnh truyền trực tiếp lên ImageView
             if (prdImage != null && item.getImageBytes() != null) {
                 try (ByteArrayInputStream bis = new ByteArrayInputStream(item.getImageBytes())) {
                     Image img = new Image(bis);
@@ -117,24 +136,46 @@ public class AuctionManagerController {
                     System.err.println("[AUCTION MANAGER] Lỗi hiển thị hình ảnh sản phẩm!");
                     e.printStackTrace();
                 }
-            } else if (prdImage != null) {
-                prdImage.setImage(null); // Xóa ảnh cũ nếu sản phẩm này không có ảnh
+            } else if (prdImage != null) prdImage.setImage(null);
+        }
+
+        // 4. KIỂM TRA TRẠNG THÁI ĐÌNH CHỈ
+        String aucStatus = auction.getStatus() != null ? auction.getStatus().toUpperCase() : "";
+        if ("SUSPENDED".equals(aucStatus)) {
+            if (reasonArea != null) {
+                reasonArea.setEditable(false); // Khóa chỉ đọc
+                reasonArea.setText("Đang tải lý do đình chỉ...");
             }
+            fetchSuspendReason(auction.getId());
         }
-        
-        // Disable suspend button if auction is already suspended or finished
-        if (suspend_btn != null && ("SUSPENDED".equals(auction.getStatus()) || "FINISHED".equals(auction.getStatus()))) {
-            suspend_btn.setDisable(true);
-        }
+
+        // 5. Cập nhật nút bấm lần cuối
+        updateButtonStates();
     }
 
     /**
-     * Bộ đếm thời gian động cập nhật từng giây lên nhãn currentTime của khung điều khiển
+     * Lấy lý do đình chỉ từ Server và fill vào reasonArea
      */
+    private void fetchSuspendReason(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.ADMIN_GET_AUCTION_REASON);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (reasonArea != null) {
+                    if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                        reasonArea.setText((String) res.getData());
+                    } else {
+                        // Nếu không tìm thấy trong Database thì dùng câu mặc định
+                        reasonArea.setText("SUSPEND do hết thời gian duyệt");
+                    }
+                }
+            });
+        }).start();
+    }
+
     private void startLiveClock(LocalDateTime startTime, LocalDateTime endTime) {
-        if (liveClockTimeline != null) {
-            liveClockTimeline.stop();
-        }
+        if (liveClockTimeline != null) liveClockTimeline.stop();
 
         if (startTime == null || endTime == null) {
             if (currentTime != null) currentTime.setText("N/A");
@@ -145,32 +186,19 @@ public class AuctionManagerController {
             LocalDateTime now = LocalDateTime.now();
 
             if (now.isBefore(startTime)) {
-                // Chưa đến giờ mở: Hiện dạng "- hh:mm:ss" màu vàng cảnh báo
                 java.time.Duration durationToStart = java.time.Duration.between(now, startTime);
                 long totalHours = durationToStart.toHours();
                 long minutes = durationToStart.toMinutes() % 60;
                 long seconds = durationToStart.toSeconds() % 60;
-
-                if (currentTime != null) {
-                    currentTime.setText(String.format("- %02d:%02d:%02d", totalHours, minutes, seconds));
-                }
-
+                if (currentTime != null) currentTime.setText(String.format("- %02d:%02d:%02d", totalHours, minutes, seconds));
             } else if (now.isBefore(endTime)) {
-                // Đang diễn ra: Hiện thời gian còn lại màu xanh lá cây
                 java.time.Duration durationLeft = java.time.Duration.between(now, endTime);
                 long totalHours = durationLeft.toHours();
                 long minutes = durationLeft.toMinutes() % 60;
                 long seconds = durationLeft.toSeconds() % 60;
-
-                if (currentTime != null) {
-                    currentTime.setText(String.format("%02d:%02d:%02d", totalHours, minutes, seconds));
-                }
-
+                if (currentTime != null) currentTime.setText(String.format("%02d:%02d:%02d", totalHours, minutes, seconds));
             } else {
-                // Đã kết thúc: Hiện 00:00:00 màu xám
-                if (currentTime != null) {
-                    currentTime.setText("00:00:00");
-                }
+                if (currentTime != null) currentTime.setText("00:00:00");
                 liveClockTimeline.stop();
             }
         }));
@@ -185,14 +213,8 @@ public class AuctionManagerController {
 
     @FXML
     private void handleBackBtn(ActionEvent event) {
-        // Hủy bộ đếm thời gian khi đóng hoặc ẩn panel quản lý để tránh rò rỉ RAM
-        if (liveClockTimeline != null) {
-            liveClockTimeline.stop();
-        }
-
-        if (onBackAction != null) {
-            onBackAction.run();
-        }
+        if (liveClockTimeline != null) liveClockTimeline.stop();
+        if (onBackAction != null) onBackAction.run();
     }
 
     @FXML
@@ -200,44 +222,59 @@ public class AuctionManagerController {
         if (currentAuction == null) return;
 
         String reason = (reasonArea != null) ? reasonArea.getText().trim() : "";
+        if (reason.isEmpty()) return;
 
-        // Bắt buộc Admin phải điền lý do vi phạm trước khi dừng phiên để đảm bảo tính minh bạch
-        if (reason.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập lý do đình chỉ phiên đấu giá này!");
-            return;
+        // Vô hiệu hóa giao diện để tránh click đúp (chờ mạng)
+        if (suspend_btn != null) {
+            suspend_btn.setDisable(true);
+            suspend_btn.setText("Processing...");
         }
+        if (reasonArea != null) reasonArea.setDisable(true);
 
-        // Đóng gói dữ liệu gửi đi dưới dạng Object[] như Server đang mong đợi
-        // [auctionId, reasonText]
-        Object[] payload = new Object[]{currentAuction.getId(), reason};
-
-        // Chạy Thread riêng để thực hiện Network Request tránh block UI đóng băng ứng dụng
         new Thread(() -> {
+            Object[] payload = new Object[]{currentAuction.getId(), reason};
             Request request = new Request(payload, ActionType.ADMIN_STOP_AUCTION);
             Response response = ClientSocket.sendRequest(request);
 
             Platform.runLater(() -> {
                 if (response != null && "SUCCESS".equals(response.getStatus())) {
-                    showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã đình chỉ thành công phiên đấu giá ID: " + currentAuction.getId());
-
-                    // Vô hiệu hóa nút bấm ngay lập tức sau khi dừng thành công
-                    if (suspend_btn != null) suspend_btn.setDisable(true);
-
-                    // Quay về danh sách quản lý chung của homepage sau khi thực hiện
                     if (onBackAction != null) onBackAction.run();
                 } else {
-                    String message = (response != null) ? response.getMessage() : "Mất kết nối tới Server.";
-                    showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể dừng phiên: " + message);
+                    // Trả lại giao diện nếu thất bại
+                    if (suspend_btn != null) suspend_btn.setText("Suspend");
+                    if (reasonArea != null) reasonArea.setDisable(false);
+                    updateButtonStates();
                 }
             });
         }).start();
     }
 
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    @FXML
+    private void handleDeleteAuction(ActionEvent event) {
+        if (currentAuction == null) return;
+
+        if (delete != null) {
+            delete.setDisable(true);
+            delete.setText("Processing...");
+        }
+
+        int itemId = currentAuction.getItem_id();
+
+        new Thread(() -> {
+            Request request = new Request(itemId, ActionType.ADMIN_DELETE_ITEM);
+            Response response = ClientSocket.sendRequest(request);
+
+            Platform.runLater(() -> {
+                if (response != null && "SUCCESS".equals(response.getStatus())) {
+                    if (onBackAction != null) onBackAction.run();
+                } else {
+                    // Bật lại nếu lỗi
+                    if (delete != null) {
+                        delete.setText("Delete");
+                        updateButtonStates();
+                    }
+                }
+            });
+        }).start();
     }
 }

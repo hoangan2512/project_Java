@@ -207,4 +207,23 @@ public class ItemRepository {
             return false;
         }
     }
+
+    public boolean updateItemDescription(int itemId, String newDescription) {
+        String sql = "UPDATE items SET description = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newDescription);
+            pstmt.setInt(2, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0; // Trả về true nếu cập nhật thành công
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi cập nhật mô tả sản phẩm (ID: " + itemId + "): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
