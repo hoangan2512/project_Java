@@ -10,7 +10,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@manager.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.AuctionManagerController">
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" stylesheets="@manager.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.admin.AuctionManagerController">
     <children>
         <StackPane fx:id="imgPane" layoutX="50.0" layoutY="50.0" prefHeight="304.0" prefWidth="540.0" style="-fx-background-color: #1E1E1E;" styleClass="prd_img">
             <children>
@@ -128,5 +128,10 @@
             <Font size="16.0" />
          </font>
       </Label>
+      <Button fx:id="delete" layoutX="618.0" layoutY="571.0" mnemonicParsing="false" onAction="#handleDeleteAuction" prefHeight="37.0" prefWidth="374.0" style="-fx-background-radius: 0; -fx-border-color: red;" styleClass="confirm_btn" text="Delete Item and Auction" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Button>
     </children>
 </AnchorPane>

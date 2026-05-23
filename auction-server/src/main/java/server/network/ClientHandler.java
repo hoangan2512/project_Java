@@ -223,6 +223,7 @@ public class ClientHandler implements Runnable {
             case ADMIN_GET_ALL_USERS:
                 if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
                 return unauthResponse();
+
             case ADMIN_BAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
                 return unauthResponse();
@@ -230,6 +231,7 @@ public class ClientHandler implements Runnable {
             case ADMIN_UNBAN_USER:
                 if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
                 return unauthResponse();
+
             case ADMIN_APPROVE_ITEM:
                 if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);
                 return unauthResponse();
@@ -242,6 +244,22 @@ public class ClientHandler implements Runnable {
                 if (checkAuthorization("ADMIN")) return auctionController.handleAdminStopAuction(request);
                 return unauthResponse();
 
+            case ADMIN_DELETE_ITEM:
+                if (checkAuthorization("ADMIN")) return itemController.handleDeleteItem(request);
+                return unauthResponse();
+
+            case ADMIN_GET_ITEM_REASON:
+                if (checkAuthorization("ADMIN")) return itemController.handleGetRejectReason(request);
+                return unauthResponse();
+
+            case ADMIN_GET_AUCTION_REASON:
+                if (checkAuthorization("ADMIN")) return auctionController.handleGetStopReason(request);
+                return unauthResponse();
+
+            case ADMIN_GET_USER_REASON:
+                if (checkAuthorization("ADMIN")) return userController.handleGetBanReason(request);
+                return unauthResponse();
+
             // ======================================================
             // CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION)
             // ======================================================
@@ -251,6 +269,18 @@ public class ClientHandler implements Runnable {
 
             case CHECK_DUPLICATE_NAME:
                 if (checkAuthorization("SELLER")) return itemController.handleCheckDuplicateName(request);
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+
+            case SELLER_DELETE_ITEM:
+                if (checkAuthorization("SELLER")) {
+                    return itemController.handleDeleteItem(request);
+                }
+                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
+
+            case UPDATE_ITEM_DESCRIPTION:
+                if (checkAuthorization("SELLER")) {
+                    return itemController.handleUpdateItemDescription(request);
+                }
                 return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
 
             case BID:

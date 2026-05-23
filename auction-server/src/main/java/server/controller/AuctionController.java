@@ -137,4 +137,37 @@ public class AuctionController {
 
         return response;
     }
+
+    public Response handleGetStopReason(Request request) {
+        Response response = new Response();
+
+        try {
+            // Kiểm tra và ép kiểu an toàn ID gửi lên từ Client
+            if (request.getPayload() instanceof Number) {
+                int auctionId = ((Number) request.getPayload()).intValue();
+
+                // Gọi vào ReasonRepository để lấy lý do mới nhất với loại là "AUCTION_STOPPED"
+                Reason latestReason = reasonRepo.getLatestReason(auctionId, "AUCTION_STOPPED");
+
+                if (latestReason != null) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Lấy lý do dừng phiên đấu giá thành công.");
+                    response.setData(latestReason.getReason()); // Trả về nội dung (String) cho Client
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không tìm thấy lý do dừng cho phiên đấu giá này.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên Auction ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý yêu cầu lấy lý do dừng phiên đấu giá!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi lấy lý do.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
 }

@@ -37,8 +37,6 @@ public class SellerManagerController {
     private Button confirm_btn;
 
     private Runnable onBackAction;
-
-    // Biến lưu trữ ID người bán hiện tại đang được chọn điều khiển
     private int currentSellerId = -1;
 
     public void initialize() {
@@ -52,7 +50,6 @@ public class SellerManagerController {
                 oldVal.setSelected(true);
             } else {
                 clearProductGridAndReleaseResources();
-
                 boolean isItem = (newVal == item_opt);
                 boolean isAuction = (newVal == auction_opt);
 
@@ -68,34 +65,68 @@ public class SellerManagerController {
 
         if (item_opt != null) item_opt.setSelected(true);
 
-        // 2. Nhóm biện pháp xử lý tài khoản (Activate / Ban) - Đảm bảo chỉ chọn được 1 trong 2
+        // 2. Nhóm biện pháp xử lý tài khoản (Activate / Ban)
         ToggleGroup actionGroup = new ToggleGroup();
         if (activate != null) activate.setToggleGroup(actionGroup);
         if (ban != null) ban.setToggleGroup(actionGroup);
 
-        // ĐỔI LOGIC: Gán sự kiện click cho duy nhất nút confirm_btn để thực thi hành động công việc
         if (confirm_btn != null) {
             confirm_btn.setOnAction(this::handleConfirmAction);
+        }
+
+        // ========================================================
+        // 3. GẮN LISTENER ĐỂ TỰ ĐỘNG BẬT/TẮT NÚT CONFIRM
+        // ========================================================
+        if (reasonArea != null) {
+            reasonArea.textProperty().addListener((observable, oldValue, newValue) -> updateButtonStates());
+        }
+        if (activate != null) {
+            activate.selectedProperty().addListener((observable, oldValue, newValue) -> updateButtonStates());
+        }
+        if (ban != null) {
+            ban.selectedProperty().addListener((observable, oldValue, newValue) -> updateButtonStates());
         }
     }
 
     /**
-     * HÀM XỬ LÝ TRUNG TÂM: Kích hoạt khi nhấn confirm_btn
+     * Thuật toán cập nhật trạng thái nút Confirm
      */
+    private void updateButtonStates() {
+        if (currentSellerId == -1 || confirm_btn == null) return;
+
+        boolean isActivateSelected = activate != null && activate.isSelected();
+        boolean isBanSelected = ban != null && ban.isSelected();
+        String currentReason = reasonArea != null ? reasonArea.getText().trim() : "";
+
+        if (isActivateSelected) {
+            // Đang chọn mở khóa -> Không cần lý do -> Mở Confirm
+            confirm_btn.setDisable(false);
+        } else if (isBanSelected) {
+            // Đang chọn khóa -> Bắt buộc phải nhập lý do mới cho Confirm
+            confirm_btn.setDisable(currentReason.isEmpty());
+        } else {
+            // Chưa chọn hành động nào -> Khóa nút Confirm
+            confirm_btn.setDisable(true);
+        }
+    }
+
+    /**
+     * Bật/Tắt các nút khi đang chờ Server phản hồi
+     */
+    private void setUIDisabled(boolean disabled) {
+        if (activate != null) activate.setDisable(disabled);
+        if (ban != null) ban.setDisable(disabled);
+        if (reasonArea != null) reasonArea.setDisable(disabled);
+        if (confirm_btn != null) confirm_btn.setDisable(disabled);
+    }
+
     @FXML
     private void handleConfirmAction(ActionEvent event) {
         if (currentSellerId == -1) return;
 
-        // 1. Kiểm tra xem Admin đang chọn hành động nào
         boolean isActivateSelected = (activate != null && activate.isSelected());
         boolean isBanSelected = (ban != null && ban.isSelected());
 
-        if (!isActivateSelected && !isBanSelected) {
-            showAlert(Alert.AlertType.WARNING, "Yêu cầu", "Vui lòng chọn một hành động (Mở khóa hoặc Khóa tài khoản) trước khi xác nhận!");
-            return;
-        }
-
-        // 2. Rẽ nhánh xử lý dựa trên nút ToggleButton được lựa chọn
         if (isActivateSelected) {
             executeActivateUser();
         } else if (isBanSelected) {
@@ -103,40 +134,32 @@ public class SellerManagerController {
         }
     }
 
-    /**
-     * Logic gửi request Mở khóa tài khoản (chạy ngầm sau khi confirm)
-     */
     private void executeActivateUser() {
+        setUIDisabled(true);
+        if (confirm_btn != null) confirm_btn.setText("Processing...");
+
         new Thread(() -> {
             Request req = new Request(Integer.valueOf(currentSellerId), ActionType.ADMIN_UNBAN_USER);
             Response res = ClientSocket.sendRequest(req);
 
             Platform.runLater(() -> {
                 if (res != null && "SUCCESS".equals(res.getStatus())) {
-                    showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã mở khóa tài khoản thành công!");
-                    if (user_status != null) {
-                        user_status.setText("ACTIVE");
-                        user_status.setStyle("-fx-text-fill: #4CAF50;");
-                    }
-                    resetActionButtons();
+                    if (onBackAction != null) onBackAction.run();
                 } else {
-                    String msg = (res != null) ? res.getMessage() : "Mất kết nối tới máy chủ.";
-                    showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể mở khóa tài khoản: " + msg);
+                    if (confirm_btn != null) confirm_btn.setText("Confirm");
+                    setUIDisabled(false);
+                    updateButtonStates();
                 }
             });
         }).start();
     }
 
-    /**
-     * Logic gửi request Khóa tài khoản kèm lý do (chạy ngầm sau khi confirm)
-     */
     private void executeBanUser() {
         String reasonText = (reasonArea != null) ? reasonArea.getText().trim() : "";
+        if (reasonText.isEmpty()) return;
 
-        if (reasonText.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Yêu cầu dữ liệu", "Vui lòng nhập lý do khóa tài khoản vào ô văn bản!");
-            return;
-        }
+        setUIDisabled(true);
+        if (confirm_btn != null) confirm_btn.setText("Processing...");
 
         new Thread(() -> {
             Object[] payloadToSend = new Object[] { Integer.valueOf(currentSellerId), reasonText };
@@ -145,40 +168,56 @@ public class SellerManagerController {
 
             Platform.runLater(() -> {
                 if (res != null && "SUCCESS".equals(res.getStatus())) {
-                    showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã khóa tài khoản người dùng thành công.");
-                    if (user_status != null) {
-                        user_status.setText("BANNED");
-                        user_status.setStyle("-fx-text-fill: #F44336;");
-                    }
-                    resetActionButtons();
+                    if (onBackAction != null) onBackAction.run();
                 } else {
-                    String msg = (res != null) ? res.getMessage() : "Mất kết nối tới máy chủ.";
-                    showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể khóa tài khoản: " + msg);
+                    if (confirm_btn != null) confirm_btn.setText("Confirm");
+                    setUIDisabled(false);
+                    updateButtonStates();
                 }
             });
         }).start();
     }
 
     /**
-     * Hàm phụ trợ dọn dẹp trạng thái các nút và ô nhập liệu sau khi xử lý thành công
+     * Lấy lý do User bị Ban từ DB
      */
+    private void fetchBanReason(int userId) {
+        new Thread(() -> {
+            Request req = new Request(userId, ActionType.ADMIN_GET_USER_REASON);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (reasonArea != null) {
+                    if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                        reasonArea.setText((String) res.getData());
+                    } else {
+                        reasonArea.setText("BANNED do vi phạm chính sách của hệ thống.");
+                    }
+                }
+            });
+        }).start();
+    }
+
     private void resetActionButtons() {
-        if (activate != null) activate.setSelected(false);
-        if (ban != null) ban.setSelected(false);
-        if (reasonArea != null) reasonArea.clear();
+        if (activate != null) {
+            activate.setSelected(false);
+            activate.setDisable(false);
+        }
+        if (ban != null) {
+            ban.setSelected(false);
+            ban.setDisable(false);
+        }
+        if (reasonArea != null) {
+            reasonArea.clear();
+            reasonArea.setEditable(true);
+            reasonArea.setDisable(false);
+        }
+        if (confirm_btn != null) {
+            confirm_btn.setText("Confirm");
+            confirm_btn.setDisable(true); // Khóa nút lúc mới vào
+        }
     }
 
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    /**
-     * Nhận gói dữ liệu Map từ homepageController truyền sang khi click vào dòng Seller
-     */
     public void setUserData(Map<String, Object> userDataMap) {
         if (userDataMap == null) return;
 
@@ -190,15 +229,16 @@ public class SellerManagerController {
         int itemsCount = ((Number) userDataMap.getOrDefault("itemsCount", 0)).intValue();
         int auctionsCount = ((Number) userDataMap.getOrDefault("auctionsCount", 0)).intValue();
         int warningsCount = ((Number) userDataMap.getOrDefault("warningsCount", 0)).intValue();
-
         int rejectedItems = ((Number) userDataMap.getOrDefault("rejectedItemsCount", 0)).intValue();
         int suspendedAuctions = ((Number) userDataMap.getOrDefault("suspendedAuctionsCount", 0)).intValue();
 
         if (username != null) username.setText(user.getUsername());
         if (role != null) role.setText(user.getRole() != null ? user.getRole().toUpperCase() : "SELLER");
+
+        String status = user.getStatus() != null ? user.getStatus().toUpperCase() : "ACTIVE";
         if (user_status != null) {
-            user_status.setText(user.getStatus() != null ? user.getStatus().toUpperCase() : "ACTIVE");
-            if ("ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            user_status.setText(status);
+            if ("ACTIVE".equals(status)) {
                 user_status.setStyle("-fx-text-fill: #4CAF50;");
             } else {
                 user_status.setStyle("-fx-text-fill: #F44336;");
@@ -211,7 +251,28 @@ public class SellerManagerController {
         if (suspend_auction_number != null) suspend_auction_number.setText(String.valueOf(suspendedAuctions));
         if (total != null) total.setText(String.valueOf(warningsCount));
 
+        // Dọn dẹp form thao tác cũ
         resetActionButtons();
+
+        // ========================================================
+        // NẾU USER BỊ BANNED -> LẤY LÝ DO VÀ KHÓA LOGIC BAN
+        // ========================================================
+        if ("BANNED".equals(status)) {
+            if (ban != null) ban.setDisable(true); // Không cho Ban lại
+            if (activate != null) activate.setDisable(false); // Cho phép mở khóa
+
+            if (reasonArea != null) {
+                reasonArea.setEditable(false);
+                reasonArea.setText("Đang tải lý do khóa tài khoản...");
+            }
+            fetchBanReason(currentSellerId);
+        } else {
+            // User đang ACTIVE
+            if (activate != null) activate.setDisable(true); // Không cần mở khóa lại
+            if (ban != null) ban.setDisable(false); // Cho phép Ban
+        }
+
+        updateButtonStates();
 
         clearProductGridAndReleaseResources();
         if (item_opt != null && item_opt.isSelected()) {

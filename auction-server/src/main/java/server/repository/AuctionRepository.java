@@ -136,7 +136,22 @@ public class AuctionRepository {
     }
 
     public List<Auction> getWaitingAuctions() {
-        return getAuctionsByStatus("WAITING");
+        List<Auction> auctions = new ArrayList<>();
+        // ĐÃ SỬA: Lấy lên cả các phiên WAITING và PENDING_APPROVAL
+        String sql = BASE_SELECT_SQL + " WHERE a.status IN ('WAITING', 'PENDING_APPROVAL')";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                auctions.add(mapRowToAuction(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy danh sách đấu giá chờ: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return auctions;
     }
 
     public List<Auction> getAllAuctions() {
@@ -342,5 +357,24 @@ public class AuctionRepository {
             e.printStackTrace();
         }
         return counts;
+    }
+
+    public boolean deleteAuctionByItemId(int itemId) {
+        // language=SQLite
+        String sql = "DELETE FROM auctions WHERE item_id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0; // Trả về true nếu có ít nhất 1 dòng bị xóa
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi xóa phiên đấu giá có Item ID " + itemId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }

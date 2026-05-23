@@ -25,6 +25,7 @@ import network.ClientSocket;
 
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -191,11 +192,27 @@ public class homepageController {
                     try {
                         List<Auction> auctionList = (List<Auction>) res.getData();
 
-                        // SẮP XẾP DANH SÁCH THEO THỨ TỰ: PENDING -> APPROVED -> REJECTED
+                        // SẮP XẾP SONG SONG:
+                        // 1. Theo trạng thái (PENDING -> APPROVED -> REJECTED)
+                        // 2. Theo thời gian mở phiên (Sắp mở lên trước)
                         auctionList.sort((a1, a2) -> {
                             int weight1 = getModerationWeight(a1.getItem());
                             int weight2 = getModerationWeight(a2.getItem());
-                            return Integer.compare(weight1, weight2);
+
+                            // Nếu trạng thái khác nhau, ưu tiên sắp xếp theo trạng thái
+                            if (weight1 != weight2) {
+                                return Integer.compare(weight1, weight2);
+                            }
+
+                            // Nếu cùng trạng thái, so sánh thời gian bắt đầu (start_time)
+                            LocalDateTime time1 = a1.getStart_time();
+                            LocalDateTime time2 = a2.getStart_time();
+
+                            if (time1 == null && time2 == null) return 0;
+                            if (time1 == null) return 1;  // Dữ liệu lỗi/null đẩy xuống cuối
+                            if (time2 == null) return -1;
+
+                            return time1.compareTo(time2); // Thời gian sớm hơn sẽ đứng trước
                         });
 
                         Locale localeVN = new Locale("vi", "VN");
@@ -210,7 +227,6 @@ public class homepageController {
                                 AnchorPane listNode = loader.load();
                                 listController controller = loader.getController();
 
-                                // Đính kèm controller vào Node để phục vụ việc giải phóng tài nguyên
                                 listNode.setUserData(controller);
 
                                 String formattedPrice = currencyFormatter.format(item.getStarting_price());
@@ -244,10 +260,6 @@ public class homepageController {
         }).start();
     }
 
-    /**
-     * Hàm hỗ trợ gán trọng số cho trạng thái duyệt.
-     * Số càng nhỏ (1) thì càng được xếp lên đầu tiên.
-     */
     private int getModerationWeight(Item item) {
         if (item == null || item.getModeration_status() == null) {
             return 4; // Nếu null hoặc không xác định thì ném xuống cuối
@@ -264,7 +276,7 @@ public class homepageController {
             return 3;
         }
 
-        return 4; // Các trạng thái khác (nếu có) sẽ nằm ở cuối
+        return 4;
     }
 
     private void fetchAuctions() {
@@ -277,6 +289,30 @@ public class homepageController {
                 if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
                     try {
                         List<model.Auction> auctions = (List<model.Auction>) res.getData();
+
+                        // SẮP XẾP SONG SONG:
+                        // 1. Trạng thái: PENDING -> WAITING -> RUNNING -> FINISHED -> SUSPENDED
+                        // 2. Thời gian: Phiên nào chuẩn bị bắt đầu trước sẽ lên trước
+                        auctions.sort((a1, a2) -> {
+                            int weight1 = getAuctionStatusWeight(a1);
+                            int weight2 = getAuctionStatusWeight(a2);
+
+                            // Nếu trạng thái khác nhau, ưu tiên sắp xếp theo trạng thái
+                            if (weight1 != weight2) {
+                                return Integer.compare(weight1, weight2);
+                            }
+
+                            // Nếu cùng trạng thái, so sánh thời gian bắt đầu
+                            LocalDateTime time1 = a1.getStart_time();
+                            LocalDateTime time2 = a2.getStart_time();
+
+                            if (time1 == null && time2 == null) return 0;
+                            if (time1 == null) return 1;  // Dữ liệu lỗi/null đẩy xuống cuối
+                            if (time2 == null) return -1;
+
+                            return time1.compareTo(time2); // Thời gian sớm hơn sẽ đứng trước
+                        });
+
                         Locale localeVN = new Locale("vi", "VN");
                         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
 
@@ -286,7 +322,6 @@ public class homepageController {
                                 AnchorPane listNode = loader.load();
                                 listController controller = loader.getController();
 
-                                // Đính kèm controller vào Node cực kỳ quan trọng đối với luồng đếm ngược này
                                 listNode.setUserData(controller);
 
                                 String formattedPrice = currencyFormatter.format(auction.getCurrent_price());
@@ -302,7 +337,6 @@ public class homepageController {
                                 };
                                 controller.setRowData(rowData);
 
-                                // Kích hoạt bộ đếm ngược thời gian thực
                                 controller.startCountdown(auction.getStart_time(), auction.getEnd_time());
 
                                 controller.setOnRowClick(() -> {
@@ -316,6 +350,27 @@ public class homepageController {
                 }
             });
         }).start();
+    }
+
+    private int getAuctionStatusWeight(Auction auction) {
+        if (auction == null || auction.getStatus() == null) {
+            return 6;
+        }
+
+        String status = String.valueOf(auction.getStatus()).toUpperCase();
+
+        if (status.contains("PENDING_APPROVAL")) {
+            return 1;
+        } else if (status.contains("WAITING")) {
+            return 2;
+        } else if (status.contains("RUNNING")) {
+            return 3;
+        } else if (status.contains("FINISHED")) {
+            return 4;
+        } else if (status.contains("SUSPENDED")) {
+            return 5;
+        }
+        return 6;
     }
 
     public void handleBidHub(MouseEvent event) {
