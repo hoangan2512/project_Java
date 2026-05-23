@@ -37,7 +37,7 @@ public class mainPageController {
     @FXML
     private Button CustomSearch;
     @FXML
-    private Button SellerHub;
+    private Button SellerHub, works, paymentPolicy, privatePolicy, contact;
     @FXML
     private StackPane prdPagePane;
     @FXML
@@ -251,5 +251,55 @@ public class mainPageController {
 
     public void handleCustomSearch(ActionEvent event) {
         try { sceneSwitcher.openFilter(null); } catch (IOException e) {}
+    }
+
+    private void loadPolicyPane(String sectionType) {
+        try {
+            // Nạp FXML của policy
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/policy_popup.fxml"));
+            Parent policyNode = loader.load();
+
+            // Lấy controller và gọi hàm showSection với tham số truyền vào
+            policy_popupController policyCtrl = loader.getController();
+            if (policyCtrl != null) {
+                policyCtrl.showSection(sectionType);
+            }
+
+            // Đặt vào Pane và làm mờ dần để xuất hiện mượt mà
+            prdPagePane.getChildren().setAll(policyNode);
+            prdPagePane.setVisible(true);
+
+            // Xóa cache màn hình sản phẩm để tránh lỗi (nếu có)
+            currentPrdPageController = null;
+
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(250), policyNode);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi khi tải file policy_popup.fxml");
+        }
+    }
+
+    @FXML
+    private void handleWorksClick(ActionEvent event) {
+        loadPolicyPane("work");
+    }
+
+    @FXML
+    private void handlePaymentPolicyClick(ActionEvent event) {
+        loadPolicyPane("payment");
+    }
+
+    @FXML
+    private void handlePrivatePolicyClick(ActionEvent event) {
+        loadPolicyPane("policy");
+    }
+
+    @FXML
+    private void handleContactClick(ActionEvent event) {
+        loadPolicyPane("contact");
     }
 }

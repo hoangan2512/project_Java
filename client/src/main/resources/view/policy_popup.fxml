@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="597.0" prefWidth="1280.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.policy_popupController">
+   <children>
+      <AnchorPane fx:id="work" layoutX="73.0" layoutY="55.0" visible="false">
+         <children>
+            <Label alignment="TOP_LEFT" layoutY="42.0" prefHeight="85.0" prefWidth="813.0" text="BidHub bridges the gap between eager buyers and independent sellers, creating a dynamic, transparent marketplace driven by real-time bidding and seamless commerce. Whether you are looking to clear out inventory or hunt for the best deals, getting started takes just a few simple steps." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="134.0" prefHeight="118.0" prefWidth="813.0" text="For Sellers: Sellers can easily set up their digital storefronts through the SellerHub. Listing a product is intuitive: upload high-quality images, write a detailed description, set a starting price, and define the auction duration. Sellers can also set a &quot;Reserve Price&quot; (the minimum price they are willing to accept) or a &quot;Buy It Now&quot; option for buyers who want to skip the auction and purchase instantly." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="252.0" prefHeight="112.0" prefWidth="813.0" text="For Buyers: Buyers can explore a vast catalog of unique products directly from the main page. Once they find an item they love, they can place a bid. BidHub utilizes an automated bidding system that securely increments bids on behalf of the user up to their maximum limit, ensuring they stay in the lead without constantly monitoring the screen." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="372.0" prefHeight="118.0" prefWidth="813.0" text="Winning and Secure Checkout: When the auction timer hits zero, the highest bidder wins the item. BidHub instantly notifies both parties and locks in the transaction. Buyers are guided through a secure checkout process, supporting multiple payment methods. Once payment is verified, the seller ships the item, and funds are released only when delivery is confirmed, ensuring maximum safety and trust for everyone in the Hub." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" prefHeight="39.0" prefWidth="813.0" text="How BidHub Works" textFill="#ff8e1f" wrapText="true">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="paymentPolicy" layoutX="73.0" layoutY="55.0" visible="false">
+         <children>
+            <Label alignment="TOP_LEFT" layoutY="42.0" prefHeight="85.0" prefWidth="813.0" text="At BidHub, we strive to provide a secure, transparent, and fair financial ecosystem for both our buyers and sellers. Our Payment Policy ensures that all monetary transactions are handled safely, minimizing risk and building mutual trust within the community." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="134.0" prefHeight="118.0" prefWidth="813.0" text="For Winning Bidders (Buyers): Once an auction concludes and you are declared the winner, or if you select the &quot;Buy It Now&quot; option, you are obligated to complete the purchase. Payments must be processed through our integrated secure payment gateway within 48 hours of the auction’s end. We accept major credit/debit cards, secure bank transfers, and authorized digital wallets." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="252.0" prefHeight="112.0" prefWidth="813.0" text="Escrow Protection (Funds Guarantee): To eliminate fraud, BidHub operates a secure escrow-like system. When a buyer makes a payment, the funds are securely held by BidHub and are not immediately transferred to the seller. This guarantees that your money is safe while the item is in transit." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="372.0" prefHeight="118.0" prefWidth="813.0" text="Payouts to Sellers: Sellers will receive their payouts directly into their registered bank accounts once the buyer confirms safe delivery of the item, or automatically after 7 days from the confirmed shipping date if no dispute is raised. Standard marketplace transaction fees are automatically deducted from the final sale price before the payout is released." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" prefHeight="39.0" prefWidth="813.0" text="Payment Policy" textFill="#ff8e1f" wrapText="true">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="privatePolicy" layoutX="73.0" layoutY="55.0" visible="false">
+         <children>
+            <Label alignment="TOP_LEFT" layoutY="42.0" prefHeight="85.0" prefWidth="813.0" text="At BidHub, we respect your privacy and are committed to protecting the personal data you share with us. This Privacy Policy outlines how we collect, use, disclose, and safeguard your information when you visit our marketplace, use the SellerHub, or interact with our services." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="134.0" prefHeight="118.0" prefWidth="813.0" text="Information We Collect: We collect information that you provide directly to us when creating an account, listing a product, placing a bid, or making a purchase. This includes your name, email address, shipping and billing addresses, phone number, and payment information (processed securely through third-party payment gateways). We also automatically collect certain device information, such as your IP address and browsing behavior, to improve your user experience." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="252.0" prefHeight="112.0" prefWidth="813.0" text="How We Use Your Information: We use the collected data to facilitate core marketplace functions (processing transactions, managing auctions, and connecting buyers with sellers), provide customer support, detect and prevent fraudulent activities, and send you important updates regarding your account or bids." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="372.0" prefHeight="118.0" prefWidth="813.0" text="Data Sharing and Security: Your trust is paramount. We do not sell your personal data to third parties. We only share information with trusted service providers essential to our operations, such as payment processors and shipping carriers. We implement robust security measures, including data encryption and secure protocols, to protect your personal information against unauthorized access, alteration, or disclosure." textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" prefHeight="39.0" prefWidth="813.0" text="Private Policy" textFill="#ff8e1f" wrapText="true">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="contact" layoutX="73.0" layoutY="55.0">
+         <children>
+            <Label alignment="TOP_LEFT" layoutY="42.0" prefHeight="30.0" prefWidth="813.0" text="If you experience any issues or have feedback, please feel free to email us at:" textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" layoutY="72.0" onMouseClicked="#handleEmailClick" prefHeight="30.0" prefWidth="369.0" styleClass="email-link" stylesheets="@welcome.css" text="ontaphochanhnguyenquanganh@gmail.com" textFill="WHITE" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label alignment="TOP_LEFT" prefHeight="39.0" prefWidth="813.0" text="Contact Us" textFill="#ff8e1f" wrapText="true">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+   </children>
+</AnchorPane>

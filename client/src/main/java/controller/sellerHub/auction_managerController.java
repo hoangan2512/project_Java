@@ -78,8 +78,10 @@ public class auction_managerController {
             if ("SUSPENDED".equals(currentStatus)) {
                 reasonArea.setVisible(true);
                 reasonArea.setManaged(true);
-                reasonArea.setText("Phiên đấu giá này đã bị đình chỉ bởi Quản trị viên.");
-                reasonArea.setStyle("-fx-text-fill: #F44336; -fx-font-weight: bold;");
+                reasonArea.setText("Đang tải lý do đình chỉ...");
+
+                // GỌI HÀM LẤY LÝ DO TỪ SERVER
+                fetchSuspendReason(auction.getId());
             } else {
                 reasonArea.setVisible(false);
                 reasonArea.setManaged(false);
@@ -149,6 +151,28 @@ public class auction_managerController {
         // 3. KIỂM TRA VÀ CẬP NHẬT TRẠNG THÁI CÁC NÚT ĐIỀU KHIỂN
         // ========================================================
         updateButtonStates(currentStatus);
+    }
+
+    /**
+     * Hàm gọi API lấy lý do đình chỉ từ Server (Bất đồng bộ)
+     */
+    private void fetchSuspendReason(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.SELLER_GET_REASON);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (reasonArea != null) {
+                    if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                        // Nếu lấy thành công, fill lý do vào Label
+                        reasonArea.setText((String) res.getData());
+                    } else {
+                        // Nếu truy vấn không có lý do hoặc lỗi mạng
+                        reasonArea.setText("SUSPEND do hết thời gian duyệt");
+                    }
+                }
+            });
+        }).start();
     }
 
     /**

@@ -16,16 +16,13 @@
     -fx-padding: 5px 20px;
     -fx-font-weight: bold;
 }
-
 .filter-btn:hover {
     -fx-background-color: #3e3e3e;
 }
-
 .filter-btn:selected {
     -fx-background-color: #ff8e1f;
     -fx-text-fill: black;
 }
-
 .filter-btn:selected:hover {
     -fx-background-color: #ffa447;
 }

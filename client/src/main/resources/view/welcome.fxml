@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: black;" stylesheets="@welcome.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.welcomeController">
+   <children>
+      <ImageView fx:id="banner6" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../image/banner/4.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="banner5" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../image/banner/3.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="banner4" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../image/banner/6.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="banner3" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../image/banner/5.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="banner2" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../image/banner/2.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="banner1" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../image/banner/1.png" />
+         </image>
+      </ImageView>
+      <Button fx:id="next" alignment="CENTER" layoutX="1231.0" layoutY="335.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="40.0" rotate="180.0" style="-fx-background-radius: 20; -fx-background-color: transparent;" text="&lt;" textFill="#ffffffe5">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Button>
+      <Button fx:id="prev" alignment="CENTER" layoutY="335.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="40.0" style="-fx-background-radius: 20; -fx-background-color: transparent;" text="&lt;" textFill="#ffffffe5">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Button>
+      <AnchorPane prefHeight="75.0" prefWidth="1280.0" styleClass="header" stylesheets="@welcome.css">
+         <children>
+            <ImageView fitHeight="68.0" fitWidth="121.0" layoutX="580.0" layoutY="6.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+               <image>
+                  <Image url="@../image/logo_project_2-removebg.png" />
+               </image>
+            </ImageView>
+            <ImageView fx:id="login" fitHeight="45.0" fitWidth="45.0" layoutX="1212.0" layoutY="18.0" onMouseClicked="#Login" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;" visible="false">
+               <image>
+                  <Image url="@../image/user_logo_transparent.png" />
+               </image>
+            </ImageView>
+            <AnchorPane layoutX="31.0" layoutY="27.0" prefHeight="18.0" prefWidth="26.0" style="-fx-background-color: transparent;" stylesheets="@welcome.css">
+               <children>
+                  <Line endX="83.0" layoutX="-58.0" layoutY="6.0" startX="61.0" stroke="WHITE" />
+                  <Line endX="83.0" layoutX="-58.0" layoutY="13.0" startX="61.0" stroke="WHITE" />
+                  <Line endX="83.0" layoutX="-58.0" layoutY="20.0" startX="61.0" stroke="WHITE" />
+                  <AnchorPane fx:id="menu" prefHeight="18.0" prefWidth="26.0" style="-fx-background-color: transparent;" stylesheets="@welcome.css" />
+               </children>
+            </AnchorPane>
+         </children>
+      </AnchorPane>
+      <AnchorPane layoutY="645.0" prefHeight="75.0" prefWidth="1280.0" styleClass="header2" stylesheets="@welcome.css">
+         <children>
+            <Button fx:id="explore2" alignment="CENTER" layoutX="10.0" layoutY="22.0" mnemonicParsing="false" onMouseClicked="#handleExplore1" prefHeight="39.0" prefWidth="1261.0" style="-fx-background-color: transparent;" styleClass="text" text="Explore more" textFill="#ffffffc3">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Button>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="transistion_pane" opacity="0.6" prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #242424;" />
+      <AnchorPane fx:id="menu_pane" prefHeight="720.0" prefWidth="350.0" style="-fx-background-color: #121212;">
+         <children>
+            <VBox layoutX="30.0" layoutY="85.0" minHeight="200.0" prefWidth="290.0" spacing="15.0" style="-fx-background-color: transparent;">
+               <children>
+                  <Button fx:id="go_to_seller" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleGoToSeller" prefHeight="50.0" prefWidth="290.0" style="-fx-background-radius: 10;" styleClass="menu-button" text="Go to SellerHub" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="20.0" top="13.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="explore1" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleExplore1" prefHeight="50.0" prefWidth="340.0" style="-fx-background-radius: 10;" styleClass="menu-button" text="Explore more" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                     <padding>
+                        <Insets left="20.0" top="13.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="info" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleInfo" prefHeight="50.0" prefWidth="340.0" style="-fx-background-radius: 10;" styleClass="menu-button" text="More about us" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                     <padding>
+                        <Insets left="20.0" top="13.0" />
+                     </padding>
+                  </Button>
+               </children>
+            </VBox>
+            <Button fx:id="backBtn" contentDisplay="CENTER" layoutX="303.0" layoutY="14.0" mnemonicParsing="false" onMouseClicked="#handleBackBtn" prefHeight="30.0" prefWidth="34.0" style="-fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Button>
+            <ImageView fx:id="exit" fitHeight="25.0" fitWidth="25.0" layoutX="19.0" layoutY="675.0" onMouseClicked="#handleExit" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+               <image>
+                  <Image url="@../image/exit_sign.png" />
+               </image>
+            </ImageView>
+         </children>
+      </AnchorPane>
+   </children>
+</AnchorPane>

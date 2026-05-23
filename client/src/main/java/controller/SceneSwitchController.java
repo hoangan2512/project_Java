@@ -15,15 +15,6 @@ import java.io.IOException;
 
 public class SceneSwitchController {
 
-    // Chuyển sang SignIn (Thay thế toàn bộ nội dung cửa sổ hiện tại)
-    public void switchToSignIn(Event e) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/view/signIn.fxml"));
-        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
-    }
-
     public void switchToMainPage(Event e) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/mainPage.fxml"));
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
@@ -163,5 +154,21 @@ public class SceneSwitchController {
             System.out.println("Lỗi khi mở popup winner: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void switchToPolicy(Event e) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/view/policy.fxml"));
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public void switchToWelcome(Event e) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/view/welcome.fxml"));
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
     }
 }
