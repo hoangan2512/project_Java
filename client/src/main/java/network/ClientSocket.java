@@ -24,13 +24,11 @@ public class ClientSocket {
 
     private static final BlockingQueue<Response> responseQueue = new LinkedBlockingQueue<>();
 
-    // Biến lưu trữ Public Key của Server
     private static String serverPublicKey = null;
 
     // Khởi tạo instance cho bộ chuyển scene
     private static final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
-    // Hàm ngắt kết nối socket
     public static void disconnect() {
         try {
             if (socket != null) socket.close();
@@ -41,7 +39,7 @@ public class ClientSocket {
         }
     }
 
-    // HÀM KIỂM TRA KẾT NỐI BAN ĐẦU
+    //KIỂM TRA KẾT NỐI
     public static boolean tryConnect() {
         if (socket != null && !socket.isClosed()) {
             return true;

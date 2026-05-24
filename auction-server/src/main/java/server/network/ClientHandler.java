@@ -14,29 +14,23 @@ import message.Response;
 import model.ActionType;
 import model.User;
 import security.RSA;
-import server.controller.AuctionController;
-import server.controller.BidController;
-import server.controller.ItemController;
-import server.controller.UserController;
+import server.handler.ActionFactory;
+import server.handler.IActionHandler;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
 
-    // --- HÀNG ĐỢI VÀ LUỒNG GỬI TIN BẤT ĐỒNG BỘ (WRITE THREAD) ---
+    public void setLoggedInUser(User user) {
+        this.loggedInUser = user;
+    }
+
+    //HÀNG ĐỢI VÀ LUỒNG GỬI TIN BẤT ĐỒNG BỘ (WRITE THREAD)
     private final BlockingQueue<Object> responseQueue = new LinkedBlockingQueue<>();
     private Thread writeThread;
     private volatile boolean isRunning = true;
-
-    // --- BIẾN QUẢN LÝ SESSION (PHIÊN ĐĂNG NHẬP) ---
     private User loggedInUser = null;
-
-    // Gọi các Controller ra để làm việc
-    private final UserController userController = new UserController();
-    private final ItemController itemController = new ItemController();
-    private final BidController bidController = new BidController();
-    private final AuctionController auctionController = new AuctionController();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -45,11 +39,9 @@ public class ClientHandler implements Runnable {
     private void closeEverything() {
         isRunning = false;
         AuctionServer.clients.remove(this);
-
         if (writeThread != null) {
             writeThread.interrupt(); // Đánh thức Write Thread nếu đang bị kẹt ở hàng đợi trống
         }
-
         try {
             if (in != null) in.close();
             if (out != null) out.close();
@@ -59,16 +51,12 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    /**
-     * Kích hoạt luồng chuyên trách gửi dữ liệu (Write Thread) độc lập
-     */
     private void startWriteThread() {
         writeThread = new Thread(() -> {
             try {
                 while (isRunning && !Thread.currentThread().isInterrupted()) {
                     // Chờ và lấy gói tin từ hàng đợi (Tự động block an toàn nếu hàng đợi trống)
                     Object message = responseQueue.take();
-
                     if (out != null) {
                         out.writeObject(message);
                         out.flush();
@@ -91,7 +79,6 @@ public class ClientHandler implements Runnable {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
-
             // 1. Kích hoạt luồng gửi dữ liệu độc lập trước
             startWriteThread();
 
@@ -123,8 +110,7 @@ public class ClientHandler implements Runnable {
     // BỘ PHẬN ĐIỀU HƯỚNG (ROUTER)
     private Response handleBusinessLogic(Request request) {
         ActionType type = request.getAction();
-
-        // --- GIẢI MÃ MẬT KHẨU TRƯỚC KHI XỬ LÝ ---
+        // giải mã password trước khi bắt đầu xử lí
         if (type == ActionType.LOGIN_BIDDER || type == ActionType.LOGIN_SELLER || type == ActionType.LOGIN_ADMIN || type == ActionType.REGISTER) {
             try {
                 User userWithEncryptedPass = (User) request.getPayload();
@@ -137,190 +123,15 @@ public class ClientHandler implements Runnable {
                 return new Response("FAIL", null, "Lỗi bảo mật: Không thể xác thực thông tin.");
             }
         }
-
-        switch (type) {
-            case LOGIN_BIDDER:
-            case LOGIN_SELLER:
-            case LOGIN_ADMIN:
-                Response loginResponse = userController.handleLogin(request);
-                if ("SUCCESS".equals(loginResponse.getStatus()) && loginResponse.getData() instanceof User) {
-                    this.loggedInUser = (User) loginResponse.getData();
-                    System.out.println("=> Đã ghi nhận Session cho user: " + loggedInUser.getName());
-                }
-                return loginResponse;
-
-            case REGISTER:
-                Response registerResponse = userController.handleRegister(request);
-                if ("SUCCESS".equals(registerResponse.getStatus()) && registerResponse.getData() instanceof User) {
-                    this.loggedInUser = (User) registerResponse.getData();
-                    System.out.println("=> Đã tự động ghi nhận Session sau khi đăng ký cho user: " + loggedInUser.getName());
-                }
-                return registerResponse;
-
-            case LOGOUT:
-                if (this.loggedInUser != null) {
-                    System.out.println("=> Client ngắt Session (Logout): " + this.loggedInUser.getName());
-                } else {
-                    System.out.println("=> Một Client ẩn danh vừa gửi yêu cầu Logout.");
-                }
-                this.loggedInUser = null;
-                return new Response("SUCCESS", null, "Đăng xuất thành công.");
-
-            case GOOGLE_LOGIN:
-                String codeReceived = (String) request.getPayload();
-                String clientId = "887547914295-i912u5c51mm9ur6s7kd1pr5kipmpcgka.apps.googleusercontent.com";
-                String clientSecret = "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";
-                String redirectUri = "http://localhost:8080";
-
-                try {
-                    com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse tokenResponse =
-                            new com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest(
-                                    new com.google.api.client.http.javanet.NetHttpTransport(),
-                                    com.google.api.client.json.gson.GsonFactory.getDefaultInstance(),
-                                    "https://oauth2.googleapis.com/token",
-                                    clientId,
-                                    clientSecret,
-                                    codeReceived,
-                                    redirectUri
-                            ).execute();
-
-                    com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = tokenResponse.parseIdToken();
-                    com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
-
-                    String email = payload.getEmail();
-                    String name = (String) payload.get("name");
-
-                    System.out.println("[SERVER] User đăng nhập Google: " + name + " (" + email + ")");
-
-                    Response authResponse = userController.handleGoogleLoginAuth(email, name);
-
-                    if ("SUCCESS".equals(authResponse.getStatus()) && authResponse.getData() instanceof User) {
-                        this.loggedInUser = (User) authResponse.getData();
-                        System.out.println("=> Đã ghi nhận Session qua Google cho user: " + loggedInUser.getName());
-                    }
-
-                    return authResponse;
-
-                } catch (com.google.api.client.auth.oauth2.TokenResponseException e) {
-                    System.err.println("[SERVER] Google OAuth API trả về lỗi cấu hình:");
-                    if (e.getDetails() != null) {
-                        System.err.println("  - Error: " + e.getDetails().getError());
-                        System.err.println("  - Description: " + e.getDetails().getErrorDescription());
-                    } else {
-                        System.err.println("  - Raw Content: " + e.getContent());
-                    }
-                    String errorMsg = (e.getDetails() != null) ? e.getDetails().getErrorDescription() : e.getMessage();
-                    return new Response("FAILED", null, "Google từ chối cấp Token: " + errorMsg);
-
-                } catch (Exception e) {
-                    System.err.println("Lỗi xác thực Google OAuth tại Server: " + e.getMessage());
-                    return new Response("FAILED", null, "Lỗi kết nối hệ thống Server: " + e.getMessage());
-                }
-
-                // ======================================================
-                // CÁC HÀNH ĐỘNG DÀNH RIÊNG CHO ADMIN
-                // ======================================================
-            case ADMIN_GET_ALL_USERS:
-                if (checkAuthorization("ADMIN")) return userController.handleGetAllUsers(request);
-                return unauthResponse();
-
-            case ADMIN_BAN_USER:
-                if (checkAuthorization("ADMIN")) return userController.handleBanUser(request);
-                return unauthResponse();
-
-            case ADMIN_UNBAN_USER:
-                if (checkAuthorization("ADMIN")) return userController.handleUnbanUser(request);
-                return unauthResponse();
-
-            case ADMIN_APPROVE_ITEM:
-                if (checkAuthorization("ADMIN")) return itemController.handleApproveItem(request);
-                return unauthResponse();
-
-            case ADMIN_REJECT_ITEM:
-                if (checkAuthorization("ADMIN")) return itemController.handleRejectItem(request);
-                return unauthResponse();
-
-            case ADMIN_STOP_AUCTION:
-                if (checkAuthorization("ADMIN")) return auctionController.handleAdminStopAuction(request);
-                return unauthResponse();
-
-            case ADMIN_DELETE_ITEM:
-                if (checkAuthorization("ADMIN")) return itemController.handleDeleteItem(request);
-                return unauthResponse();
-
-            case ADMIN_GET_ITEM_REASON:
-                if (checkAuthorization("ADMIN")) return itemController.handleGetRejectReason(request);
-                return unauthResponse();
-
-            case ADMIN_GET_AUCTION_REASON:
-                if (checkAuthorization("ADMIN")) return auctionController.handleGetStopReason(request);
-                return unauthResponse();
-
-            case ADMIN_GET_USER_REASON:
-                if (checkAuthorization("ADMIN")) return userController.handleGetBanReason(request);
-                return unauthResponse();
-
-            // ======================================================
-            // CÁC HÀNH ĐỘNG CẦN KIỂM TRA QUYỀN (AUTHORIZATION)
-            // ======================================================
-            case CREATE_ITEM:
-                if (checkAuthorization("SELLER")) return itemController.handleCreateItem(request);
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-
-            case CHECK_DUPLICATE_NAME:
-                if (checkAuthorization("SELLER")) return itemController.handleCheckDuplicateName(request);
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-
-            case SELLER_DELETE_ITEM:
-                if (checkAuthorization("SELLER")) {
-                    return itemController.handleDeleteItem(request);
-                }
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-
-            case UPDATE_ITEM_DESCRIPTION:
-                if (checkAuthorization("SELLER")) {
-                    return itemController.handleUpdateItemDescription(request);
-                }
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-
-            case SELLER_GET_REASON:
-                if (checkAuthorization("SELLER")) return itemController.handleGetRejectReason(request);
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không phải là Người bán!");
-
-            case BID:
-                if (checkAuthorization("BIDDER")) return bidController.handleBid(request);
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá!");
-
-            case REGISTER_AUTOBID:
-                if (checkAuthorization("BIDDER")) return bidController.handleRegisterAutoBid(request);
-                return new Response("FAIL", null, "Bạn chưa đăng nhập hoặc không có quyền đấu giá tự động!");
-
-            // ======================================================
-            // CÁC HÀNH ĐỘNG CÔNG KHAI
-            // ======================================================
-            case UNREGISTER_AUTOBID:
-                if (checkAuthorization("BIDDER")) return bidController.handleUnregisterAutoBid(request);
-                return new Response("FAIL", null, "You are not allowed to use auto-bid.");
-
-            case GET_BID_HISTORY:
-                return bidController.handleGetBidHistory(request);
-            case GET_LIST:
-                return auctionController.handleGetList(request);
-            case GET_ITEM_DETAIL:
-                return auctionController.handleGetItemDetail(request);
-            case CUSTOM_SEARCH:
-                return auctionController.handleCustomSearch(request);
-            case GET_IMAGE:
-                return auctionController.handleGetImage(request);
-            case AUCTION_END:
-                return new Response("FAIL", null, "Client không có quyền kết thúc phiên đấu giá.");
-
-            default:
-                return new Response("ERROR", null, "Hành động không xác định: " + type);
+        IActionHandler handler = ActionFactory.getHandler(type);
+        if (handler != null) {
+            return handler.execute(request, this);
         }
+
+        return new Response("ERROR", null, "Hành động không xác định hoặc không được hỗ trợ: " + type);
     }
 
-    private boolean checkAuthorization(String expectedRole) {
+    public boolean checkAuthorization(String expectedRole) {
         if (this.loggedInUser == null) {
             return false;
         }
@@ -333,14 +144,10 @@ public class ClientHandler implements Runnable {
         return expectedRole == null || expectedRole.equalsIgnoreCase(this.loggedInUser.getRole());
     }
 
-    private Response unauthResponse() {
+    public Response unauthResponse() {
         return new Response("FAIL", null, "Bạn không có quyền thực hiện chức năng này!");
     }
 
-    /**
-     * NÂNG CẤP BẤT ĐỒNG BỘ: Đẩy gói tin vào hàng đợi an toàn Thread-safe.
-     * Hàm này phản hồi ngay lập tức, giải phóng luồng xử lý chính.
-     */
     public void sendMessage(Object msg) {
         if (msg == null) return;
         responseQueue.offer(msg); // Thêm vào queue (không gây nghẽn luồng gọi)

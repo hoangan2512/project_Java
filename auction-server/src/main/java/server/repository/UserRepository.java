@@ -81,17 +81,21 @@ public class UserRepository {
     }
 
     public boolean addUser(User user) {
-        // language=SQLite
+        // 1. Gộp bước kiểm tra trùng tên vào đây để dùng chung 1 Connection
+        if (isUserExists(user.getName())) {
+            LOGGER.log(Level.WARNING, "Registration failed: Username ''{0}'' already exists.", user.getName());
+            return false;
+        }
+
+        // 2. Thực hiện ghi dữ liệu như bình thường
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getName());
 
-            // Băm mật khẩu (đã được giải mã RSA từ Client gửi lên) trước khi lưu
             String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(10));
             pstmt.setString(2, hashedPassword);
-
             pstmt.setString(3, user.getRole());
 
             int rowsAffected = pstmt.executeUpdate();
