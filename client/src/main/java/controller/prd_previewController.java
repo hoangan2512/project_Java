@@ -99,7 +99,7 @@ public class prd_previewController {
             handleAuctionEnd();
         }
 
-        // --- LOAD ẢNH THUMBNAIL TỪ RAM HOẶC Ổ CỨNG ---
+        // --- LOAD ẢNH TỪ RAM HOẶC Ổ CỨNG ---
         if (prdImage != null) {
             if (imageBytes != null && imageBytes.length > 0) {
                 try {
@@ -124,6 +124,9 @@ public class prd_previewController {
                 } catch (Exception e) {
                     System.out.println("Không thể hiển thị ảnh từ path: " + imagePath);
                 }
+            } else {
+                // Xóa ảnh cũ nếu không có dữ liệu (khi load placeholder)
+                prdImage.setImage(null);
             }
         }
     }
@@ -217,6 +220,22 @@ public class prd_previewController {
     public void stopTimer() {
         if (countdownTimer != null) {
             countdownTimer.stop();
+        }
+    }
+
+    // =====================================================================
+    // HÀM MỚI: CHỈ ĐẮP ẢNH LÊN GIAO DIỆN MÀ KHÔNG LÀM RESET BỘ ĐẾM THỜI GIAN
+    // (Được gọi từ customSearchController)
+    // =====================================================================
+    public void updateImage(byte[] imageBytes) {
+        if (prdImage != null && imageBytes != null && imageBytes.length > 0) {
+            try {
+                ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                Image image = new Image(bis);
+                prdImage.setImage(image);
+            } catch (Exception e) {
+                System.out.println("Lỗi khi load ảnh Lazy: " + e.getMessage());
+            }
         }
     }
 }
