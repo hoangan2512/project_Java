@@ -67,7 +67,16 @@ public class auction_managerController {
         String currentStatus = auction.getStatus() != null ? auction.getStatus().toUpperCase() : "WAITING";
 
         // ========================================================
-        // 1. ĐẨY DỮ LIỆU TRẠNG THÁI VÀ BỘ ĐẾM THỜI GIAN
+        // 1. DỌN DẸP UI (XÓA ẢNH CŨ VÀ ĐẶT TRẠNG THÁI LOADING CHO MÔ TẢ)
+        // ========================================================
+        if (prdImage != null) prdImage.setImage(null);
+        if (prd_description != null) {
+            originalDescription = ""; // Xóa bộ nhớ gốc tạm thời
+            prd_description.setText("Đang tải mô tả chi tiết từ hệ thống...");
+        }
+
+        // ========================================================
+        // 2. ĐẨY DỮ LIỆU TRẠNG THÁI VÀ BỘ ĐẾM THỜI GIAN
         // ========================================================
         if (Status != null) {
             Status.setStyle("-fx-text-fill: #FFC107;");
@@ -79,8 +88,6 @@ public class auction_managerController {
                 reasonArea.setVisible(true);
                 reasonArea.setManaged(true);
                 reasonArea.setText("Đang tải lý do đình chỉ...");
-
-                // GỌI HÀM LẤY LÝ DO TỪ SERVER
                 fetchSuspendReason(auction.getId());
             } else {
                 reasonArea.setVisible(false);
@@ -101,61 +108,97 @@ public class auction_managerController {
             java.time.Duration diff = java.time.Duration.between(auction.getStart_time(), auction.getEnd_time());
             long totalHours = diff.toHours();
             long minutes = diff.toMinutes() % 60;
-
-            if (duration != null) {
-                duration.setText(String.format("%02d:%02d", totalHours, minutes));
-            }
+            if (duration != null) duration.setText(String.format("%02d:%02d", totalHours, minutes));
         }
 
         startLiveClock(auction.getStart_time(), auction.getEnd_time());
 
         // ========================================================
-        // 2. BÓC TÁCH VÀ ĐẨY DỮ LIỆU SẢN PHẨM
+        // 3. ĐẨY DỮ LIỆU SẢN PHẨM THÔ CÓ SẴN NGAY LẬP TỨC
         // ========================================================
         if (item != null) {
             if (prdName != null) prdName.setText(item.getName() != null ? item.getName() : "Chưa xác định");
-
-            if (prdIDbySeller != null) {
-                prdIDbySeller.setText(item.getUser_prdID() != null ? item.getUser_prdID() : "Không có ID");
-            }
+            if (prdIDbySeller != null) prdIDbySeller.setText(item.getUser_prdID() != null ? item.getUser_prdID() : "Không có ID");
 
             if (startingPrice != null) {
                 Locale localeVN = new Locale("vi", "VN");
                 NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
                 startingPrice.setText(currencyFormatter.format(item.getStarting_price()));
             }
-
-            if (prd_description != null) {
-                // Lưu lại đoạn text gốc vào biến để đối chiếu về sau
-                originalDescription = item.getDescription() != null ? item.getDescription() : "";
-                prd_description.setText(originalDescription);
-            }
-
-            if (prdImage != null) {
-                if (item.getImageBytes() != null && item.getImageBytes().length > 0) {
-                    try (ByteArrayInputStream bis = new ByteArrayInputStream(item.getImageBytes())) {
-                        Image img = new Image(bis);
-                        prdImage.setImage(img);
-                    } catch (Exception e) {
-                        System.err.println("[AUCTION MANAGER] Lỗi khi dựng luồng hiển thị mảng byte ảnh sản phẩm!");
-                        e.printStackTrace();
-                        prdImage.setImage(null);
-                    }
-                } else {
-                    prdImage.setImage(null);
-                }
-            }
         }
 
-        // ========================================================
-        // 3. KIỂM TRA VÀ CẬP NHẬT TRẠNG THÁI CÁC NÚT ĐIỀU KHIỂN
-        // ========================================================
         updateButtonStates(currentStatus);
+
+        // ========================================================
+        // 4. KÍCH HOẠT LAZY LOADING
+        // ========================================================
+        fetchDetailedTextData(auction.getId(), currentStatus);
+        fetchProductImageLazy(auction.getId());
     }
 
     /**
-     * Hàm gọi API lấy lý do đình chỉ từ Server (Bất đồng bộ)
+     * LUỒNG NGẦM 1: Lấy chi tiết Description để fill vào khung Text
      */
+    private void fetchDetailedTextData(int auctionId, String currentStatus) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.GET_ITEM_DETAIL);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() instanceof Auction detailedAuction) {
+                    if (this.currentAuction != null && detailedAuction.getItem() != null) {
+                        Item fullItem = detailedAuction.getItem();
+                        Item currentItem = this.currentAuction.getItem();
+
+                        if (currentItem != null) {
+                            currentItem.setDescription(fullItem.getDescription());
+                            currentItem.setCategories(fullItem.getCategories());
+                        }
+
+                        // Cập nhật biến lưu gốc TRƯỚC KHI fill lên UI để tránh kích hoạt cờ thay đổi giả
+                        originalDescription = fullItem.getDescription() != null ? fullItem.getDescription() : "";
+
+                        if (prd_description != null) {
+                            prd_description.setText(originalDescription.isEmpty() ? "" : originalDescription);
+                        }
+                    }
+                    updateButtonStates(currentStatus);
+                } else {
+                    if (prd_description != null) prd_description.setText("Không thể kết nối để tải mô tả chi tiết.");
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * LUỒNG NGẦM 2: Lấy mảng byte hình ảnh (Fullsize)
+     */
+    private void fetchProductImageLazy(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.GET_IMAGE);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                    try {
+                        byte[] imageBytes = (byte[]) res.getData();
+                        if (imageBytes != null && imageBytes.length > 0 && prdImage != null) {
+                            if (this.currentAuction != null && this.currentAuction.getItem() != null) {
+                                this.currentAuction.getItem().setImageBytes(imageBytes);
+                            }
+                            try (ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
+                                prdImage.setImage(new Image(bis));
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[SELLER HUB] Lỗi dựng hình ảnh lên ImageView tại client!");
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }).start();
+    }
+
     private void fetchSuspendReason(int auctionId) {
         new Thread(() -> {
             Request req = new Request(auctionId, ActionType.SELLER_GET_REASON);
@@ -164,10 +207,8 @@ public class auction_managerController {
             Platform.runLater(() -> {
                 if (reasonArea != null) {
                     if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
-                        // Nếu lấy thành công, fill lý do vào Label
                         reasonArea.setText((String) res.getData());
                     } else {
-                        // Nếu truy vấn không có lý do hoặc lỗi mạng
                         reasonArea.setText("SUSPEND do hết thời gian duyệt");
                     }
                 }
@@ -175,9 +216,6 @@ public class auction_managerController {
         }).start();
     }
 
-    /**
-     * Quản lý việc ĐẶT TÊN và BẬT/TẮT (Enable/Disable) các nút bấm
-     */
     private void updateButtonStates(String currentStatus) {
         if (currentAuction == null) {
             if (propose_changes != null) propose_changes.setDisable(true);
@@ -185,9 +223,6 @@ public class auction_managerController {
             return;
         }
 
-        // ==========================================
-        // QUY TẮC ĐẶT TÊN NÚT (Tuyệt đối tuân thủ)
-        // ==========================================
         if ("PENDING_APPROVAL".equals(currentStatus)) {
             if (propose_changes != null) propose_changes.setText("Save");
             if (propose_delete != null) propose_delete.setText("Delete Auction");
@@ -196,24 +231,17 @@ public class auction_managerController {
             if (propose_delete != null) propose_delete.setText("Propose Delete");
         }
 
-        // ==========================================
-        // QUY TẮC BẬT/TẮT NÚT PROPOSE CHANGES
-        // ==========================================
         boolean isUpdatableStatus = "WAITING".equals(currentStatus) || "PENDING_APPROVAL".equals(currentStatus);
-
-        // Kiểm tra mô tả có bị thay đổi không
         String currentDescText = prd_description != null ? prd_description.getText() : "";
-        boolean isDescriptionChanged = !currentDescText.equals(originalDescription);
 
-        // Chỉ bật khi trạng thái cho phép VÀ người dùng đã sửa đổi chữ trong Description
+        // Không bật nút Save nếu mô tả đang ở trạng thái loading
+        boolean isLoading = currentDescText.equals("Đang tải mô tả chi tiết từ hệ thống...");
+        boolean isDescriptionChanged = !currentDescText.equals(originalDescription) && !isLoading;
+
         if (propose_changes != null) {
             propose_changes.setDisable(!(isUpdatableStatus && isDescriptionChanged));
         }
 
-        // ==========================================
-        // QUY TẮC BẬT/TẮT NÚT PROPOSE DELETE
-        // ==========================================
-        // Vô hiệu hóa (disable = true) nếu trạng thái là 1 trong 3 trạng thái dưới đây
         boolean isDeleteDisabled = "FINISHED".equals(currentStatus) || "RUNNING".equals(currentStatus) || "SUSPENDED".equals(currentStatus);
         if (propose_delete != null) {
             propose_delete.setDisable(isDeleteDisabled);
@@ -239,9 +267,7 @@ public class auction_managerController {
                 long minutes = durationToStart.toMinutes() % 60;
                 long seconds = durationToStart.toSeconds() % 60;
 
-                if (currentTime != null) {
-                    currentTime.setText(String.format("- %02d:%02d:%02d", totalHours, minutes, seconds));
-                }
+                if (currentTime != null) currentTime.setText(String.format("- %02d:%02d:%02d", totalHours, minutes, seconds));
 
             } else if (now.isBefore(endTime)) {
                 java.time.Duration durationLeft = java.time.Duration.between(now, endTime);
@@ -249,14 +275,10 @@ public class auction_managerController {
                 long minutes = durationLeft.toMinutes() % 60;
                 long seconds = durationLeft.toSeconds() % 60;
 
-                if (currentTime != null) {
-                    currentTime.setText(String.format("%02d:%02d:%02d", totalHours, minutes, seconds));
-                }
+                if (currentTime != null) currentTime.setText(String.format("%02d:%02d:%02d", totalHours, minutes, seconds));
 
             } else {
-                if (currentTime != null) {
-                    currentTime.setText("00:00:00");
-                }
+                if (currentTime != null) currentTime.setText("00:00:00");
                 liveClockTimeline.stop();
             }
         }));
@@ -271,13 +293,8 @@ public class auction_managerController {
 
     @FXML
     private void handleBackBtn(ActionEvent event) {
-        if (liveClockTimeline != null) {
-            liveClockTimeline.stop();
-        }
-
-        if (onBackAction != null) {
-            onBackAction.run();
-        }
+        if (liveClockTimeline != null) liveClockTimeline.stop();
+        if (onBackAction != null) onBackAction.run();
     }
 
     @FXML
@@ -286,25 +303,20 @@ public class auction_managerController {
 
         String currentStatus = currentAuction.getStatus() != null ? currentAuction.getStatus().toUpperCase() : "";
 
-        // Chặn luồng nếu ở trạng thái không cho phép tương tác xóa/hủy
         if ("FINISHED".equals(currentStatus) || "RUNNING".equals(currentStatus) || "SUSPENDED".equals(currentStatus)) {
             return;
         }
 
-        // Vô hiệu hóa nút trong lúc chờ Server phản hồi để tránh Spam click
         if (propose_delete != null) propose_delete.setDisable(true);
         if (propose_changes != null) propose_changes.setDisable(true);
 
         new Thread(() -> {
             Request request;
 
-            // KIỂM TRA TRẠNG THÁI VÀ GÁN LỆNH TƯƠNG ỨNG
             if ("PENDING_APPROVAL".equals(currentStatus)) {
-                // Nếu đang chờ duyệt -> Gửi lệnh xóa hoàn toàn khỏi cơ sở dữ liệu
-                int itemId = currentAuction.getItem_id(); // Hoặc currentAuction.getItem().getId()
+                int itemId = currentAuction.getItem_id();
                 request = new Request(itemId, ActionType.SELLER_DELETE_ITEM);
             } else {
-                // Nếu là WAITING -> Gửi lệnh tự hủy (đình chỉ)
                 Object[] payload = new Object[]{currentAuction.getId(), "Người bán tự hủy phiên"};
                 request = new Request(payload, ActionType.ADMIN_STOP_AUCTION);
             }
@@ -315,7 +327,6 @@ public class auction_managerController {
                 if (response != null && "SUCCESS".equals(response.getStatus())) {
                     if (onBackAction != null) onBackAction.run();
                 } else {
-                    // Thất bại -> Bật lại các nút điều khiển dựa trên trạng thái cũ, KHÔNG đổi Text của nút
                     updateButtonStates(currentStatus);
                 }
             });
@@ -328,16 +339,13 @@ public class auction_managerController {
 
         String currentStatus = currentAuction.getStatus() != null ? currentAuction.getStatus().toUpperCase() : "";
 
-        // CHỈ GỌI SERVER KHI TRẠNG THÁI LÀ PENDING_APPROVAL
         if ("PENDING_APPROVAL".equals(currentStatus)) {
             String newDescription = prd_description != null ? prd_description.getText() : "";
 
-            // Vô hiệu hóa nút trong lúc chờ Server để tránh spam click
             if (propose_changes != null) propose_changes.setDisable(true);
             if (propose_delete != null) propose_delete.setDisable(true);
 
             new Thread(() -> {
-                // Tạo Payload mảng [itemId, newDescription] theo đúng cấu trúc của ItemController
                 int itemId = currentAuction.getItem_id();
                 Object[] payload = new Object[]{itemId, newDescription};
                 Request request = new Request(payload, ActionType.UPDATE_ITEM_DESCRIPTION);
@@ -346,22 +354,17 @@ public class auction_managerController {
 
                 Platform.runLater(() -> {
                     if (response != null && "SUCCESS".equals(response.getStatus())) {
-                        // Cập nhật thành công: Đặt lại mốc mô tả gốc
                         originalDescription = newDescription;
                         System.out.println("[AUCTION MANAGER] Đã cập nhật mô tả thành công.");
                     } else {
                         System.err.println("[AUCTION MANAGER] Cập nhật mô tả thất bại.");
                     }
 
-                    // Dù thành công hay thất bại cũng gọi lại hàm này để refresh trạng thái nút
-                    // Nếu thành công -> Nút Save sẽ bị mờ đi (do text hiện tại == text gốc)
-                    // Nếu thất bại -> Nút Save sẽ sáng lại để user có thể bấm thử lại
                     updateButtonStates(currentStatus);
                 });
             }).start();
 
         } else if ("WAITING".equals(currentStatus)) {
-            // TODO: Xử lý logic cho việc "Đề xuất thay đổi" khi phiên đã được duyệt (nếu cần sau này)
             System.out.println("Tính năng Đề xuất thay đổi khi phiên đã lên sàn (WAITING) chưa được xử lý.");
         }
     }
