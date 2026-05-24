@@ -502,7 +502,7 @@ public class sellerHubController_homepage {
 
             int currentSellerId = currentUser.getId();
 
-            Request req = new Request(null, ActionType.GET_LIST); // Vẫn gọi lấy toàn bộ
+            Request req = new Request(null, ActionType.GET_LIST);
             Response res = ClientSocket.sendRequest(req);
 
             Platform.runLater(() -> {
@@ -512,10 +512,20 @@ public class sellerHubController_homepage {
                     try {
                         List<Auction> auctions = (List<model.Auction>) res.getData();
 
+                        // SẮP XẾP SONG SONG:
+                        // 1. Trạng thái (PENDING -> WAITING -> RUNNING...)
+                        // 2. Theo thời gian (Phiên nào mở sớm hơn xếp trước)
                         auctions.sort((a1, a2) -> {
                             int weight1 = getAuctionStatusWeight(a1);
                             int weight2 = getAuctionStatusWeight(a2);
-                            return Integer.compare(weight1, weight2);
+                            if (weight1 != weight2) return Integer.compare(weight1, weight2);
+
+                            LocalDateTime time1 = a1.getStart_time();
+                            LocalDateTime time2 = a2.getStart_time();
+                            if (time1 == null && time2 == null) return 0;
+                            if (time1 == null) return 1;
+                            if (time2 == null) return -1;
+                            return time1.compareTo(time2);
                         });
 
                         Locale localeVN = new Locale("vi", "VN");
@@ -523,8 +533,7 @@ public class sellerHubController_homepage {
 
                         for (model.Auction auction : auctions) {
                             try {
-                                // ---- ĐÂY LÀ ĐOẠN LỌC THỦ CÔNG ---
-                                // Nếu ID người bán của phiên đấu giá KHÁC với ID đang đăng nhập thì bỏ qua
+                                // Lọc: Chỉ lấy các phiên đấu giá thuộc về Seller đang đăng nhập
                                 if (auction.getItem() == null || auction.getItem().getSeller_id() != currentSellerId) {
                                     continue;
                                 }
@@ -537,23 +546,33 @@ public class sellerHubController_homepage {
 
                                 String formattedPrice = currencyFormatter.format(auction.getCurrent_price());
 
+                                // Ưu tiên hiển thị mã sản phẩm do người bán tự định nghĩa
+                                String prdId = (auction.getItem().getUser_prdID() != null && !auction.getItem().getUser_prdID().isEmpty())
+                                        ? auction.getItem().getUser_prdID()
+                                        : String.valueOf(auction.getItem_id());
+
                                 String[] rowData = {
                                         String.valueOf(auction.getId()),
-                                        auction.getItem().getName(),
-                                        String.valueOf(auction.getItem_id()),
+                                        auction.getItem().getName() != null ? auction.getItem().getName() : "Unknown",
+                                        prdId,
                                         String.valueOf(auction.getItem().getSeller_id()),
-                                        "",
+                                        "", // Cột 5 để trống vì startCountdown sẽ ghi đè vào đây
                                         formattedPrice,
                                         auction.getStatus() != null ? auction.getStatus() : "WAITING"
                                 };
+
                                 controller.setRowData(rowData);
                                 controller.startCountdown(auction.getStart_time(), auction.getEnd_time());
+
+                                // Sự kiện Click vào dòng -> Truyền dữ liệu thô sang hàm mở Manager để xử lý Lazy Loading
                                 controller.setOnRowClick(() -> {
                                     openAuctionManager(auction);
                                 });
 
                                 productGrid.getChildren().add(listNode);
-                            } catch (Exception e) { e.printStackTrace(); }
+                            } catch (Exception e) {
+                                System.err.println("Lỗi render danh sách seller: " + e.getMessage());
+                            }
                         }
                     } catch (Exception e) { e.printStackTrace(); }
                 }
