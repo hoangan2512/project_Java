@@ -6,10 +6,13 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -40,7 +43,24 @@ public class welcomeController {
 
     @FXML
     public void Login(MouseEvent event) {
-        try { sceneSwitcher.openSignInPopup(null); } catch (IOException e) {}
+        try {
+            Stage welcomeStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Runnable Callback = () -> {
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        // CHUYỂN SCENE CỦA STAGE WELCOME CŨ SANG MAINPAGE
+                        sceneSwitcher.switchToMainPage(null);
+                    } catch (IOException e) {
+                        System.err.println("Lỗi chuyển trang: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+            };
+            sceneSwitcher.openSignInPopup();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -170,17 +190,44 @@ public class welcomeController {
     // ==========================================
     @FXML
     private void handleExplore1(MouseEvent event) {
-        try {
-            sceneSwitcher.switchToMainPage(event);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        if (SessionManager.getInstance().isBidder()) {
+            try {
+                sceneSwitcher.switchToMainPage(event);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            try {
+                // 1. Lấy Stage Welcome hiện tại
+                Stage welcomeStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+                // 2. Tạo một cái bẫy Callback (Runnable)
+                Runnable callback = () -> {
+                    // Ép JavaFX xử lý trên giao diện để tránh bị xung đột luồng
+                    javafx.application.Platform.runLater(() -> {
+                        try {
+                            // CHUYỂN SCENE CỦA STAGE WELCOME CŨ SANG MAINPAGE
+                            SceneSwitchController.switchToMainPage2(welcomeStage);
+                        } catch (IOException e) {
+                            System.err.println("Lỗi chuyển trang: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    });
+                };
+
+                sceneSwitcher.openSignInPopup();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @FXML
     private void handleGoToSeller(MouseEvent event) {
         try {
-            sceneSwitcher.switchToSellerSignIn(event);
+            sceneSwitcher.openSellerSignInPopup(event);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }

@@ -12,6 +12,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import message.Request;
 import message.Response;
@@ -59,7 +60,7 @@ public class sellerHubController_signin {
             backToBidHub.setVisible(false);
 
             LogoutBtn.setVisible(true);
-        } else {
+        } else if (SessionManager.getInstance().isBidder()) {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
             Status.setVisible(false);
@@ -76,6 +77,24 @@ public class sellerHubController_signin {
             line2.setVisible(true);
             OR.setVisible(true);
             backToBidHub.setVisible(true);
+            backToBidHub.setDisable(false);
+        } else {
+            Status.setAlignment(javafx.geometry.Pos.CENTER);
+            Status.setMaxWidth(Double.MAX_VALUE);
+            Status.setVisible(false);
+            UsrNameField.setVisible(false);
+            PassField.setVisible(false);
+            LoginBtn.setVisible(false);
+            backBtn.setVisible(false);
+            SignInBtn.setVisible(false);
+            LogoutBtn.setVisible(false);
+
+            SignInOpt.setVisible(true);
+            LoginOpt.setVisible(true);
+            line1.setVisible(true);
+            line2.setVisible(true);
+            OR.setVisible(true);
+            backToBidHub.setVisible(false);
             backToBidHub.setDisable(false);
         }
     }
@@ -316,7 +335,7 @@ public class sellerHubController_signin {
             PauseTransition pause = new PauseTransition(Duration.seconds(2));
             pause.setOnFinished(e -> {
                 try {
-                    sceneSwitcher.switchToMainPage(event);
+                    sceneSwitcher.switchToWelcome(event);
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -328,11 +347,19 @@ public class sellerHubController_signin {
     public void handleBackToBidHub(ActionEvent event) {
         if (SessionManager.getInstance().isSeller()) {
             backToBidHub.setDisable(true);
-        } else {
+        } else if (SessionManager.getInstance().isBidder()) {
             backToBidHub.setVisible(true);
             backToBidHub.setDisable(false);
             try {
                 sceneSwitcher.switchToMainPage(event);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        } else {
+            backToBidHub.setVisible(true);
+            backToBidHub.setDisable(false);
+            try {
+                sceneSwitcher.switchToWelcome(event);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }

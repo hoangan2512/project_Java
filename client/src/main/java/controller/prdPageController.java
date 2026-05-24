@@ -299,7 +299,7 @@ public class prdPageController {
         if (!SessionManager.getInstance().isBidder()) {
             updateAutoBidState(false, "Sign in as bidder first.");
             try {
-                sceneSwitcher.openSignInPopup(null);
+                sceneSwitcher.openSignInPopup();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -479,7 +479,7 @@ public class prdPageController {
                 showErrorInBidAmount("Minimum bid not reached: " + currencyFormatter.format(minAllowedBid) + " ₫");
             }
         } else {
-            sceneSwitcher.openSignInPopup(null);
+            sceneSwitcher.openSignInPopup();
         }
     }
 
