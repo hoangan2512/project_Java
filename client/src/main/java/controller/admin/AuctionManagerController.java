@@ -60,10 +60,8 @@ public class AuctionManagerController {
         // ==========================================
         if (suspend_btn != null) {
             if ("SUSPENDED".equals(aucStatus) || "FINISHED".equals(aucStatus)) {
-                // Đã kết thúc hoặc đình chỉ thì khóa vĩnh viễn
                 suspend_btn.setDisable(true);
             } else {
-                // Đang diễn ra hoặc chờ thì chỉ bật khi đã nhập lý do
                 String currentReason = reasonArea != null ? reasonArea.getText().trim() : "";
                 suspend_btn.setDisable(currentReason.isEmpty());
             }
@@ -76,34 +74,30 @@ public class AuctionManagerController {
             Item item = currentAuction.getItem();
             String modStatus = (item != null && item.getModeration_status() != null) ? item.getModeration_status().toUpperCase() : "";
 
-            // Chỉ được phép xóa khi Item hoặc Auction bị REJECTED
             boolean isRejected = "REJECTED".equals(modStatus) || "REJECTED".equals(aucStatus);
             delete.setDisable(!isRejected);
         }
     }
 
     /**
-     * Hàm chính nhận dữ liệu từ homepageController truyền sang khi click vào dòng Auction
+     * Hàm chính nhận dữ liệu thô từ homepageController truyền sang khi click vào dòng Auction
      */
     public void setAuctionData(Auction auction) {
         if (auction == null) return;
         this.currentAuction = auction;
         Item item = auction.getItem();
 
-        // 1. Dọn dẹp & Đặt lại UI mặc định
+        // 1. Dọn dẹp & Đặt lại UI mặc định về trạng thái chờ nạp dữ liệu sâu
         if (reasonArea != null) {
             reasonArea.clear();
             reasonArea.setEditable(true);
             reasonArea.setDisable(false);
         }
-        if (suspend_btn != null) {
-            suspend_btn.setText("Suspend"); // Tên mặc định của nút
-        }
-        if (delete != null) {
-            delete.setText("Delete"); // Tên mặc định của nút
-        }
+        if (suspend_btn != null) suspend_btn.setText("Suspend");
+        if (delete != null) delete.setText("Delete");
+        if (prdImage != null) prdImage.setImage(null); // Xóa ảnh cũ tránh hiện tượng nháy ảnh sản phẩm trước
 
-        // 2. Bóc tách thời gian
+        // 2. Bóc tách thời gian thô (Hiển thị ngay lập tức)
         if (auction.getStart_time() != null) {
             LocalDateTime startDateTime = auction.getStart_time();
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -122,35 +116,112 @@ public class AuctionManagerController {
 
         startLiveClock(auction.getStart_time(), auction.getEnd_time());
 
-        // 3. Bóc tách dữ liệu vật phẩm
+        // 3. ĐỔ DỮ LIỆU CÓ SẴN LÊN UI (TÊN VÀ GIÁ HIỆN TẠI NGUYÊN BẢN CHỮ SỐ)
         if (item != null) {
             if (prdName != null) prdName.setText(item.getName());
-            if (startingPrice != null) startingPrice.setText(String.format("%,.0f đ", item.getStarting_price()));
-            if (prd_description != null) prd_description.setText(item.getDescription() != null ? item.getDescription() : "Không có mô tả sản phẩm.");
-
-            if (prdImage != null && item.getImageBytes() != null) {
-                try (ByteArrayInputStream bis = new ByteArrayInputStream(item.getImageBytes())) {
-                    Image img = new Image(bis);
-                    prdImage.setImage(img);
-                } catch (Exception e) {
-                    System.err.println("[AUCTION MANAGER] Lỗi hiển thị hình ảnh sản phẩm!");
-                    e.printStackTrace();
-                }
-            } else if (prdImage != null) prdImage.setImage(null);
         }
 
-        // 4. KIỂM TRA TRẠNG THÁI ĐÌNH CHỈ
+        if (startingPrice != null) {
+            // CHỈ FILL MỖI SỐ GIÁ HIỆN TẠI (Đã format tiền tệ giống hệt logic cũ của bạn)
+            startingPrice.setText(String.format("%,.0f đ", auction.getCurrent_price()));
+        }
+
+        if (prd_description != null) {
+            prd_description.setText("Đang tải mô tả chi tiết từ hệ thống...");
+        }
+
+        // 4. KIỂM TRA TRẠNG THÁI ĐÌNH CHỈ KHÓA KHUNG NHẬP
         String aucStatus = auction.getStatus() != null ? auction.getStatus().toUpperCase() : "";
         if ("SUSPENDED".equals(aucStatus)) {
             if (reasonArea != null) {
-                reasonArea.setEditable(false); // Khóa chỉ đọc
+                reasonArea.setEditable(false);
                 reasonArea.setText("Đang tải lý do đình chỉ...");
             }
             fetchSuspendReason(auction.getId());
         }
 
-        // 5. Cập nhật nút bấm lần cuối
+        // 5. Cập nhật nút bấm lần đầu theo thông tin thô ban đầu
         updateButtonStates();
+
+        // =======================================================================
+        // KÍCH HOẠT LAZY LOADING: Tải bất đồng bộ các trường còn thiếu và hình ảnh
+        // =======================================================================
+        fetchDetailedTextData(auction.getId());
+        fetchProductImageLazy(auction.getId());
+    }
+
+    /**
+     * LUỒNG NGẦM 1: Tải thông tin văn bản còn khuyết (Description, Moderation Status)
+     */
+    private void fetchDetailedTextData(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.GET_ITEM_DETAIL);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() instanceof Auction detailedAuction) {
+
+                    // CẬP NHẬT THÔNG TIN: Đắp các trường chữ thiếu vào bộ nhớ, giữ nguyên giá hiện tại lấy từ list
+                    if (this.currentAuction != null && detailedAuction.getItem() != null) {
+                        Item fullItem = detailedAuction.getItem();
+                        Item currentItem = this.currentAuction.getItem();
+
+                        if (currentItem != null) {
+                            currentItem.setCategories(fullItem.getCategories());
+                            currentItem.setDescription(fullItem.getDescription());
+                            currentItem.setStarting_price(fullItem.getStarting_price());
+                            currentItem.setUser_prdID(fullItem.getUser_prdID());
+                            currentItem.setModeration_status(fullItem.getModeration_status());
+                        }
+                    }
+
+                    // Đổ dữ liệu mô tả chữ bổ sung lên UI (Bỏ qua, không can thiệp vào label startingPrice nữa)
+                    Item item = this.currentAuction.getItem();
+                    if (item != null) {
+                        if (prd_description != null) {
+                            prd_description.setText(item.getDescription() != null && !item.getDescription().trim().isEmpty()
+                                    ? item.getDescription()
+                                    : "Không có mô tả sản phẩm.");
+                        }
+                    }
+
+                    // Cập nhật lại các nút bấm dựa trên chính xác cột moderation_status vừa đồng bộ
+                    updateButtonStates();
+                } else {
+                    if (prd_description != null) prd_description.setText("Không thể kết nối để tải mô tả chi tiết.");
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * LUỒNG NGẦM 2: Tải mảng byte hình ảnh (Lazy Loading qua mạng cực nhẹ)
+     */
+    private void fetchProductImageLazy(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.GET_IMAGE);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                    try {
+                        byte[] imageBytes = (byte[]) res.getData();
+                        if (imageBytes != null && imageBytes.length > 0 && prdImage != null) {
+                            if (this.currentAuction != null && this.currentAuction.getItem() != null) {
+                                this.currentAuction.getItem().setImageBytes(imageBytes);
+                            }
+                            try (ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
+                                Image img = new Image(bis);
+                                prdImage.setImage(img);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[LAZY IMAGE] Lỗi dựng hình ảnh lên ImageView tại client!");
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }).start();
     }
 
     /**
@@ -166,7 +237,6 @@ public class AuctionManagerController {
                     if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
                         reasonArea.setText((String) res.getData());
                     } else {
-                        // Nếu không tìm thấy trong Database thì dùng câu mặc định
                         reasonArea.setText("SUSPEND do hết thời gian duyệt");
                     }
                 }
@@ -224,7 +294,6 @@ public class AuctionManagerController {
         String reason = (reasonArea != null) ? reasonArea.getText().trim() : "";
         if (reason.isEmpty()) return;
 
-        // Vô hiệu hóa giao diện để tránh click đúp (chờ mạng)
         if (suspend_btn != null) {
             suspend_btn.setDisable(true);
             suspend_btn.setText("Processing...");
@@ -240,7 +309,6 @@ public class AuctionManagerController {
                 if (response != null && "SUCCESS".equals(response.getStatus())) {
                     if (onBackAction != null) onBackAction.run();
                 } else {
-                    // Trả lại giao diện nếu thất bại
                     if (suspend_btn != null) suspend_btn.setText("Suspend");
                     if (reasonArea != null) reasonArea.setDisable(false);
                     updateButtonStates();
@@ -268,7 +336,6 @@ public class AuctionManagerController {
                 if (response != null && "SUCCESS".equals(response.getStatus())) {
                     if (onBackAction != null) onBackAction.run();
                 } else {
-                    // Bật lại nếu lỗi
                     if (delete != null) {
                         delete.setText("Delete");
                         updateButtonStates();

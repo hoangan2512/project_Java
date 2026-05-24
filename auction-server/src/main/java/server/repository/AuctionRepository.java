@@ -16,17 +16,24 @@ import java.time.LocalDateTime;
  */
 public class AuctionRepository {
 
-    // Tạo một chuỗi SQL Select dùng chung để tránh viết đi viết lại và sót cột
+    // Câu SQL lấy Full thông tin (Dùng cho xem chi tiết 1 sản phẩm)
     private final String BASE_SELECT_SQL =
             "SELECT a.id, a.item_id, a.start_time, a.end_time, a.status, a.current_price, a.highest_bidder_id, " +
                     "i.name, i.categories, i.imgPath, i.description, i.seller_id, i.starting_price, " +
                     "i.user_prdID, i.moderation_status " +
                     "FROM auctions a JOIN items i ON a.item_id = i.id";
 
+    // CÂU SQL TỐI ƯU: Dành riêng cho List, chứa đầy đủ các trường dữ liệu thô dạng chữ/số ngắn
+    private final String LIST_SELECT_SQL =
+            "SELECT a.id, a.item_id, a.start_time, a.end_time, a.status, a.current_price, a.highest_bidder_id, " +
+                    "i.name, i.seller_id, i.user_prdID, i.moderation_status, i.starting_price " +
+                    "FROM auctions a JOIN items i ON a.item_id = i.id";
+
     /**
-     * Ánh xạ một dòng từ ResultSet sang một đối tượng Auction.
+     * TỐI ƯU HÓA: Ánh xạ dòng dữ liệu từ ResultSet sang Object Auction.
+     * Nếu isDetailed = false, bỏ qua việc đọc File Ảnh và trường mô tả dài để giảm lag mạng WAN.
      */
-    private Auction mapRowToAuction(ResultSet rs) throws SQLException {
+    private Auction mapRowToAuction(ResultSet rs, boolean isDetailed) throws SQLException {
         Auction auction = new Auction();
         auction.setId(rs.getInt("id"));
         auction.setItem_id(rs.getInt("item_id"));
@@ -41,38 +48,65 @@ public class AuctionRepository {
         auction.setCurrent_price(rs.getDouble("current_price"));
         auction.setHighest_bidder_id(rs.getInt("highest_bidder_id"));
 
+        // Khởi tạo thực thể Item gắn kèm và nạp toàn bộ thông tin thô
         Item item = new Item();
-        item.setId(rs.getInt("item_id"));
+        item.setId(rs.getInt("item_id")); // Đồng bộ item id vào thực thể Item
         item.setName(rs.getString("name"));
-        item.setCategories(rs.getString("categories"));
-        item.setDescription(rs.getString("description"));
         item.setSeller_id(rs.getInt("seller_id"));
-        item.setStarting_price(rs.getDouble("starting_price")); // Đã có đầy đủ
-        item.setUser_prdID(rs.getString("user_prdID"));         // Đã có đầy đủ
-        item.setModeration_status(rs.getString("moderation_status")); // Đã có đầy đủ
+        item.setUser_prdID(rs.getString("user_prdID"));
+        item.setModeration_status(rs.getString("moderation_status"));
+        item.setStarting_price(rs.getDouble("starting_price"));
 
-        String imgPath = rs.getString("imgPath");
-        item.setImgPath(imgPath);
+        // Chỉ nạp các dữ liệu cấu trúc siêu nặng (Mô tả dài, File Ảnh bổ sung) khi mở chi tiết sâu
+        if (isDetailed) {
+            item.setCategories(rs.getString("categories"));
+            item.setDescription(rs.getString("description"));
 
-        if (imgPath != null && !imgPath.trim().isEmpty()) {
-            try {
-                File file = new File("src/main/resources" + imgPath);
-                if (!file.exists()) {
-                    file = new File("auction-server/src/main/resources" + imgPath);
+            String imgPath = rs.getString("imgPath");
+            item.setImgPath(imgPath);
+
+            if (imgPath != null && !imgPath.trim().isEmpty()) {
+                try {
+                    File file = new File("src/main/resources" + imgPath);
+                    if (!file.exists()) {
+                        file = new File("auction-server/src/main/resources" + imgPath);
+                    }
+
+                    // Đọc file ảnh từ server gửi về Client
+                    if (file.exists()) {
+                        byte[] fileBytes = Files.readAllBytes(file.toPath());
+                        item.setImageBytes(fileBytes);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Không thể đọc file ảnh: " + imgPath);
                 }
-
-                if (file.exists()) {
-                    byte[] fileBytes = Files.readAllBytes(file.toPath());
-                    item.setImageBytes(fileBytes);
-                }
-            } catch (Exception e) {
-                System.err.println("Không thể đọc file ảnh: " + imgPath);
             }
         }
 
         auction.setItem(item);
         return auction;
     }
+
+    // =======================================================================
+    // HÀM LẤY DANH SÁCH SIÊU NHẸ (DÙNG CHO TRANG CHỦ ADMIN / CLIENT LIST)
+    // =======================================================================
+    public List<Auction> getAllAuctionsForList() {
+        List<Auction> auctions = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(LIST_SELECT_SQL);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                auctions.add(mapRowToAuction(rs, false)); // Chặn ảnh và mô tả dài
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getAllAuctionsForList: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return auctions;
+    }
+
+    // =======================================================================
 
     public boolean createAuction(Auction auction) {
         String sql = "INSERT INTO auctions (item_id, start_time, end_time, status, current_price, highest_bidder_id) VALUES(?, ?, ?, ?, ?, ?)";
@@ -95,14 +129,13 @@ public class AuctionRepository {
     }
 
     public Auction getAuctionById(int id) {
-        // ĐÃ SỬA: Sử dụng BASE_SELECT_SQL để lấy đầy đủ tất cả các cột của Item
         String sql = BASE_SELECT_SQL + " WHERE a.id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return mapRowToAuction(rs);
+                    return mapRowToAuction(rs, true); // Xem chi tiết nạp full dữ liệu
                 }
             }
         } catch (SQLException e) {
@@ -114,14 +147,13 @@ public class AuctionRepository {
 
     public List<Auction> getAuctionsByStatus(String status) {
         List<Auction> auctions = new ArrayList<>();
-        // ĐÃ SỬA TẠI ĐÂY: Giải quyết triệt để lỗi sập của luồng TimeManager bằng cách dùng BASE_SELECT_SQL
         String sql = BASE_SELECT_SQL + " WHERE a.status = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, status);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    auctions.add(mapRowToAuction(rs));
+                    auctions.add(mapRowToAuction(rs, false));
                 }
             }
         } catch (SQLException e) {
@@ -137,7 +169,6 @@ public class AuctionRepository {
 
     public List<Auction> getWaitingAuctions() {
         List<Auction> auctions = new ArrayList<>();
-        // ĐÃ SỬA: Lấy lên cả các phiên WAITING và PENDING_APPROVAL
         String sql = BASE_SELECT_SQL + " WHERE a.status IN ('WAITING', 'PENDING_APPROVAL')";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -145,7 +176,7 @@ public class AuctionRepository {
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                auctions.add(mapRowToAuction(rs));
+                auctions.add(mapRowToAuction(rs, false));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi khi lấy danh sách đấu giá chờ: " + e.getMessage());
@@ -156,7 +187,6 @@ public class AuctionRepository {
 
     public List<Auction> getAllAuctions() {
         List<Auction> auctions = new ArrayList<>();
-        // ĐÃ SỬA: Sử dụng BASE_SELECT_SQL đồng bộ cấu trúc
         String sql = BASE_SELECT_SQL;
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -164,7 +194,7 @@ public class AuctionRepository {
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                auctions.add(mapRowToAuction(rs));
+                auctions.add(mapRowToAuction(rs, false));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi getAllAuctions: " + e.getMessage());
@@ -182,7 +212,7 @@ public class AuctionRepository {
             pstmt.setInt(3, auctionId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi khi cập nhật giá thầu cho auction ID " + auctionId + ": " + e.getMessage());
+            System.err.println("Lỗi khi cập nhật giá thầu: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -196,7 +226,7 @@ public class AuctionRepository {
             pstmt.setInt(2, auctionId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi khi cập nhật trạng thái cho auction ID " + auctionId + ": " + e.getMessage());
+            System.err.println("Lỗi khi cập nhật trạng thái: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -210,7 +240,7 @@ public class AuctionRepository {
             pstmt.setInt(2, auctionId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi khi gia hạn thời gian cho auction ID " + auctionId + ": " + e.getMessage());
+            System.err.println("Lỗi khi gia hạn thời gian: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -218,7 +248,6 @@ public class AuctionRepository {
 
     public List<Auction> searchAdvanced(SearchCriteria criteria) {
         List<Auction> resultList = new ArrayList<>();
-        // ĐÃ SỬA: Thay thế chuỗi Select cũ bằng BASE_SELECT_SQL đầy đủ cột dữ liệu
         StringBuilder sql = new StringBuilder(BASE_SELECT_SQL + " WHERE 1=1");
         List<Object> parameters = new ArrayList<>();
 
@@ -234,11 +263,11 @@ public class AuctionRepository {
             }
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    resultList.add(mapRowToAuction(rs));
+                    resultList.add(mapRowToAuction(rs, true));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi khi thực hiện tìm kiếm nâng cao: " + e.getMessage());
+            System.err.println("Lỗi tìm kiếm nâng cao: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -360,7 +389,6 @@ public class AuctionRepository {
     }
 
     public boolean deleteAuctionByItemId(int itemId) {
-        // language=SQLite
         String sql = "DELETE FROM auctions WHERE item_id = ?";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -368,8 +396,7 @@ public class AuctionRepository {
 
             pstmt.setInt(1, itemId);
 
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0; // Trả về true nếu có ít nhất 1 dòng bị xóa
+            return pstmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
             System.err.println("Lỗi khi xóa phiên đấu giá có Item ID " + itemId + ": " + e.getMessage());
@@ -377,4 +404,72 @@ public class AuctionRepository {
             return false;
         }
     }
+
+    public byte[] getAuctionImage(int auctionId) {
+        String sql = "SELECT i.imgPath FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, auctionId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String imgPath = rs.getString("imgPath");
+
+                    if (imgPath != null && !imgPath.trim().isEmpty()) {
+                        File file = new File("src/main/resources" + imgPath);
+                        if (!file.exists()) {
+                            file = new File("auction-server/src/main/resources" + imgPath);
+                        }
+
+                        if (file.exists()) {
+                            return Files.readAllBytes(file.toPath());
+                        } else {
+                            System.err.println("[Image Service] Không tìm thấy file ảnh trên đĩa: " + imgPath);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy dữ liệu ảnh cho auction ID " + auctionId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Auction getAuctionDetails(int auctionId) {
+        String sql = "SELECT a.id, i.categories, i.description, i.starting_price, i.user_prdID, i.moderation_status " +
+                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, auctionId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Auction auction = new Auction();
+                    auction.setId(rs.getInt("id"));
+
+                    Item item = new Item();
+                    item.setId(rs.getInt("id")); // Bảo toàn luôn item_id khi lazy load chi tiết
+                    item.setCategories(rs.getString("categories"));
+                    item.setDescription(rs.getString("description"));
+                    item.setStarting_price(rs.getDouble("starting_price"));
+                    item.setUser_prdID(rs.getString("user_prdID"));
+                    item.setModeration_status(rs.getString("moderation_status"));
+
+                    auction.setItem(item);
+                    return auction;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy thông tin chi tiết bổ sung cho auction ID " + auctionId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 }
