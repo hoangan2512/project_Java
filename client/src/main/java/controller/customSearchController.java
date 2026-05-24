@@ -3,6 +3,7 @@ package controller;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.time.Duration;
 
@@ -34,7 +36,6 @@ public class customSearchController {
     private SearchCriteria currentCriteria;
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
-    // --- BỘ CACHE QUẢN LÝ THẺ SẢN PHẨM TRÊN UI (Giúp update 1 cái mà không load lại cả trang) ---
     private final Map<Integer, prd_previewController> cardMap = new HashMap<>();
     private final Map<Integer, Auction> auctionDataCache = new HashMap<>();
     private final Map<Integer, String> sellerNameCache = new HashMap<>();
@@ -55,26 +56,19 @@ public class customSearchController {
         fetchProductsFromDatabase();
     }
 
-    // Hàm gọi để load lại toàn bộ dữ liệu
     public void refresh() {
         fetchProductsFromDatabase();
     }
 
-    /**
-     * HÀM MỚI: Chỉ cập nhật trạng thái/giá của 1 Auction cụ thể trên màn hình.
-     * Sử dụng hàm này khi nhận được Broadcast từ Server thay vì gọi refresh()
-     */
     public void updateSingleAuction(Auction updatedAuction) {
         if (updatedAuction == null) return;
 
         int aucId = updatedAuction.getId();
 
-        // Nếu sản phẩm này không có trên màn hình hiện tại thì bỏ qua luôn
         if (!auctionDataCache.containsKey(aucId) || !cardMap.containsKey(aucId)) {
             return;
         }
 
-        // 1. Lấy dữ liệu gốc và GỘP (Merge) với dữ liệu mới cập nhật (Giá, Trạng thái, Thời gian)
         Auction existingAuc = auctionDataCache.get(aucId);
         existingAuc.setCurrent_price(updatedAuction.getCurrent_price());
 
@@ -82,7 +76,6 @@ public class customSearchController {
         if (updatedAuction.getEnd_time() != null) existingAuc.setEnd_time(updatedAuction.getEnd_time());
         if (updatedAuction.getStart_time() != null) existingAuc.setStart_time(updatedAuction.getStart_time());
 
-        // 2. Tính toán lại thời gian thực tế
         long timeToStartSeconds = 0;
         long timeToEndSeconds = 0;
         LocalDateTime now = LocalDateTime.now();
@@ -108,7 +101,6 @@ public class customSearchController {
             }
         }
 
-        // 3. Truy xuất lại các dữ liệu tĩnh (Tên, Ảnh) từ cache
         String name = (existingAuc.getItem() != null) ? existingAuc.getItem().getName() : "Không tên";
         String imgPath = (existingAuc.getItem() != null) ? existingAuc.getItem().getImgPath() : null;
         byte[] imageBytes = (existingAuc.getItem() != null) ? existingAuc.getItem().getImageBytes() : null;
@@ -117,7 +109,6 @@ public class customSearchController {
             sellerNameStr = sellerNameCache.getOrDefault(existingAuc.getItem().getSeller_id(), "Unknown");
         }
 
-        // 4. Bơm dữ liệu trực tiếp vào đúng cái Card đó trên giao diện
         prd_previewController cardController = cardMap.get(aucId);
         cardController.setData(name, (long) existingAuc.getCurrent_price(), timeToStartSeconds, timeToEndSeconds, imgPath, status, sellerNameStr, imageBytes);
     }
@@ -147,8 +138,10 @@ public class customSearchController {
 
             if (res.getData() instanceof Object[]) {
                 Object[] dataPackage = (Object[]) res.getData();
-                resultList = (List<Auction>) dataPackage[0];
-                sellerNames = (Map<Integer, String>) dataPackage[1];
+                if (dataPackage.length >= 2) {
+                    resultList = (List<Auction>) dataPackage[0];
+                    sellerNames = (Map<Integer, String>) dataPackage[1];
+                }
             } else if (res.getData() instanceof List) {
                 resultList = (List<Auction>) res.getData();
                 sellerNames = new HashMap<>();
@@ -156,6 +149,10 @@ public class customSearchController {
 
             if (resultList != null && !resultList.isEmpty()) {
                 int cardIndex = 0;
+
+                // Lưu lại danh sách ID cần fetch ảnh để chạy Thread ngầm
+                List<Integer> auctionIdsToFetchImage = new ArrayList<>();
+
                 for (Auction auc : resultList) {
                     try {
                         String status = auc.getStatus();
@@ -164,12 +161,11 @@ public class customSearchController {
                             continue;
                         }
 
-                        // Lưu tên seller vào cache tĩnh
                         String sellerNameStr = "Unknown";
                         if (auc.getItem() != null && sellerNames != null) {
                             int sellerId = auc.getItem().getSeller_id();
                             sellerNameStr = sellerNames.getOrDefault(sellerId, "Unknown");
-                            sellerNameCache.put(sellerId, sellerNameStr); // <--- LƯU CACHE
+                            sellerNameCache.put(sellerId, sellerNameStr);
                         }
 
                         long timeToStartSeconds = 0;
@@ -212,16 +208,15 @@ public class customSearchController {
                         Node productCard = loader.load();
                         prd_previewController cardController = loader.getController();
 
-                        // --- LƯU CONTROLLER & DATA VÀO CACHE ĐỂ SAU NÀY UPDATE ---
                         cardMap.put(auc.getId(), cardController);
                         auctionDataCache.put(auc.getId(), auc);
+                        auctionIdsToFetchImage.add(auc.getId()); // Thêm vào hàng đợi lấy ảnh
 
                         String name = (auc.getItem() != null) ? auc.getItem().getName() : "Không tên";
-                        String imgPath = (auc.getItem() != null) ? auc.getItem().getImgPath() : null;
-                        byte[] imageBytes = (auc.getItem() != null) ? auc.getItem().getImageBytes() : null;
                         long currentPrice = (long) auc.getCurrent_price();
 
-                        cardController.setData(name, currentPrice, timeToStartSeconds, timeToEndSeconds, imgPath, finalStatus, sellerNameStr, imageBytes);
+                        // LƯU Ý: Ở bước này truyền NULL cho ảnh để render Chữ siêu tốc
+                        cardController.setData(name, currentPrice, timeToStartSeconds, timeToEndSeconds, null, finalStatus, sellerNameStr, null);
 
                         cardController.setOnBidAction(() -> {
                             if (mainPageController.getInstance() != null) {
@@ -239,7 +234,10 @@ public class customSearchController {
                         dropDown.setToY(0);
 
                         ParallelTransition combinedAnim = new ParallelTransition(fadeIn, dropDown);
-                        combinedAnim.setDelay(javafx.util.Duration.millis(cardIndex * 60));
+
+                        // GIẢM LAG ANIMATION: Nếu quá nhiều card thì không nhân độ trễ nữa
+                        long delayMillis = (cardIndex < 15) ? (cardIndex * 60L) : 0;
+                        combinedAnim.setDelay(javafx.util.Duration.millis(delayMillis));
 
                         productGrid.getChildren().add(productCard);
                         combinedAnim.play();
@@ -251,12 +249,53 @@ public class customSearchController {
                         e.printStackTrace();
                     }
                 }
+
+                // =========================================================
+                // TRUE LAZY LOADING: Mở đúng 1 luồng ngầm tuần tự đi đòi ảnh
+                // =========================================================
+                startImageLazyLoadThread(auctionIdsToFetchImage);
+
             } else {
                 System.out.println("Không có kết quả phù hợp.");
             }
         } else {
             System.out.println("Lỗi: " + (res != null ? res.getMessage() : "Mất kết nối"));
         }
+    }
+    /**
+     * Chạy duy nhất 1 Thread để xin từng ảnh một, bảo vệ Socket và giúp UI cực mượt
+     */
+    private void startImageLazyLoadThread(List<Integer> auctionIds) {
+        new Thread(() -> {
+            for (Integer aucId : auctionIds) {
+                try {
+                    Request imgReq = new Request(aucId, ActionType.GET_IMAGE);
+                    Response imgRes = ClientSocket.sendRequest(imgReq);
+
+                    if (imgRes != null && "SUCCESS".equals(imgRes.getStatus()) && imgRes.getData() != null) {
+                        byte[] loadedBytes = (byte[]) imgRes.getData();
+
+                        if (loadedBytes != null && loadedBytes.length > 0) {
+                            Platform.runLater(() -> {
+                                // 1. Nạp ảnh vào bộ nhớ đệm
+                                Auction cached = auctionDataCache.get(aucId);
+                                if (cached != null && cached.getItem() != null) {
+                                    cached.getItem().setImageBytes(loadedBytes);
+                                }
+
+                                // 2. Update ĐỘC LẬP lên thẻ UI (Không làm reset bộ đếm giờ)
+                                prd_previewController targetCard = cardMap.get(aucId);
+                                if (targetCard != null) {
+                                    targetCard.updateImage(loadedBytes);
+                                }
+                            });
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Lỗi nạp ảnh Lazy Load cho ID " + aucId + ": " + e.getMessage());
+                }
+            }
+        }).start();
     }
 
     @FXML

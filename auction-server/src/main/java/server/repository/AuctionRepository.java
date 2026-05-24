@@ -263,7 +263,7 @@ public class AuctionRepository {
             }
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    resultList.add(mapRowToAuction(rs, true));
+                    resultList.add(mapRowToAuction(rs, false));
                 }
             }
         } catch (SQLException e) {
