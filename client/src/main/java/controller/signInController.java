@@ -13,6 +13,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import message.Request;
 import message.Response;
@@ -89,7 +90,7 @@ public class signInController {
             Status.setText("Please insert username & password");
             return;
         }
-        
+
         // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
         String serverPublicKey = ClientSocket.getServerPublicKey();
         if (serverPublicKey == null) {
@@ -122,9 +123,7 @@ public class signInController {
             Status.setVisible(true);
             Status.setStyle("-fx-text-fill: green;");
             Status.setText("Account created successfully");
-            PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
-            
-            // Cập nhật session user với dữ liệu được Server trả về (đã bao gồm ID thực từ Database)
+
             User userFromServer = (User) res.getData();
             if (userFromServer != null) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
@@ -132,9 +131,32 @@ public class signInController {
                 SessionManager.getInstance().setCurrentUser(newUser);
             }
 
+            // 1. Lấy đúng cửa sổ Popup hiện tại để tí nữa tắt nó đi
+            Stage popupStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            PauseTransition pause1 = new PauseTransition(Duration.seconds(1));
             pause1.setOnFinished(e -> {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.close();
+                try {
+                    // 2. Tìm cửa sổ Welcome cũ để chuyển scene của chính nó sang MainPage
+                    Stage welcomeStage = null;
+                    for (Window window : Window.getWindows()) {
+                        if (window instanceof Stage && window != popupStage) {
+                            welcomeStage = (Stage) window;
+                            break;
+                        }
+                    }
+
+                    if (welcomeStage != null) {
+                        SceneSwitchController.switchToMainPage2(welcomeStage);
+                    }
+
+                    // 3. Đóng hẳn cửa sổ Popup SignIn lại
+                    popupStage.close();
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Status.setText("Error switching to main page");
+                }
             });
             pause1.play();
         } else {
@@ -152,7 +174,7 @@ public class signInController {
             Status.setText("Please insert username & password");
             return;
         }
-        
+
         // --- MÃ HÓA MẬT KHẨU BẰNG RSA ---
         String serverPublicKey = ClientSocket.getServerPublicKey();
         if (serverPublicKey == null) {
@@ -183,17 +205,38 @@ public class signInController {
         if (res != null && "SUCCESS".equals(res.getStatus())) {
             User userFromServer = (User) res.getData();
 
-            // Sửa lỗi: Cập nhật kiểm tra vai trò để cho phép BOTH
             if ("BIDDER".equalsIgnoreCase(userFromServer.getRole()) || "BOTH".equalsIgnoreCase(userFromServer.getRole())) {
                 SessionManager.getInstance().setCurrentUser(userFromServer);
                 Status.setVisible(true);
                 Status.setStyle("-fx-text-fill: green;");
                 Status.setText("Login successful!");
 
+                // 1. Lấy đúng cửa sổ Popup hiện tại
+                Stage popupStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
                 PauseTransition pause = new PauseTransition(Duration.seconds(1));
                 pause.setOnFinished(e -> {
-                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                    stage.close();
+                    try {
+                        // 2. Tìm cửa sổ Welcome cũ
+                        Stage welcomeStage = null;
+                        for (Window window : Window.getWindows()) {
+                            if (window instanceof Stage && window != popupStage) {
+                                welcomeStage = (Stage) window;
+                                break;
+                            }
+                        }
+
+                        if (welcomeStage != null) {
+                            SceneSwitchController.switchToMainPage2(welcomeStage);
+                        }
+
+                        // 3. Đóng hẳn cửa sổ Popup SignIn
+                        popupStage.close();
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Status.setText("Error switching to main page");
+                    }
                 });
                 pause.play();
 
@@ -208,7 +251,6 @@ public class signInController {
             Status.setStyle("-fx-text-fill: red;");
             Status.setText(res != null && res.getMessage() != null ? res.getMessage() : "Login Failed");
         }
-
     }
 
     public void handleSigninOpt(ActionEvent event) {
@@ -252,7 +294,6 @@ public class signInController {
     }
 
     public void handleLogout(ActionEvent event) {
-        // Gửi yêu cầu LOGOUT đến Server trước khi xóa session ở Client
         Request logoutReq = new Request(null, ActionType.LOGOUT);
         ClientSocket.sendRequest(logoutReq);
 
@@ -267,10 +308,32 @@ public class signInController {
             Status.setStyle("-fx-text-fill: white;");
             Status.setText("Logged Out. See you later!");
 
-            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            // Đăng xuất từ MainPage về Welcome (Chỉ chạy trên 1 cửa sổ duy nhất)
+            Stage popupStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            PauseTransition pause = new PauseTransition(Duration.seconds(1));
             pause.setOnFinished(e -> {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.close();
+                try {
+                    // 2. Tìm cửa sổ Welcome cũ
+                    Stage welcomeStage = null;
+                    for (Window window : Window.getWindows()) {
+                        if (window instanceof Stage && window != popupStage) {
+                            welcomeStage = (Stage) window;
+                            break;
+                        }
+                    }
+
+                    if (welcomeStage != null) {
+                        SceneSwitchController.switchToWelcome2(welcomeStage);
+                    }
+
+                    // 3. Đóng hẳn cửa sổ Popup SignIn
+                    popupStage.close();
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Status.setText("Error switching to main page");
+                }
             });
             pause.play();
         }
@@ -278,53 +341,66 @@ public class signInController {
 
     @FXML
     private void handleGoogleLogin(ActionEvent event) {
-        // Thay thế bằng Client ID thực tế của bạn tạo trên Google Cloud
         String clientId = "887547914295-i912u5c51mm9ur6s7kd1pr5kipmpcgka.apps.googleusercontent.com";
         String redirectUri = "http://localhost:8080";
 
-        // Tạo URL dẫn tới trung tâm xác thực của Google
         String googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth?"
                 + "scope=email%20profile"
                 + "&redirect_uri=" + redirectUri
                 + "&response_type=code"
                 + "&client_id=" + clientId;
 
-        // 1. Dùng một Thread độc lập chạy ngầm mở trình duyệt và hứng mã để không gây đơ (Freeze) UI JavaFX
         new Thread(() -> {
             try {
-                // Mở trình duyệt mặc định của hệ điều hành hiển thị trang đăng nhập Google
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     Desktop.getDesktop().browse(new URI(googleAuthUrl));
                 }
 
-                // 2. Kích hoạt bộ đón code (Hàm này sẽ treo luồng ngầm này lại đợi trình duyệt bắn code về)
                 String code = ClientSocket.startLocalServerToGetCode();
 
                 if (code != null) {
                     System.out.println("[CLIENT] Đã bắt được mã Code từ Google: " + code);
 
-                    // 3. Đóng gói mã code vào Request gửi qua Socket chính về Server xử lý DB
                     Request req = new Request(code, ActionType.GOOGLE_LOGIN);
                     Response res = ClientSocket.sendRequest(req);
 
                     Platform.runLater(() -> {
                         if (res != null && "SUCCESS".equals(res.getStatus())) {
                             System.out.println("Đăng nhập Google hoàn tất! Chuyển trang thôi.");
-                            
-                            // 4. Ghi trạng thái đã đăng nhập vào SessionManager
+
                             User userFromServer = (User) res.getData();
                             SessionManager.getInstance().setCurrentUser(userFromServer);
-                            
-                            // 5. Cập nhật giao diện (Label Status)
+
                             Status.setVisible(true);
                             Status.setStyle("-fx-text-fill: green;");
                             Status.setText("Google Login successful!");
 
-                            // 6. Đóng popup scene login/signin đang mở sau 1 khoảng trễ
+                            // 1. Lấy đúng cửa sổ Popup hiện tại qua Label Status
+                            Stage popupStage = (Stage) Status.getScene().getWindow();
+
                             PauseTransition pause = new PauseTransition(Duration.seconds(1));
                             pause.setOnFinished(e -> {
-                                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                                stage.close();
+                                try {
+                                    // 2. Tìm cửa sổ Welcome cũ
+                                    Stage welcomeStage = null;
+                                    for (Window window : Window.getWindows()) {
+                                        if (window instanceof Stage && window != popupStage) {
+                                            welcomeStage = (Stage) window;
+                                            break;
+                                        }
+                                    }
+
+                                    if (welcomeStage != null) {
+                                        SceneSwitchController.switchToMainPage2(welcomeStage);
+                                    }
+
+                                    // 3. Đóng hẳn cửa sổ Popup SignIn
+                                    popupStage.close();
+
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    Status.setText("Error switching to main page");
+                                }
                             });
                             pause.play();
 

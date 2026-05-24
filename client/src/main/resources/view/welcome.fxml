@@ -9,44 +9,44 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: black;" stylesheets="@welcome.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.welcomeController">
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: black;" stylesheets="@welcome.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.welcomeController">
    <children>
-      <ImageView fx:id="banner6" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="banner6" fitHeight="720.0" fitWidth="1280.0" onMouseClicked="#handleExplore1" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/banner/4.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="banner5" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="banner5" fitHeight="720.0" fitWidth="1280.0" onMouseClicked="#handleExplore1" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/banner/3.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="banner4" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="banner4" fitHeight="720.0" fitWidth="1280.0" onMouseClicked="#handleExplore1" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/banner/6.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="banner3" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="banner3" fitHeight="720.0" fitWidth="1280.0" onMouseClicked="#handleExplore1" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/banner/5.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="banner2" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="banner2" fitHeight="720.0" fitWidth="1280.0" onMouseClicked="#handleExplore1" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/banner/2.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="banner1" fitHeight="720.0" fitWidth="1280.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="banner1" fitHeight="720.0" fitWidth="1280.0" onMouseClicked="#handleExplore1" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/banner/1.png" />
          </image>
       </ImageView>
-      <Button fx:id="next" alignment="CENTER" layoutX="1231.0" layoutY="335.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="40.0" rotate="180.0" style="-fx-background-radius: 20; -fx-background-color: transparent;" text="&lt;" textFill="#ffffffe5">
+      <Button fx:id="next" alignment="CENTER" layoutX="1231.0" layoutY="335.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="40.0" rotate="180.0" style="-fx-background-radius: 20; -fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ffffffe5">
          <font>
             <Font name="System Bold" size="24.0" />
          </font>
       </Button>
-      <Button fx:id="prev" alignment="CENTER" layoutY="335.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="40.0" style="-fx-background-radius: 20; -fx-background-color: transparent;" text="&lt;" textFill="#ffffffe5">
+      <Button fx:id="prev" alignment="CENTER" layoutY="335.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="40.0" style="-fx-background-radius: 20; -fx-background-color: transparent; -fx-cursor: hand;" text="&lt;" textFill="#ffffffe5">
          <font>
             <Font name="System Bold" size="24.0" />
          </font>
@@ -87,7 +87,7 @@
          <children>
             <VBox layoutX="30.0" layoutY="85.0" minHeight="200.0" prefWidth="290.0" spacing="15.0" style="-fx-background-color: transparent;">
                <children>
-                  <Button fx:id="go_to_seller" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleGoToSeller" prefHeight="50.0" prefWidth="290.0" style="-fx-background-radius: 10;" styleClass="menu-button" text="Go to SellerHub" textFill="WHITE">
+                  <Button fx:id="go_to_seller" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleGoToSeller" prefHeight="50.0" prefWidth="290.0" style="-fx-background-radius: 10; -fx-cursor: hand;" styleClass="menu-button" text="Go to SellerHub" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
@@ -98,7 +98,7 @@
                         <Insets left="20.0" top="13.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="explore1" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleExplore1" prefHeight="50.0" prefWidth="340.0" style="-fx-background-radius: 10;" styleClass="menu-button" text="Explore more" textFill="WHITE">
+                  <Button fx:id="explore1" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleExplore1" prefHeight="50.0" prefWidth="340.0" style="-fx-background-radius: 10; -fx-cursor: hand;" styleClass="menu-button" text="Explore more" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
@@ -106,7 +106,7 @@
                         <Insets left="20.0" top="13.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="info" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleInfo" prefHeight="50.0" prefWidth="340.0" style="-fx-background-radius: 10;" styleClass="menu-button" text="More about us" textFill="WHITE">
+                  <Button fx:id="info" alignment="TOP_LEFT" mnemonicParsing="false" onMouseClicked="#handleInfo" prefHeight="50.0" prefWidth="340.0" style="-fx-background-radius: 10; -fx-cursor: hand;" styleClass="menu-button" text="More about us" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>

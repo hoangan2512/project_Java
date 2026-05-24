@@ -7,6 +7,7 @@ import javafx.animation.TranslateTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -18,6 +19,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.SearchCriteria;
 import model.User;
@@ -223,7 +225,27 @@ public class mainPageController {
     // Các hàm xử lý click khác giữ nguyên...
     @FXML
     public void handleAvatarClick(MouseEvent event) {
-        try { sceneSwitcher.openSignInPopup(null); } catch (IOException e) {}
+        try {
+            Stage welcomeStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Runnable callback = () -> {
+                // Ép JavaFX xử lý trên giao diện để tránh bị xung đột luồng
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        // CHUYỂN SCENE CỦA STAGE WELCOME CŨ SANG MAINPAGE
+                        SceneSwitchController.switchToWelcome2(welcomeStage);
+                    } catch (IOException e) {
+                        System.err.println("Lỗi chuyển trang: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+            };
+
+            // 3. Truyền Runnable vào đúng theo thiết kế cũ của hàm
+            sceneSwitcher.openSignInPopup();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void handleSearchBtnClick(MouseEvent event) {

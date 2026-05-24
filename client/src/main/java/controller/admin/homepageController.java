@@ -57,18 +57,21 @@ public class homepageController {
             item_manager_paneController.setOnBack(() -> {
                 item_manager_pane.setVisible(false);
                 item_manager_pane.setManaged(false);
+                fetchItems();
             });
         }
         if (auction_manager_paneController != null) {
             auction_manager_paneController.setOnBack(() -> {
                 auction_manager_pane.setVisible(false);
                 auction_manager_pane.setManaged(false);
+                fetchAuctions();
             });
         }
         if (seller_manager_paneController != null) {
             seller_manager_paneController.setOnBack(() -> {
                 seller_manager_pane.setVisible(false);
                 seller_manager_pane.setManaged(false);
+                fetchSellers();
             });
         }
 
@@ -328,14 +331,20 @@ public class homepageController {
         return 6;
     }
 
-    public void handleBidHub(MouseEvent event) {
+    public void handleGoToBidHub(MouseEvent event) {
         clearProductGridAndReleaseResources();
         Request logoutReq = new Request(null, ActionType.LOGOUT);
         ClientSocket.sendRequest(logoutReq);
         SessionManager.getInstance().logout();
         try {
-            sceneSwitcher.switchToMainPage(event);
+            sceneSwitcher.switchToWelcome(event);
         } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    public void handleBidHub(MouseEvent event) {
+        if (Seller != null) {
+            Seller.setSelected(true);
+        }
     }
 
     // ==========================================

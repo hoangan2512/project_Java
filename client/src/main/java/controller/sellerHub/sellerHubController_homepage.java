@@ -19,6 +19,7 @@ import javafx.scene.layout.TilePane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
 import message.Request;
 import message.Response;
 import model.ActionType;
@@ -487,9 +488,9 @@ public class sellerHubController_homepage {
         Request logoutReq = new Request(null, ActionType.LOGOUT);
         ClientSocket.sendRequest(logoutReq);
         SessionManager.getInstance().logout();
-
+        Stage popupStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         try {
-            sceneSwitcher.switchToMainPage(event);
+            sceneSwitcher.switchToWelcome(event);
         } catch (IOException e) {
             e.printStackTrace();
         }
