@@ -10,8 +10,7 @@ public class DatabaseConnection {
 
     // Đảm bảo database được lưu vào một file cố định trong thư mục project
     private static final String DB_FILE_PATH = "auction-server/auction_db.db";
-    private static final String URL = "jdbc:sqlite:" + DB_FILE_PATH;
-
+    private static final String URL = "jdbc:sqlite:" + DB_FILE_PATH + "?busy_timeout=5000";
     private DatabaseConnection() {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -48,3 +47,4 @@ public class DatabaseConnection {
         }
     }
 }
+

@@ -139,37 +139,29 @@ public class UserController {
         Response response = new Response();
         User newUser = (User) request.getPayload();
 
-        // Thêm bước kiểm tra tài khoản đã tồn tại hay chưa
-        if (userRepo.isUserExists(newUser.getName())) {
-            LOGGER.log(Level.WARNING, "Registration failed: Username ''{0}'' already exists.", newUser.getName());
-            response.setStatus("FAIL");
-            response.setMessage("Tài khoản đã tồn tại.");
-            return response;
-        }
-
+        // Gọi trực tiếp addUser (hàm này giờ đã tự động check trùng tên ở bên trong)
         boolean isRegistered = userRepo.addUser(newUser);
 
         if (isRegistered) {
-            // Lấy lại thông tin user đầy đủ từ DB (bao gồm cả ID vừa được tạo)
             User registeredUser = userRepo.findUserByUsername(newUser.getName());
             if (registeredUser != null) {
                 LOGGER.log(Level.INFO, "New user registered successfully: ''{0}'' with role: {1}", new Object[]{registeredUser.getName(), registeredUser.getRole()});
                 response.setStatus("SUCCESS");
                 response.setMessage("Đăng ký thành công!");
-                response.setData(registeredUser); // Trả về user đầy đủ thông tin
+                response.setData(registeredUser);
             } else {
                 LOGGER.log(Level.SEVERE, "Registration failed for username: ''{0}''. Could not retrieve user after creation.", newUser.getName());
                 response.setStatus("FAIL");
                 response.setMessage("Có lỗi xảy ra trong quá trình đăng ký (không thể lấy thông tin user).");
             }
         } else {
-            LOGGER.log(Level.SEVERE, "Registration failed for username: ''{0}'' due to a database error.", newUser.getName());
+            // Báo lỗi chung (Có thể do trùng tên hoặc kẹt file DB, nhưng nhờ busy_timeout nên tỷ lệ kẹt file gần như bằng 0)
+            LOGGER.log(Level.SEVERE, "Registration failed for username: ''{0}'' due to a database error or username exists.", newUser.getName());
             response.setStatus("FAIL");
-            response.setMessage("Có lỗi xảy ra trong quá trình đăng ký.");
+            response.setMessage("Đăng ký thất bại. Tài khoản đã tồn tại hoặc hệ thống bận.");
         }
         return response;
     }
-    
     // ==========================================
     // CÁC HÀNH ĐỘNG DÀNH CHO ADMIN QUẢN LÝ USER
     // ==========================================
