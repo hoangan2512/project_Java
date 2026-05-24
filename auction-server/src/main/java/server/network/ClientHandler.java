@@ -310,7 +310,8 @@ public class ClientHandler implements Runnable {
                 return auctionController.handleGetItemDetail(request);
             case CUSTOM_SEARCH:
                 return auctionController.handleCustomSearch(request);
-
+            case GET_IMAGE:
+                return auctionController.handleGetImage(request);
             case AUCTION_END:
                 return new Response("FAIL", null, "Client không có quyền kết thúc phiên đấu giá.");
 

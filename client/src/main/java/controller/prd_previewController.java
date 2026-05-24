@@ -37,10 +37,9 @@ public class prd_previewController {
     private Timeline countdownTimer;
     private long remainingSeconds;
 
-    // BIẾN MỚI: Lưu thời gian kết thúc để dùng khi tự động chuyển trạng thái
-    private long timeToEndSeconds;
+    // LƯU TRỮ THỜI LƯỢNG THỰC TẾ DIỄN RA PHIÊN ĐẤU GIÁ
+    private long actualAuctionDuration;
 
-    // PHƯƠNG THỨC ĐÃ CẬP NHẬT: Thêm tham số 'long timeToEnd'
     public void setData(String name, long price, long timeToStart, long timeToEnd, String imagePath, String status, String sellerNameStr, byte[] imageBytes) {
         if (prdName != null) {
             prdName.setText(name);
@@ -63,7 +62,9 @@ public class prd_previewController {
 
         // --- BẮT ĐẦU BỘ ĐẾM THỜI GIAN & TRẠNG THÁI ---
         this.remainingSeconds = timeToStart;
-        this.timeToEndSeconds = timeToEnd; // Lưu lại để xài sau
+
+        // SỬA LỖI LOGIC: Thời lượng thực tế = Tổng thời gian đến lúc kết thúc trừ đi thời gian chờ bắt đầu
+        this.actualAuctionDuration = timeToEnd - timeToStart;
 
         if (countdownTimer != null) countdownTimer.stop();
 
@@ -87,18 +88,18 @@ public class prd_previewController {
 
             if (Bid != null) {
                 Bid.setText("Upcoming");
-                Bid.setDisable(true); // Nên khóa nút lúc chờ
+                Bid.setDisable(true); // Khóa nút lúc chờ
             }
 
         } else if ("RUNNING".equals(status)) {
-            // Nếu vừa vào đã là RUNNING, time truyền vào thực chất là thời gian kết thúc
-            this.remainingSeconds = (timeToEnd > 0) ? timeToEnd : timeToStart;
+            // Nếu vừa vào đã là RUNNING, timeToEnd truyền vào từ customSearchController chính là thời gian còn lại
+            this.remainingSeconds = timeToEnd;
             startRunningCountdown();
         } else {
             handleAuctionEnd();
         }
 
-        // --- BẮT ĐẦU LOAD ẢNH ---
+        // --- LOAD ẢNH THUMBNAIL TỪ RAM HOẶC Ổ CỨNG ---
         if (prdImage != null) {
             if (imageBytes != null && imageBytes.length > 0) {
                 try {
@@ -127,18 +128,17 @@ public class prd_previewController {
         }
     }
 
-    // HÀM MỚI: Xử lý tự động chuyển sang chế độ đếm ngược kết thúc
     private void switchToRunningState() {
         if (Bid != null) {
             Bid.setDisable(false);
             Bid.setText("Start Bidding");
         }
-        // Gán thời gian hiện tại bằng tổng thời gian phiên đấu giá diễn ra
-        this.remainingSeconds = this.timeToEndSeconds;
+
+        // SỬA LỖI LOGIC: Gán bằng thời lượng thực tế của phiên
+        this.remainingSeconds = this.actualAuctionDuration > 0 ? this.actualAuctionDuration : 0;
         startRunningCountdown();
     }
 
-    // HÀM MỚI: Chạy đồng hồ đếm ngược chờ kết thúc
     private void startRunningCountdown() {
         updateTimeLabel();
         if (Bid != null) {
@@ -164,7 +164,7 @@ public class prd_previewController {
         }
     }
 
-    // Các hàm Overload cũ giữ nguyên phòng hờ lỗi
+    // Các hàm Overload dự phòng
     public void setData(String name, long price, long timeToStart, long timeToEnd, String imagePath, String status, String sellerNameStr) {
         setData(name, price, timeToStart, timeToEnd, imagePath, status, sellerNameStr, null);
     }

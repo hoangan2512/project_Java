@@ -43,7 +43,7 @@ public class ItemManagerController {
         }
 
         // ========================================================
-        // GẮN LISTENER ĐỂ CẬP NHẬT TRẠNG THÁI NÚT CONFIRM (BỎ LOGIC SO SÁNH)
+        // GẮN LISTENER ĐỂ CẬP NHẬT TRẠNG THÁI NÚT CONFIRM
         // ========================================================
         if (reasonArea != null) {
             reasonArea.textProperty().addListener((observable, oldValue, newValue) -> updateConfirmButtonState());
@@ -75,13 +75,10 @@ public class ItemManagerController {
         String currentReason = reasonArea != null ? reasonArea.getText().trim() : "";
 
         if (isApprove) {
-            // Nút Approve được chọn -> Luôn cho phép bấm Confirm
             confirm_btn.setDisable(false);
         } else if (isReject) {
-            // Nút Reject được chọn -> Chỉ cho phép Confirm nếu đã nhập lý do
             confirm_btn.setDisable(currentReason.isEmpty());
         } else {
-            // Chưa chọn gì -> Khóa nút Confirm
             confirm_btn.setDisable(true);
         }
     }
@@ -145,7 +142,6 @@ public class ItemManagerController {
                 if (res != null && "SUCCESS".equals(res.getStatus())) {
                     if (onBackAction != null) onBackAction.run();
                 } else {
-                    // Thất bại: Mở lại UI để thử lại
                     if (confirm_btn != null) confirm_btn.setText("Confirm");
                     setUIDisabled(false);
                 }
@@ -192,10 +188,13 @@ public class ItemManagerController {
         }
         if (confirm_btn != null) {
             confirm_btn.setText("Confirm");
-            confirm_btn.setDisable(true); // Khóa nút Confirm theo mặc định
+            confirm_btn.setDisable(true);
         }
     }
 
+    /**
+     * Hàm chính nhận dữ liệu thô từ homepageController truyền sang khi click vào dòng Item
+     */
     public void setItemData(Auction auction) {
         if (auction == null) return;
 
@@ -203,7 +202,9 @@ public class ItemManagerController {
         Item item = auction.getItem();
 
         resetActionComponents();
+        if (prdImage != null) prdImage.setImage(null); // Xóa ảnh cũ để tránh nháy ảnh cũ của phiên trước
 
+        // 1. Đổ thời gian thô (Hiển thị ngay lập tức)
         if (auction.getStart_time() != null) {
             LocalDateTime startDateTime = auction.getStart_time();
 
@@ -223,21 +224,18 @@ public class ItemManagerController {
             if (duration != null) duration.setText(durationStr);
         }
 
+        // 2. Đổ dữ liệu thô có sẵn từ LIST_SELECT_SQL lên UI ngay lập tức
         if (item != null) {
             if (prdName != null) prdName.setText(item.getName());
-            if (startingPrice != null) startingPrice.setText(String.format("%,.0f đ", item.getStarting_price()));
-            if (prd_description != null) prd_description.setText(item.getDescription() != null ? item.getDescription() : "Không có mô tả sản phẩm.");
 
-            if (prdImage != null && item.getImageBytes() != null) {
-                try (ByteArrayInputStream bis = new ByteArrayInputStream(item.getImageBytes())) {
-                    Image img = new Image(bis);
-                    prdImage.setImage(img);
-                } catch (Exception e) {
-                    System.err.println("Lỗi bóc tách hiển thị hình ảnh sản phẩm!");
-                    e.printStackTrace();
-                }
-            } else if (prdImage != null) {
-                prdImage.setImage(null);
+            // LƯU Ý: Giữ nguyên hiển thị đúng cột Giá khởi điểm gốc ban đầu (starting_price)
+            if (startingPrice != null) {
+                startingPrice.setText(String.format("%,.0f đ", item.getStarting_price()));
+            }
+
+            // Set chữ trạng thái chờ tải cho phần mô tả dài bị khuyết
+            if (prd_description != null) {
+                prd_description.setText("Đang tải mô tả chi tiết từ hệ thống...");
             }
 
             // ========================================================
@@ -248,16 +246,16 @@ public class ItemManagerController {
 
                 if (not_approve != null) {
                     not_approve.setSelected(true);
-                    not_approve.setDisable(true); // Khóa nút Reject không cho bấm bỏ chọn
+                    not_approve.setDisable(true);
                 }
 
                 if (reasonArea != null) {
                     reasonArea.setText("Đang tải lý do từ chối...");
-                    reasonArea.setEditable(false); // Chỉ đọc
+                    reasonArea.setEditable(false);
                 }
 
                 if (confirm_btn != null) {
-                    confirm_btn.setDisable(true); // Khóa hoàn toàn nút Confirm
+                    confirm_btn.setDisable(true);
                 }
 
                 // Gọi Server lấy lý do cũ
@@ -266,6 +264,80 @@ public class ItemManagerController {
         }
 
         updateConfirmButtonState();
+
+        // =======================================================================
+        // KÍCH HOẠT LAZY LOADING: Tải bất đồng bộ phần mô tả chữ dài và hình ảnh
+        // =======================================================================
+        fetchDetailedItemData(auction.getId());
+        fetchProductImageLazy(auction.getId());
+    }
+
+    /**
+     * LUỒNG NGẦM 1: Tải thông tin văn bản còn khuyết (Description, Categories)
+     */
+    private void fetchDetailedItemData(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.GET_ITEM_DETAIL);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() instanceof Auction detailedAuction) {
+                    // Đắp nối thuộc tính thiếu vào RAM của thực thể cũ
+                    if (this.currentAuction != null && detailedAuction.getItem() != null) {
+                        Item fullItem = detailedAuction.getItem();
+                        Item currentItem = this.currentAuction.getItem();
+
+                        if (currentItem != null) {
+                            currentItem.setDescription(fullItem.getDescription());
+                            currentItem.setCategories(fullItem.getCategories());
+                        }
+                    }
+
+                    // Đổ dữ liệu text mô tả chi tiết lên UI
+                    Item item = this.currentAuction.getItem();
+                    if (item != null && prd_description != null) {
+                        prd_description.setText(item.getDescription() != null && !item.getDescription().trim().isEmpty()
+                                ? item.getDescription()
+                                : "Không có mô tả sản phẩm.");
+                    }
+                } else {
+                    if (prd_description != null) {
+                        prd_description.setText("Không thể kết nối để tải mô tả chi tiết.");
+                    }
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * LUỒNG NGẦM 2: Tải dữ liệu byte mảng hình ảnh bổ sung
+     */
+    private void fetchProductImageLazy(int auctionId) {
+        new Thread(() -> {
+            Request req = new Request(auctionId, ActionType.GET_IMAGE);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                    try {
+                        byte[] imageBytes = (byte[]) res.getData();
+                        if (imageBytes != null && imageBytes.length > 0 && prdImage != null) {
+                            // Lưu trữ byte ảnh vào Ram đối tượng đề phòng cần tái cấu trúc dữ liệu
+                            if (this.currentAuction != null && this.currentAuction.getItem() != null) {
+                                this.currentAuction.getItem().setImageBytes(imageBytes);
+                            }
+                            // Dựng mảng byte stream thành đối tượng Image hiển thị
+                            try (ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
+                                prdImage.setImage(new Image(bis));
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[ITEM IMAGE LAZY] Lỗi hiển thị hình ảnh sản phẩm tại client!");
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }).start();
     }
 
     public void setOnBack(Runnable onBackAction) {

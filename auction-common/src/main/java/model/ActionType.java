@@ -20,6 +20,7 @@ public enum ActionType {
     CUSTOM_SEARCH,
     GET_SELLER_NAME,
     GOOGLE_LOGIN,
+    GET_IMAGE,
 
     ADMIN_GET_ALL_USERS,
     ADMIN_BAN_USER,

@@ -6,14 +6,11 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.TilePane;
 import message.Request;
 import message.Response;
@@ -111,21 +108,14 @@ public class homepageController {
         if (Seller != null) Seller.setSelected(true);
     }
 
-    /**
-     * Hàm tiện ích xử lý việc dọn dẹp lưới và hủy các bộ đếm thời gian đang chạy
-     */
     private void clearProductGridAndReleaseResources() {
         if (productGrid != null) {
-            // Duyệt qua tất cả các dòng (Node) hiện tại trong lưới hiển thị
             for (Node node : productGrid.getChildren()) {
-                // Trích xuất thuộc tính controller lưu trữ trong Node (nếu có)
                 Object controller = node.getUserData();
                 if (controller instanceof listController) {
-                    // Ép kiểu và ra lệnh cho dòng đó dừng ngay lập tức Timeline chạy ẩn
                     ((listController) controller).stopTimeline();
                 }
             }
-            // Sau khi đã dập tắt toàn bộ luồng chạy ẩn, tiến hành xóa sạch các Node con
             productGrid.getChildren().clear();
             System.out.println("[HOMEPAGE] Đã giải phóng toàn bộ bộ đếm thời gian chạy ẩn thành công.");
         }
@@ -136,7 +126,6 @@ public class homepageController {
             Request req = new Request(null, ActionType.ADMIN_GET_ALL_USERS);
             Response res = ClientSocket.sendRequest(req);
             Platform.runLater(() -> {
-                // Cần dọn dẹp an toàn luồng cũ (nếu có tác vụ chạy trùng lặp)
                 clearProductGridAndReleaseResources();
 
                 if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
@@ -148,7 +137,6 @@ public class homepageController {
                                 AnchorPane listNode = loader.load();
                                 listController controller = loader.getController();
 
-                                // Đính kèm controller vào Node để sau này hàm clear dữ liệu tìm thấy và hủy Timeline
                                 listNode.setUserData(controller);
 
                                 User user = (User) userDataMap.get("user");
@@ -180,9 +168,12 @@ public class homepageController {
         }).start();
     }
 
+    // ==========================================
+    // TỐI ƯU HÓA: FETCH ITEMS (DỮ LIỆU THÔ)
+    // ==========================================
     private void fetchItems() {
         new Thread(() -> {
-            Request req = new Request(null, ActionType.GET_LIST);
+            Request req = new Request(null, ActionType.GET_LIST); // Gọi hàm lấy danh sách thô siêu nhẹ
             Response res = ClientSocket.sendRequest(req);
 
             Platform.runLater(() -> {
@@ -192,27 +183,18 @@ public class homepageController {
                     try {
                         List<Auction> auctionList = (List<Auction>) res.getData();
 
-                        // SẮP XẾP SONG SONG:
-                        // 1. Theo trạng thái (PENDING -> APPROVED -> REJECTED)
-                        // 2. Theo thời gian mở phiên (Sắp mở lên trước)
+                        // Sắp xếp dữ liệu cục bộ
                         auctionList.sort((a1, a2) -> {
                             int weight1 = getModerationWeight(a1.getItem());
                             int weight2 = getModerationWeight(a2.getItem());
+                            if (weight1 != weight2) return Integer.compare(weight1, weight2);
 
-                            // Nếu trạng thái khác nhau, ưu tiên sắp xếp theo trạng thái
-                            if (weight1 != weight2) {
-                                return Integer.compare(weight1, weight2);
-                            }
-
-                            // Nếu cùng trạng thái, so sánh thời gian bắt đầu (start_time)
                             LocalDateTime time1 = a1.getStart_time();
                             LocalDateTime time2 = a2.getStart_time();
-
                             if (time1 == null && time2 == null) return 0;
-                            if (time1 == null) return 1;  // Dữ liệu lỗi/null đẩy xuống cuối
+                            if (time1 == null) return 1;
                             if (time2 == null) return -1;
-
-                            return time1.compareTo(time2); // Thời gian sớm hơn sẽ đứng trước
+                            return time1.compareTo(time2);
                         });
 
                         Locale localeVN = new Locale("vi", "VN");
@@ -242,43 +224,33 @@ public class homepageController {
                                 };
                                 controller.setRowData(rowData);
 
+                                // Khi nhấn vào dòng, truyền toàn bộ Object thô sang Manager để xử lý Lazy-load sâu
                                 controller.setOnRowClick(() -> {
-                                    System.out.println("[ADMIN] Đang chọn quản lý Item ID: " + item.getId());
+                                    System.out.println("[ADMIN] Đang click quản lý Item ID: " + item.getId() + " (Chờ tải Lazy-load)");
                                     openItemManager(auc);
                                 });
 
                                 productGrid.getChildren().add(listNode);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                            } catch (Exception e) { e.printStackTrace(); }
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    } catch (Exception e) { e.printStackTrace(); }
                 }
             });
         }).start();
     }
 
     private int getModerationWeight(Item item) {
-        if (item == null || item.getModeration_status() == null) {
-            return 4; // Nếu null hoặc không xác định thì ném xuống cuối
-        }
-
-        // Chuyển về viết hoa toàn bộ để dễ so sánh, tránh lỗi do sai khác chữ hoa/thường
+        if (item == null || item.getModeration_status() == null) return 4;
         String status = String.valueOf(item.getModeration_status()).toUpperCase();
-
-        if (status.contains("PENDING")) {
-            return 1;
-        } else if (status.contains("APPROVE")) {
-            return 2;
-        } else if (status.contains("REJECT")) {
-            return 3;
-        }
-
+        if (status.contains("PENDING")) return 1;
+        if (status.contains("APPROVE")) return 2;
+        if (status.contains("REJECT")) return 3;
         return 4;
     }
 
+    // ==========================================
+    // TỐI ƯU HÓA: FETCH AUCTIONS (DỮ LIỆU THÔ)
+    // ==========================================
     private void fetchAuctions() {
         new Thread(() -> {
             Request req = new Request(null, ActionType.GET_LIST);
@@ -288,35 +260,26 @@ public class homepageController {
 
                 if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
                     try {
-                        List<model.Auction> auctions = (List<model.Auction>) res.getData();
+                        List<Auction> auctions = (List<Auction>) res.getData();
 
-                        // SẮP XẾP SONG SONG:
-                        // 1. Trạng thái: PENDING -> WAITING -> RUNNING -> FINISHED -> SUSPENDED
-                        // 2. Thời gian: Phiên nào chuẩn bị bắt đầu trước sẽ lên trước
+                        // Sắp xếp danh sách
                         auctions.sort((a1, a2) -> {
                             int weight1 = getAuctionStatusWeight(a1);
                             int weight2 = getAuctionStatusWeight(a2);
+                            if (weight1 != weight2) return Integer.compare(weight1, weight2);
 
-                            // Nếu trạng thái khác nhau, ưu tiên sắp xếp theo trạng thái
-                            if (weight1 != weight2) {
-                                return Integer.compare(weight1, weight2);
-                            }
-
-                            // Nếu cùng trạng thái, so sánh thời gian bắt đầu
                             LocalDateTime time1 = a1.getStart_time();
                             LocalDateTime time2 = a2.getStart_time();
-
                             if (time1 == null && time2 == null) return 0;
-                            if (time1 == null) return 1;  // Dữ liệu lỗi/null đẩy xuống cuối
+                            if (time1 == null) return 1;
                             if (time2 == null) return -1;
-
-                            return time1.compareTo(time2); // Thời gian sớm hơn sẽ đứng trước
+                            return time1.compareTo(time2);
                         });
 
                         Locale localeVN = new Locale("vi", "VN");
                         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
 
-                        for (model.Auction auction : auctions) {
+                        for (Auction auction : auctions) {
                             try {
                                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/admin/list.fxml"));
                                 AnchorPane listNode = loader.load();
@@ -331,14 +294,16 @@ public class homepageController {
                                         auction.getItem() != null ? auction.getItem().getName() : "Unknown",
                                         String.valueOf(auction.getItem_id()),
                                         auction.getItem() != null ? String.valueOf(auction.getItem().getSeller_id()) : "Unknown",
-                                        "",
+                                        "", // col5 để trống vì startCountdown sẽ ghi đè
                                         formattedPrice,
                                         auction.getStatus() != null ? auction.getStatus() : "WAITING"
                                 };
                                 controller.setRowData(rowData);
 
+                                // Kích hoạt bộ đếm thời gian cho dòng thô
                                 controller.startCountdown(auction.getStart_time(), auction.getEnd_time());
 
+                                // Nhấp vào dòng để đưa sang màn hình quản lý nạp chi tiết
                                 controller.setOnRowClick(() -> {
                                     openAuctionManager(auction);
                                 });
@@ -353,42 +318,32 @@ public class homepageController {
     }
 
     private int getAuctionStatusWeight(Auction auction) {
-        if (auction == null || auction.getStatus() == null) {
-            return 6;
-        }
-
+        if (auction == null || auction.getStatus() == null) return 6;
         String status = String.valueOf(auction.getStatus()).toUpperCase();
-
-        if (status.contains("PENDING_APPROVAL")) {
-            return 1;
-        } else if (status.contains("WAITING")) {
-            return 2;
-        } else if (status.contains("RUNNING")) {
-            return 3;
-        } else if (status.contains("FINISHED")) {
-            return 4;
-        } else if (status.contains("SUSPENDED")) {
-            return 5;
-        }
+        if (status.contains("PENDING_APPROVAL")) return 1;
+        if (status.contains("WAITING")) return 2;
+        if (status.contains("RUNNING")) return 3;
+        if (status.contains("FINISHED")) return 4;
+        if (status.contains("SUSPENDED")) return 5;
         return 6;
     }
 
     public void handleBidHub(MouseEvent event) {
-        // Trước khi chuyển scene chính thoát app, tắt toàn bộ Timeline
         clearProductGridAndReleaseResources();
-
         Request logoutReq = new Request(null, ActionType.LOGOUT);
         ClientSocket.sendRequest(logoutReq);
         SessionManager.getInstance().logout();
         try {
             sceneSwitcher.switchToMainPage(event);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
+    // ==========================================
+    // CÁC HÀM TRUYỀN DỮ LIỆU SANG MANAGER PANE
+    // ==========================================
     private void openItemManager(Auction auction) {
         if (item_manager_paneController != null) {
+            // Gửi toàn bộ cục thông tin thô đã load từ danh sách sang trước
             item_manager_paneController.setItemData(auction);
         }
 
@@ -415,12 +370,12 @@ public class homepageController {
 
     private void openAuctionManager(Auction auction) {
         if (auction_manager_paneController != null) {
+            // Gửi toàn bộ cục thông tin thô đã load từ danh sách sang trước
             auction_manager_paneController.setAuctionData(auction);
         }
 
         auction_manager_pane.setManaged(true);
         auction_manager_pane.setVisible(true);
-
         item_manager_pane.setManaged(false);
         item_manager_pane.setVisible(false);
         seller_manager_pane.setManaged(false);
