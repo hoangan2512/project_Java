@@ -50,4 +50,20 @@ public class BidController {
             return new Response("ERROR", null, "Lỗi server.");
         }
     }
+
+    public Response handleCheckAutobidStatus(Request request) {
+        try {
+            Object[] payload = (Object[]) request.getPayload();
+            int auctionId = (Integer) payload[0];
+            int bidderId = (Integer) payload[1];
+
+            AutoBidConfig config = AutoBidManager.getInstance().getUserAutoBidConfig(auctionId, bidderId);
+
+            // Trả về nguyên object AutoBidConfig, client sẽ tự check null
+            return new Response("SUCCESS", config, "Checked autobid status successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response("ERROR", null, "Error checking autobid status.");
+        }
+    }
 }

@@ -56,6 +56,19 @@ public class AutoBidManager {
         System.out.println("[AUTO-BID] Unregistered user " + bidderId + " from auction " + auctionId);
     }
 
+    public synchronized AutoBidConfig getUserAutoBidConfig(int auctionId, int bidderId) {
+        List<AutoBidConfig> configs = autoBids.get(auctionId);
+        if (configs == null || configs.isEmpty()) {
+            return null;
+        }
+        for (AutoBidConfig config : configs) {
+            if (config.getBidderId() == bidderId) {
+                return config;
+            }
+        }
+        return null;
+    }
+
     public void processAutoBids(int auctionId, double currentHighestBid, AuctionService auctionService) {
         if (snapshotConfigs(auctionId).isEmpty()) {
             return;

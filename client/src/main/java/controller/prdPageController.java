@@ -62,20 +62,14 @@ public class prdPageController {
     private LineChart<Number, Number> prcieChart;
     @FXML
     private Button backBtn;
-
-    // Các nút Toggle chuyển tab
     @FXML
     private ToggleButton description_btn;
     @FXML
     private ToggleButton price_chart_btn;
     @FXML
     private ToggleButton auto_bid_btn;
-
-    // Nút trạng thái Auto-bid bên trong tab Auto-bid
     @FXML
     private ToggleButton auto_bid_status_btn;
-
-    // Các Pane hiển thị nội dung tương ứng
     @FXML
     private AnchorPane priceC;
     @FXML
@@ -131,6 +125,23 @@ public class prdPageController {
             });
         }
 
+        // --- TÍNH NĂNG MỚI: RÀNG BUỘC DỮ LIỆU AUTOBID KHI USER RỜI Ô NHẬP (FOCUS LOST) ---
+        if (price_step != null) {
+            price_step.focusedProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal) { // Khi mất focus (người dùng nhấn ra ngoài hoặc chuyển ô)
+                    validateAndCorrectPriceStep();
+                }
+            });
+        }
+
+        if (ceilling_price != null) {
+            ceilling_price.focusedProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal) { // Khi mất focus
+                    validateAndCorrectCeilingPrice();
+                }
+            });
+        }
+
         // --- LOGIC CHUYỂN TAB ---
         if (description_btn != null) description_btn.setSelected(true);
         if (price_chart_btn != null) price_chart_btn.setSelected(false);
@@ -171,6 +182,75 @@ public class prdPageController {
         }
     }
 
+    // =========================================================
+    // HÀM KIỂM TRA VÀ TỰ ĐỘNG SỬA DỮ LIỆU AUTO-BID
+    // =========================================================
+
+    /**
+     * Kiểm tra và tự động sửa nếu bước giá nhập vào thấp hơn bước giá tối thiểu của hệ thống
+     */
+    private void validateAndCorrectPriceStep() {
+        if (currentAuction == null || price_step == null || price_step.getText().isEmpty()) return;
+
+        double currentPriceValue = currentAuction.getCurrent_price();
+        long minAllowedIncrement = (long) calculateMinimumIncrement(currentPriceValue);
+        long inputStep = getRealPrice(price_step);
+
+        if (inputStep < minAllowedIncrement) {
+            // Tự động đẩy lên bước giá tối thiểu hợp lệ và thông báo trực quan
+            price_step.setText(currencyFormatter.format(minAllowedIncrement));
+            showErrorFeedback(price_step, "Min step: " + currencyFormatter.format(minAllowedIncrement));
+
+            // Sau khi sửa lại bước giá, kiểm tra luôn giá trần xem có còn hợp lệ không
+            validateAndCorrectCeilingPrice();
+        }
+    }
+
+    /**
+     * Kiểm tra và sửa nếu giá trần thấp hơn mức: Giá hiện tại + Bước giá đang nhập
+     */
+    private void validateAndCorrectCeilingPrice() {
+        if (currentAuction == null || ceilling_price == null || ceilling_price.getText().isEmpty()) return;
+
+        double currentPriceValue = currentAuction.getCurrent_price();
+        long inputStep = getRealPrice(price_step);
+
+        // Nếu ô bước giá trống, lấy bước giá tối thiểu mặc định làm căn cứ
+        if (inputStep <= 0) {
+            inputStep = (long) calculateMinimumIncrement(currentPriceValue);
+        }
+
+        long minAllowedCeiling = (long) (currentPriceValue + inputStep);
+        long inputCeiling = getRealPrice(ceilling_price);
+
+        if (inputCeiling < minAllowedCeiling) {
+            // Tự động điều chỉnh lên mức giá trần tối thiểu hợp lệ
+            ceilling_price.setText(currencyFormatter.format(minAllowedCeiling));
+            showErrorFeedback(ceilling_price, "Min ceiling: " + currencyFormatter.format(minAllowedCeiling));
+        }
+    }
+
+    /**
+     * Hiệu ứng nhấp nháy chữ đỏ cảnh báo lỗi tạm thời trên TextField khi tự động sửa dữ liệu
+     */
+    private void showErrorFeedback(TextField textField, String warningMessage) {
+        String oldStyle = textField.getStyle();
+        String currentText = textField.getText();
+
+        textField.setText("");
+        textField.setPromptText(warningMessage);
+        textField.setStyle(oldStyle + "; -fx-prompt-text-fill: #ff4d4d; -fx-font-weight: bold;");
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(1.5));
+        pause.setOnFinished(e -> {
+            textField.setStyle(oldStyle);
+            textField.setPromptText("");
+            textField.setText(currentText);
+        });
+        pause.play();
+    }
+
+
     // --- HÀM HỖ TRỢ THUẬT TOÁN BIỂU ĐỒ ---
     private String formatTime(long epoch) {
         LocalDateTime dateTime = LocalDateTime.ofEpochSecond(epoch, 0, ZoneOffset.ofHours(7));
@@ -202,7 +282,6 @@ public class prdPageController {
 
     private void initPriceChart() {
         if (prcieChart != null) {
-            // Nạp file CSS vào biểu đồ (Nếu bạn đã thêm ở file FXML rồi thì có thể xóa dòng này)
             try {
                 prcieChart.getStylesheets().add(getClass().getResource("/css/chart-style.css").toExternalForm());
             } catch (Exception e) {
@@ -293,6 +372,41 @@ public class prdPageController {
         } else {
             unregisterAutoBid();
         }
+    }
+
+    private void checkAutoBidStatus() {
+        if (!SessionManager.getInstance().isBidder() || currentAuction == null) {
+            return;
+        }
+        int bidderId = SessionManager.getInstance().getCurrentUser().getId();
+        Object[] payload = new Object[]{currentAuction.getId(), bidderId};
+        Request req = new Request(payload, ActionType.CHECK_AUTOBID_STATUS);
+
+        new Thread(() -> {
+            try {
+                Response res = ClientSocket.sendRequest(req);
+                Platform.runLater(() -> {
+                    if (res != null && "SUCCESS".equals(res.getStatus())) {
+                        // Server trả về AutoBidConfig nếu đã đăng ký, hoặc null nếu chưa
+                        if (res.getData() instanceof AutoBidConfig config) {
+                            // Đã đăng ký -> Cập nhật trạng thái và điền thông tin
+                            updateAutoBidState(true, "Auto-bid active.");
+                            if (ceilling_price != null) {
+                                ceilling_price.setText(currencyFormatter.format(config.getMaxBid()));
+                            }
+                            if (price_step != null) {
+                                price_step.setText(currencyFormatter.format(config.getIncrement()));
+                            }
+                        } else {
+                            // Chưa đăng ký -> Chỉ cập nhật trạng thái
+                            updateAutoBidState(false, "Auto-bid inactive.");
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private void registerAutoBid() {
@@ -824,6 +938,9 @@ public class prdPageController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            // TÍNH NĂNG MỚI: KIỂM TRA TRẠNG THÁI AUTOBID KHI VỪA VÀO TRANG
+            checkAutoBidStatus();
         }
     }
 

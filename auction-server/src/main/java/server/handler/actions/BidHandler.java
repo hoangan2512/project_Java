@@ -27,6 +27,8 @@ public class BidHandler implements ActionHandler {
                 return bidController.handleUnregisterAutoBid(request);
             case GET_BID_HISTORY:
                 return bidController.handleGetBidHistory(request);
+            case CHECK_AUTOBID_STATUS:
+                return bidController.handleCheckAutobidStatus(request);
             default:
                 LOGGER.warning("Unsupported bidder action attempted: "+request.getAction());
                 return new Response("ERROR", null, "Bidder action not supported.");
