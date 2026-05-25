@@ -7,10 +7,10 @@ import message.Request;
 import message.Response;
 import model.User;
 import server.controller.UserController;
-import server.handler.IActionHandler;
+import server.handler.ActionHandler;
 import server.network.ClientHandler;
 
-public class UserHandler implements IActionHandler {
+public class UserHandler implements ActionHandler {
     private final UserController userController = new UserController();
     private static final Logger LOGGER = Logger.getLogger(UserHandler.class.getName());
 

@@ -3,12 +3,12 @@ package server.handler.actions;
 import message.Request;
 import message.Response;
 import server.controller.BidController;
-import server.handler.IActionHandler;
+import server.handler.ActionHandler;
 import server.network.ClientHandler;
 
 import java.util.logging.Logger;
 
-public class BidHandler implements IActionHandler {
+public class BidHandler implements ActionHandler {
     private static final Logger LOGGER = Logger.getLogger(BidHandler.class.getName());
     private BidController bidController = new BidController();
     @Override

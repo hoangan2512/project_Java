@@ -1,16 +1,15 @@
 package server.handler.actions;
 
-import server.handler.IActionHandler;
+import server.handler.ActionHandler;
 
 import java.util.logging.Logger;
 
 import message.Request;
 import message.Response;
-import server.network.AuctionServer;
 import server.network.ClientHandler;
 import server.controller.AuctionController;
 
-public class AuctionHandler implements IActionHandler {
+public class AuctionHandler implements ActionHandler {
     private static final Logger LOGGER = Logger.getLogger(AuctionHandler.class.getName());
     private final AuctionController auctionController = new AuctionController();
 

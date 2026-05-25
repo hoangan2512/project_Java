@@ -63,7 +63,11 @@ public class policy_popupController {
     @FXML
     private void handleEmailClick(MouseEvent event) {
         try {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI("mailto:ontaphochanhnguyenquanganh@gmail.com"));
+            String gmailUrl = "https://mail.google.com/mail/?view=cm&&to=ontaphochanhnguyenquanganh@gmail.com";
+
+            if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                java.awt.Desktop.getDesktop().browse(new java.net.URI(gmailUrl));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

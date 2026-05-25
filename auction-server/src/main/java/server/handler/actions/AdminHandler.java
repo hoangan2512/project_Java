@@ -6,10 +6,10 @@ import message.Response;
 import server.controller.AuctionController;
 import server.controller.ItemController;
 import server.controller.UserController;
-import server.handler.IActionHandler;
+import server.handler.ActionHandler;
 import server.network.ClientHandler;
 
-public class AdminHandler implements IActionHandler {
+public class AdminHandler implements ActionHandler {
     private static final Logger LOGGER = Logger.getLogger(AdminHandler.class.getName());
 
     private final UserController userController = new UserController();

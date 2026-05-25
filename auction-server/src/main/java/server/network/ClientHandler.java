@@ -15,7 +15,7 @@ import model.ActionType;
 import model.User;
 import security.RSA;
 import server.handler.ActionFactory;
-import server.handler.IActionHandler;
+import server.handler.ActionHandler;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -123,7 +123,7 @@ public class ClientHandler implements Runnable {
                 return new Response("FAIL", null, "Lỗi bảo mật: Không thể xác thực thông tin.");
             }
         }
-        IActionHandler handler = ActionFactory.getHandler(type);
+        ActionHandler handler = ActionFactory.getHandler(type);
         if (handler != null) {
             return handler.execute(request, this);
         }
