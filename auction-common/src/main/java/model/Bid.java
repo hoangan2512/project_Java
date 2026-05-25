@@ -19,7 +19,6 @@ public class Bid implements Serializable {
         this.bid_time = bid_time;
     }
     public Bid(){
-
     }
 
     public int getId() {

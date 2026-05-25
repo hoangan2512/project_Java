@@ -37,6 +37,6 @@
     -fx-cursor: hand;
 }
 .email-link:hover {
-    -fx-text-fill: #1ee3cf;
+    -fx-text-fill: #ff8e1f;
     -fx-underline: true;
 }

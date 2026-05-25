@@ -63,10 +63,18 @@ public class sellerHubController_homepage {
     private Node auction_manager_pane;
     @FXML
     private auction_managerController auction_manager_paneController;
+    @FXML
+    private MenuItem col1_increase, col1_decrease, col2_increase, col2_decrease, col5_increase, col5_decrease, col6_increase, col6_decrease, col7_waiting, col7_running, col7_finished, col7_suspended, col7_pending_approval, col7_all;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
     private Object currentSubController;
     private ProductDraftDTO currentDraft = new ProductDraftDTO();
+
+    // --- BIẾN LƯU TRẠNG THÁI SẮP XẾP VÀ LỌC DANH SÁCH ---
+    private List<Auction> masterAuctionList = new java.util.ArrayList<>(); // Lưu bản gốc từ Server về để sort/filter offline không cần kéo lại mạng
+    private String currentSortField = "STATUS_DEFAULT"; // ID, NAME, TIME, PRICE, STATUS_DEFAULT
+    private boolean isAscending = true;
+    private String currentStatusFilter = "ALL";
 
     // --- BIẾN GHI NHỚ ĐỂ BYPASS CẢNH BÁO ---
     private String lastWarnedName = "";
@@ -75,11 +83,35 @@ public class sellerHubController_homepage {
 
     @FXML
     public void initialize() {
+        // --- Cột 1: ID ---
+        if (col1_increase != null) col1_increase.setOnAction(e -> { currentSortField = "ID"; isAscending = true; applySortAndFilter(); });
+        if (col1_decrease != null) col1_decrease.setOnAction(e -> { currentSortField = "ID"; isAscending = false; applySortAndFilter(); });
+
+        // --- Cột 2: Product Name ---
+        if (col2_increase != null) col2_increase.setOnAction(e -> { currentSortField = "NAME"; isAscending = true; applySortAndFilter(); });
+        if (col2_decrease != null) col2_decrease.setOnAction(e -> { currentSortField = "NAME"; isAscending = false; applySortAndFilter(); });
+
+        // --- Cột 5: Current Time (Thời gian bắt đầu) ---
+        if (col5_increase != null) col5_increase.setOnAction(e -> { currentSortField = "TIME"; isAscending = true; applySortAndFilter(); });
+        if (col5_decrease != null) col5_decrease.setOnAction(e -> { currentSortField = "TIME"; isAscending = false; applySortAndFilter(); });
+
+        // --- Cột 6: Current Price ---
+        if (col6_increase != null) col6_increase.setOnAction(e -> { currentSortField = "PRICE"; isAscending = true; applySortAndFilter(); });
+        if (col6_decrease != null) col6_decrease.setOnAction(e -> { currentSortField = "PRICE"; isAscending = false; applySortAndFilter(); });
+
+        // --- Cột 7: Lọc theo trạng thái (Filter Status) [ĐÃ BỔ SUNG ALL & PENDING_APPROVAL] ---
+        if (col7_all != null) col7_all.setOnAction(e -> { currentStatusFilter = "ALL"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+        if (col7_pending_approval != null) col7_pending_approval.setOnAction(e -> { currentStatusFilter = "PENDING_APPROVAL"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+        if (col7_waiting != null) col7_waiting.setOnAction(e -> { currentStatusFilter = "WAITING"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+        if (col7_running != null) col7_running.setOnAction(e -> { currentStatusFilter = "RUNNING"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+        if (col7_finished != null) col7_finished.setOnAction(e -> { currentStatusFilter = "FINISHED"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+        if (col7_suspended != null) col7_suspended.setOnAction(e -> { currentStatusFilter = "SUSPENDED"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+
         try {
-            Image usr_img = new Image(getClass().getResourceAsStream("/image/avatar1.png"));
+            Image usr_img = new Image(getClass().getResourceAsStream("../../image/avatar1.png"));
             userAvatar.setFill(new ImagePattern(usr_img));
 
-            Image search_img = new Image(getClass().getResourceAsStream("/image/search_icon1.png"));
+            Image search_img = new Image(getClass().getResourceAsStream("../../image/search_icon1.png"));
             searchBtn.setFill(new ImagePattern(search_img));
         } catch (Exception e) {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
@@ -95,36 +127,27 @@ public class sellerHubController_homepage {
             System.out.println("Logged In: " + user.getUsername());
         }
 
-        // =========================================================
-        // ---> THÊM MỚI 1: GÁN SỰ KIỆN CHO NÚT BACK CỦA BẢNG CHI TIẾT
-        // =========================================================
         if (auction_manager_paneController != null) {
             auction_manager_paneController.setOnBack(() -> {
-                // Tắt bảng chi tiết
                 if (auction_manager_pane != null) {
                     auction_manager_pane.setVisible(false);
                     auction_manager_pane.setManaged(false);
                 }
-                // Làm mới lại danh sách
                 fetchAuctions();
             });
         }
 
-        // =========================================================
-        // CẤU HÌNH TOGGLE GROUP CHO 2 NÚT CHUYỂN TAB
-        // =========================================================
         ToggleGroup actionGroup = new ToggleGroup();
 
         if (list_new_item != null) {
             list_new_item.setToggleGroup(actionGroup);
-            list_new_item.setSelected(true); // Đặt trạng thái mặc định được chọn
+            list_new_item.setSelected(true);
         }
 
         if (auction_manager != null) {
             auction_manager.setToggleGroup(actionGroup);
         }
 
-        // Khởi tạo giao diện ẩn phần auction ban đầu
         if (auction_scroll != null && auction_stack != null) {
             auction_scroll.setVisible(false);
             auction_scroll.setManaged(false);
@@ -132,44 +155,36 @@ public class sellerHubController_homepage {
             auction_stack.setManaged(false);
         }
 
-        // Lắng nghe sự kiện chuyển đổi giữa 2 nút
         actionGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null) {
-                // Ép buộc luôn phải có 1 nút được chọn
                 oldValue.setSelected(true);
                 return;
             }
 
             if (newValue == list_new_item) {
-                // Hiện giao diện "Thêm sản phẩm mới"
                 contentArea.setVisible(true);
                 contentArea.setManaged(true);
                 if (NextBtn != null) { NextBtn.setVisible(true); NextBtn.setManaged(true); }
                 if (backBtn != null) { backBtn.setVisible(true); backBtn.setManaged(true); }
 
-                // Ẩn giao diện "Quản lý đấu giá"
                 if (auction_scroll != null) { auction_scroll.setVisible(false); auction_scroll.setManaged(false); }
                 if (auction_stack != null) { auction_stack.setVisible(false); auction_stack.setManaged(false); }
 
             } else if (newValue == auction_manager) {
-                // Ẩn giao diện "Thêm sản phẩm mới"
                 contentArea.setVisible(false);
                 contentArea.setManaged(false);
                 if (NextBtn != null) { NextBtn.setVisible(false); NextBtn.setManaged(false); }
                 if (backBtn != null) { backBtn.setVisible(false); backBtn.setManaged(false); }
                 Status.setVisible(false);
 
-                // HIỂN THỊ CẢ DANH SÁCH VÀ KHUNG CHI TIẾT THEO YÊU CẦU TRƯỚC ĐÓ
                 if (auction_scroll != null) { auction_scroll.setVisible(true); auction_scroll.setManaged(true); }
                 if (auction_stack != null) { auction_stack.setVisible(true); auction_stack.setManaged(true); }
 
-                // ---> THÊM MỚI 2: ĐẢM BẢO BẢNG CHI TIẾT BỊ TẮT KHI BẤM CHUYỂN TAB
                 if (auction_manager_pane != null) {
                     auction_manager_pane.setVisible(false);
                     auction_manager_pane.setManaged(false);
                 }
 
-                // Fetch danh sách các phiên đấu giá lên grid (Làm mới trang)
                 fetchAuctions();
             }
         });
@@ -328,9 +343,6 @@ public class sellerHubController_homepage {
                 loadChildFXML("/view/sellerHub/new_item_page/prdOverview.fxml");
                 if (currentSubController instanceof prdOverview) {
                     ((prdOverview) currentSubController).setOnPreviewCallback(() -> {
-                        // Khi bấm "Preview", kích hoạt nút "auction_manager" (Nút quản lý đấu giá)
-                        // Lệnh này sẽ tự động kích hoạt listener trong initialize() để bật auction_scroll,
-                        // auction_stack, ẩn các nút tạo mới và fetch dữ liệu từ Database.
                         if (auction_manager != null) {
                             auction_manager.setSelected(true);
                         }
@@ -501,80 +513,17 @@ public class sellerHubController_homepage {
             User currentUser = SessionManager.getInstance().getCurrentUser();
             if (currentUser == null) return;
 
-            int currentSellerId = currentUser.getId();
-
             Request req = new Request(null, ActionType.GET_LIST);
             Response res = ClientSocket.sendRequest(req);
 
             Platform.runLater(() -> {
+                // KHI NẠP MỚI HOÀN TOÀN TỪ SERVER: Reset bộ lọc tổng thể
                 clearProductGridAndReleaseResources();
 
                 if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
                     try {
-                        List<Auction> auctions = (List<model.Auction>) res.getData();
-
-                        // SẮP XẾP SONG SONG:
-                        // 1. Trạng thái (PENDING -> WAITING -> RUNNING...)
-                        // 2. Theo thời gian (Phiên nào mở sớm hơn xếp trước)
-                        auctions.sort((a1, a2) -> {
-                            int weight1 = getAuctionStatusWeight(a1);
-                            int weight2 = getAuctionStatusWeight(a2);
-                            if (weight1 != weight2) return Integer.compare(weight1, weight2);
-
-                            LocalDateTime time1 = a1.getStart_time();
-                            LocalDateTime time2 = a2.getStart_time();
-                            if (time1 == null && time2 == null) return 0;
-                            if (time1 == null) return 1;
-                            if (time2 == null) return -1;
-                            return time1.compareTo(time2);
-                        });
-
-                        Locale localeVN = new Locale("vi", "VN");
-                        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
-
-                        for (model.Auction auction : auctions) {
-                            try {
-                                // Lọc: Chỉ lấy các phiên đấu giá thuộc về Seller đang đăng nhập
-                                if (auction.getItem() == null || auction.getItem().getSeller_id() != currentSellerId) {
-                                    continue;
-                                }
-
-                                FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/sellerHub/list.fxml"));
-                                AnchorPane listNode = loader.load();
-                                listController controller = loader.getController();
-
-                                listNode.setUserData(controller);
-
-                                String formattedPrice = currencyFormatter.format(auction.getCurrent_price());
-
-                                // Ưu tiên hiển thị mã sản phẩm do người bán tự định nghĩa
-                                String prdId = (auction.getItem().getUser_prdID() != null && !auction.getItem().getUser_prdID().isEmpty())
-                                        ? auction.getItem().getUser_prdID()
-                                        : String.valueOf(auction.getItem_id());
-
-                                String[] rowData = {
-                                        String.valueOf(auction.getId()),
-                                        auction.getItem().getName() != null ? auction.getItem().getName() : "Unknown",
-                                        prdId,
-                                        String.valueOf(auction.getItem().getSeller_id()),
-                                        "", // Cột 5 để trống vì startCountdown sẽ ghi đè vào đây
-                                        formattedPrice,
-                                        auction.getStatus() != null ? auction.getStatus() : "WAITING"
-                                };
-
-                                controller.setRowData(rowData);
-                                controller.startCountdown(auction.getStart_time(), auction.getEnd_time());
-
-                                // Sự kiện Click vào dòng -> Truyền dữ liệu thô sang hàm mở Manager để xử lý Lazy Loading
-                                controller.setOnRowClick(() -> {
-                                    openAuctionManager(auction);
-                                });
-
-                                productGrid.getChildren().add(listNode);
-                            } catch (Exception e) {
-                                System.err.println("Lỗi render danh sách seller: " + e.getMessage());
-                            }
-                        }
+                        masterAuctionList = (List<Auction>) res.getData();
+                        applySortAndFilter();
                     } catch (Exception e) { e.printStackTrace(); }
                 }
             });
@@ -602,7 +551,100 @@ public class sellerHubController_homepage {
         return 6;
     }
 
-    private void clearProductGridAndReleaseResources() {
+    private void applySortAndFilter() {
+        if (masterAuctionList == null || masterAuctionList.isEmpty()) return;
+
+        User currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+        int currentSellerId = currentUser.getId();
+
+        // CHỈ XOÁ UI CŨ TRÊN GRID, Không reset biến trạng thái để tính năng Sắp xếp/Lọc hoạt động tốt
+        clearGridUIOnly();
+
+        // LỌC 1: Chỉ lấy sản phẩm của Seller đang đăng nhập và lọc theo Status được chọn (Bao gồm ALL và PENDING_APPROVAL)
+        List<Auction> filteredList = masterAuctionList.stream()
+                .filter(a -> a.getItem() != null && a.getItem().getSeller_id() == currentSellerId)
+                .filter(a -> "ALL".equalsIgnoreCase(currentStatusFilter) ||
+                        (a.getStatus() != null && a.getStatus().equalsIgnoreCase(currentStatusFilter)))
+                .collect(java.util.stream.Collectors.toList());
+
+        // LỌC 2: Tiến hành Sắp xếp (Sort) dữ liệu dựa trên thuộc tính được chọn
+        filteredList.sort((a1, a2) -> {
+            int result = 0;
+            switch (currentSortField) {
+                case "ID":
+                    result = Integer.compare(a1.getId(), a2.getId());
+                    break;
+                case "NAME":
+                    String name1 = a1.getItem() != null && a1.getItem().getName() != null ? a1.getItem().getName() : "";
+                    String name2 = a2.getItem() != null && a2.getItem().getName() != null ? a2.getItem().getName() : "";
+                    result = name1.compareToIgnoreCase(name2);
+                    break;
+                case "TIME":
+                    LocalDateTime time1 = a1.getStart_time();
+                    LocalDateTime time2 = a2.getStart_time();
+                    if (time1 == null) return 1;
+                    if (time2 == null) return -1;
+                    result = time1.compareTo(time2);
+                    break;
+                case "PRICE":
+                    result = Double.compare(a1.getCurrent_price(), a2.getCurrent_price());
+                    break;
+                case "STATUS_DEFAULT":
+                default:
+                    int weight1 = getAuctionStatusWeight(a1);
+                    int weight2 = getAuctionStatusWeight(a2);
+                    if (weight1 != weight2) {
+                        result = Integer.compare(weight1, weight2);
+                    } else {
+                        LocalDateTime t1 = a1.getStart_time();
+                        LocalDateTime t2 = a2.getStart_time();
+                        result = (t1 != null && t2 != null) ? t1.compareTo(t2) : 0;
+                    }
+                    return result;
+            }
+            return isAscending ? result : -result;
+        });
+
+        // HIỂN THỊ LÊN GIAO DIỆN
+        Locale localeVN = new Locale("vi", "VN");
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
+
+        for (Auction auction : filteredList) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/sellerHub/list.fxml"));
+                AnchorPane listNode = loader.load();
+                listController controller = loader.getController();
+                listNode.setUserData(controller);
+
+                String formattedPrice = currencyFormatter.format(auction.getCurrent_price());
+                String prdId = (auction.getItem().getUser_prdID() != null && !auction.getItem().getUser_prdID().isEmpty())
+                        ? auction.getItem().getUser_prdID()
+                        : String.valueOf(auction.getItem_id());
+
+                String[] rowData = {
+                        String.valueOf(auction.getId()),
+                        auction.getItem().getName() != null ? auction.getItem().getName() : "Unknown",
+                        auction.getItem().getUser_prdID() != null ? auction.getItem().getUser_prdID() : "Unknown",
+                        prdId,
+                        "",
+                        formattedPrice,
+                        auction.getStatus() != null ? auction.getStatus() : "WAITING"
+                };
+
+                controller.setRowData(rowData);
+                controller.startCountdown(auction.getStart_time(), auction.getEnd_time());
+                controller.setOnRowClick(() -> openAuctionManager(auction));
+
+                productGrid.getChildren().add(listNode);
+            } catch (Exception e) {
+                System.err.println("Lỗi hiển thị dòng sau khi sort: " + e.getMessage());
+            }
+        }
+    }
+
+    // Hàm dọn dẹp UI thuần túy để chuẩn bị vẽ các Grid đã được sắp xếp hoặc lọc
+    private void clearGridUIOnly() {
         if (productGrid != null) {
             for (Node node : productGrid.getChildren()) {
                 Object controller = node.getUserData();
@@ -611,8 +653,19 @@ public class sellerHubController_homepage {
                 }
             }
             productGrid.getChildren().clear();
-            System.out.println("[HOMEPAGE] Đã giải phóng toàn bộ bộ đếm thời gian chạy ẩn thành công.");
         }
+    }
+
+    // Hàm dọn dẹp tổng lực: Vừa xóa UI vừa reset cứng bộ lọc về mặc định ban đầu
+    private void clearProductGridAndReleaseResources() {
+        // 1. Reset các biến trạng thái Sort và Filter về mặc định
+        this.currentSortField = "STATUS_DEFAULT";
+        this.isAscending = true;
+        this.currentStatusFilter = "ALL";
+
+        // 2. Dọn sạch UI
+        clearGridUIOnly();
+        System.out.println("[HOMEPAGE] Đã giải phóng bộ đếm và làm sạch toàn bộ bộ lọc (Filter/Sort).");
     }
 
     private void openAuctionManager(Auction auction) {

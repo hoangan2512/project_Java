@@ -227,7 +227,7 @@ public class welcomeController {
     @FXML
     private void handleGoToSeller(MouseEvent event) {
         try {
-            sceneSwitcher.openSellerSignInPopup(event);
+            sceneSwitcher.switchToSellerSignIn(event);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }

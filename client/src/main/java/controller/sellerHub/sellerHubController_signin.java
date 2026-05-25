@@ -60,24 +60,6 @@ public class sellerHubController_signin {
             backToBidHub.setVisible(false);
 
             LogoutBtn.setVisible(true);
-        } else if (SessionManager.getInstance().isBidder()) {
-            Status.setAlignment(javafx.geometry.Pos.CENTER);
-            Status.setMaxWidth(Double.MAX_VALUE);
-            Status.setVisible(false);
-            UsrNameField.setVisible(false);
-            PassField.setVisible(false);
-            LoginBtn.setVisible(false);
-            backBtn.setVisible(false);
-            SignInBtn.setVisible(false);
-            LogoutBtn.setVisible(false);
-
-            SignInOpt.setVisible(true);
-            LoginOpt.setVisible(true);
-            line1.setVisible(true);
-            line2.setVisible(true);
-            OR.setVisible(true);
-            backToBidHub.setVisible(true);
-            backToBidHub.setDisable(false);
         } else {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
@@ -94,7 +76,7 @@ public class sellerHubController_signin {
             line1.setVisible(true);
             line2.setVisible(true);
             OR.setVisible(true);
-            backToBidHub.setVisible(false);
+            backToBidHub.setVisible(true);
             backToBidHub.setDisable(false);
         }
     }

@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -34,7 +35,10 @@ public class SceneSwitchController {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/signIn.fxml"));
         Parent root = loader.load();
         Stage popupStage = new Stage();
-        popupStage.setTitle("BidHub: SignIn - LogIn Console");
+        popupStage.setTitle("BidHub: User Center");
+        Image icon = new Image(getClass().getResourceAsStream("/image/logo_project_2-removebg-preview.png"));
+        popupStage.getIcons().add(icon);
+        popupStage.setResizable(false);
         popupStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
         Scene scene = new Scene(root);
         popupStage.setScene(scene);
@@ -176,7 +180,7 @@ public class SceneSwitchController {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/sellerHub/sellerHub_signin.fxml"));
         Parent root = loader.load();
         Stage popupStage = new Stage();
-        popupStage.setTitle("SellerHub: SignIn - LogIn Console");
+        popupStage.setTitle("SellerHub: User Center");
         popupStage.initModality(Modality.APPLICATION_MODAL);
         Scene scene = new Scene(root);
         popupStage.setScene(scene);

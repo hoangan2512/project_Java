@@ -5,10 +5,9 @@ import model.ActionType;
 import server.handler.actions.*;
 
 public class ActionFactory {
-    public static IActionHandler getHandler(ActionType type) {
+    public static ActionHandler getHandler(ActionType type) {
         if (type == null) return null;
 
-        // Chỉ tạo Handler khi có request thực tế.
         switch (type) {
             case LOGIN_BIDDER:
             case LOGIN_SELLER:

@@ -3,12 +3,12 @@ package server.handler.actions;
 import message.Request;
 import message.Response;
 import server.controller.ItemController;
-import server.handler.IActionHandler;
+import server.handler.ActionHandler;
 import server.network.ClientHandler;
 
 import java.util.logging.Logger;
 
-public class SellerHandler implements IActionHandler {
+public class SellerHandler implements ActionHandler {
     private static final Logger LOGGER = Logger.getLogger(SellerHandler.class.getName());
     private final ItemController itemController = new ItemController();
 
