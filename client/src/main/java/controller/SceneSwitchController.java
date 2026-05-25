@@ -143,7 +143,7 @@ public class SceneSwitchController {
 
             // 3. Hiển thị Popup
             Stage stage = new Stage();
-            stage.setTitle("Chúc mừng!");
+            stage.setTitle("BidHub: Winner Notification");
             stage.setScene(new Scene(root));
             stage.show();
 

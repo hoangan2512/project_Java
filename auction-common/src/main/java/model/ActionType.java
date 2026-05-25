@@ -21,6 +21,7 @@ public enum ActionType {
     GET_SELLER_NAME,
     GOOGLE_LOGIN,
     GET_IMAGE,
+    CHECK_AUTOBID_STATUS,
 
     ADMIN_GET_ALL_USERS,
     ADMIN_BAN_USER,
