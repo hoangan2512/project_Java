@@ -38,7 +38,9 @@ public class listController {
                     col7.setStyle("-fx-text-fill: #FFC107;");
                 } else if (status.equals("FINISHED")) {
                     col7.setStyle("-fx-text-fill: #919191;");
-                }else {
+                } else if (status.equals("PROPOSAL")) {
+                    col7.setStyle("-fx-text-fill: #FFC107;");
+                } else {
                     col7.setStyle("-fx-text-fill: WHITE;");
                 }
             }

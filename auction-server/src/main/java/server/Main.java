@@ -31,6 +31,7 @@ public class Main {
                 "imgpath5 TEXT, " +
                 "imgpath6 TEXT, " +
                 "categories TEXT, " +
+                "changes TEXT, " +
                 "moderation_status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL'," + // PENDING_APPROVAL, APPROVED, REJECTED
                 "FOREIGN KEY (seller_id) REFERENCES users(id)" +
                 ");";
@@ -67,9 +68,6 @@ public class Main {
                 "reason_text TEXT NOT NULL" +
                 ");";
 
-        // language=SQLite
-        String createAdmin = "INSERT OR IGNORE INTO users (username, password, role, status) VALUES ('admin', 'admin123', 'ADMIN', 'ACTIVE');";
-
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(usersTable);
@@ -77,7 +75,6 @@ public class Main {
             stmt.execute(auctionsTable);
             stmt.execute(bidsTable);
             stmt.execute(reasonsTable);
-            stmt.execute(createAdmin); // Chạy lệnh tạo admin
             System.out.println("Database structure is up-to-date. Admin user is ready.");
         } catch (Exception e) {
             System.err.println("Error during database initialization!");

@@ -15,7 +15,7 @@ public class ItemRepository {
      */
     public int addItem(Item item) {
         // language=SQLite
-        String sql = "INSERT INTO items (user_prdID, name, description, starting_price, seller_id, imgpath, imgpath1, imgpath2, imgpath3, imgpath4, imgpath5, imgpath6, categories, moderation_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO items (user_prdID, name, description, starting_price, seller_id, imgpath, imgpath1, imgpath2, imgpath3, imgpath4, imgpath5, imgpath6, categories, moderation_status, changes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         // SỬA LỖI: Dùng try-with-resources cho Connection
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -34,6 +34,7 @@ public class ItemRepository {
             pstmt.setString(12, item.getImgPath6());
             pstmt.setString(13, item.getCategories());
             pstmt.setString(14, "PENDING_APPROVAL");
+            pstmt.setString(15, item.getChanges());
 
             int rows = pstmt.executeUpdate();
             if (rows > 0) {
@@ -70,6 +71,7 @@ public class ItemRepository {
                 item.setImgPath(rs.getString("imgpath"));
                 item.setCategories(rs.getString("categories"));
                 item.setModeration_status(rs.getString("moderation_status"));
+                item.setChanges(rs.getString("changes"));
                 itemList.add(item);
             }
         } catch (Exception e) {
@@ -95,6 +97,7 @@ public class ItemRepository {
                     item.setImgPath(rs.getString("imgpath"));
                     item.setCategories(rs.getString("categories"));
                     item.setModeration_status(rs.getString("moderation_status"));
+                    item.setChanges(rs.getString("changes"));
                     return item;
                 }
             }
@@ -222,6 +225,86 @@ public class ItemRepository {
 
         } catch (SQLException e) {
             System.err.println("Lỗi khi cập nhật mô tả sản phẩm (ID: " + itemId + "): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean createChanges(int itemId, String changes) {
+        // language=SQLite
+        String sql = "UPDATE items SET changes = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, changes);
+            pstmt.setInt(2, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi tạo/cập nhật changes cho sản phẩm (ID: " + itemId + "): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public String getChanges(int itemId) {
+        // language=SQLite
+        String sql = "SELECT changes FROM items WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, itemId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("changes");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy changes của sản phẩm (ID: " + itemId + "): " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null; // Trả về null nếu không tìm thấy hoặc có lỗi
+    }
+
+    public boolean deleteChanges(int itemId) {
+        // language=SQLite
+        // Đặt giá trị changes về NULL. (Bạn có thể đổi thành '' nếu DB yêu cầu NOT NULL)
+        String sql = "UPDATE items SET changes = NULL WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi xóa changes của sản phẩm (ID: " + itemId + "): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean acceptChanges(int itemId) {
+        // language=SQLite
+        // Tối ưu: Dùng 1 câu lệnh SQL để vừa chuyển dữ liệu vừa clear cột changes
+        String sql = "UPDATE items SET description = changes, changes = NULL WHERE id = ? AND changes IS NOT NULL";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, itemId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0; // Trả về true nếu cập nhật thành công ít nhất 1 dòng
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi cập nhật changes vào description cho sản phẩm (ID: " + itemId + "): " + e.getMessage());
             e.printStackTrace();
             return false;
         }

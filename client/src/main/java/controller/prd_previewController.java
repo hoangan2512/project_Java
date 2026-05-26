@@ -68,7 +68,7 @@ public class prd_previewController {
 
         if (countdownTimer != null) countdownTimer.stop();
 
-        if ("WAITING".equals(status) || "UPCOMING".equals(status)) {
+        if ("WAITING".equals(status) || "UPCOMING".equals(status) || "PROPOSAL".equals(status) || "DELETE_PROPOSAL".equals(status)) {
             updateUpcomingTimeLabel();
 
             if (remainingSeconds > 0) {

@@ -56,6 +56,18 @@ public class AdminHandler implements ActionHandler {
             case ADMIN_GET_USER_REASON:
                 return userController.handleGetBanReason(request);
 
+            case ADMIN_GET_CHANGES:
+                return itemController.handleGetChanges(request);
+
+            case ADMIN_DELETE_CHANGES:
+                return itemController.handleDeleteChanges(request);
+
+            case ADMIN_ACCEPT_CHANGES:
+                return itemController.handleAcceptChanges(request);
+
+            case ADMIN_REFUSE_DELETE_PROPOSAL:
+                return itemController.handleRefuseDeleteProposal(request);
+
             default:
                 LOGGER.warning("Unsupported admin action attempted: " + request.getAction());
                 return new Response("ERROR", null, "Admin action not supported.");

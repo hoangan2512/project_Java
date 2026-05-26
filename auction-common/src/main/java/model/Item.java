@@ -14,6 +14,7 @@ public class Item extends entity implements Serializable {
     private double currentPrice;
     private String categories;
     private String moderation_status;
+    private String changes; // --- BỔ SUNG CỘT CHANGES ---
 
     // --- BỔ SUNG BIẾN MÃ SẢN PHẨM CỦA NGƯỜI DÙNG ---
     private String user_prdID;
@@ -56,9 +57,6 @@ public class Item extends entity implements Serializable {
         super(0, "");
     }
 
-    // ==========================================
-    // GETTER & SETTER CHO USER_PRDID (MỚI)
-    // ==========================================
     public String getUser_prdID() {
         return user_prdID;
     }
@@ -67,9 +65,13 @@ public class Item extends entity implements Serializable {
         this.user_prdID = user_prdID;
     }
 
-    // ==========================================
-    // CÁC GETTER & SETTER KHÁC (GIỮ NGUYÊN)
-    // ==========================================
+    public String getChanges() {
+        return changes;
+    }
+
+    public void setChanges(String changes) {
+        this.changes = changes;
+    }
     public void setDescription(String description) {
         this.description = description;
     }
