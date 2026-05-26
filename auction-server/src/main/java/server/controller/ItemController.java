@@ -359,4 +359,208 @@ public class ItemController {
 
         return response;
     }
+
+    public Response handleCreateChanges(Request request) {
+        Response response = new Response();
+        Object payloadObj = request.getPayload();
+
+        try {
+            // Yêu cầu Client gửi lên mảng Object [itemId, changesString]
+            if (payloadObj instanceof Object[]) {
+                Object[] payload = (Object[]) payloadObj;
+
+                if (payload.length == 2 && payload[0] instanceof Number && payload[1] instanceof String) {
+                    int itemId = ((Number) payload[0]).intValue();
+                    String changes = (String) payload[1];
+
+                    boolean isUpdated = itemRepo.createChanges(itemId, changes);
+
+                    if (isUpdated) {
+                        // NEW LOGIC: Set item and auction status to "PROPOSAL"
+                        itemRepo.updateStatus(itemId, "PROPOSAL");
+                        Auction auction = auctionRepo.getAuctionByItemId(itemId);
+                        if (auction != null) {
+                            auctionRepo.updateStatus(auction.getId(), "PROPOSAL");
+                        }
+
+                        response.setStatus("SUCCESS");
+                        response.setMessage("Cập nhật lịch sử thay đổi (changes) thành công và chuyển trạng thái sang PROPOSAL.");
+                    } else {
+                        response.setStatus("FAIL");
+                        response.setMessage("Không thể cập nhật. Có thể ID sản phẩm không tồn tại.");
+                    }
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Định dạng dữ liệu không hợp lệ. Yêu cầu mảng [Number, String].");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu payload không hợp lệ. Yêu cầu bắt buộc gửi dạng mảng Object[].");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý Create Changes!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi tạo changes.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
+    public Response handleGetChanges(Request request) {
+        Response response = new Response();
+
+        try {
+            // Yêu cầu Client gửi lên itemId
+            if (request.getPayload() instanceof Number) {
+                int itemId = ((Number) request.getPayload()).intValue();
+
+                String changes = itemRepo.getChanges(itemId);
+
+                if (changes != null) {
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Lấy dữ liệu changes thành công.");
+                    response.setData(changes); // Trả về chuỗi changes cho Client
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không tìm thấy dữ liệu changes hoặc sản phẩm không tồn tại.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý Get Changes!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi lấy changes.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
+    public Response handleDeleteChanges(Request request) {
+        Response response = new Response();
+
+        try {
+            // Yêu cầu Client gửi lên itemId
+            if (request.getPayload() instanceof Number) {
+                int itemId = ((Number) request.getPayload()).intValue();
+
+                boolean isDeleted = itemRepo.deleteChanges(itemId);
+
+                if (isDeleted) {
+                    // NEW LOGIC: Set item and auction status to "PROPOSAL"
+                    itemRepo.updateStatus(itemId, "WAITING");
+                    Auction auction = auctionRepo.getAuctionByItemId(itemId);
+                    if (auction != null) {
+                        auctionRepo.updateStatus(auction.getId(), "WAITING");
+                    }
+
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã xóa dữ liệu changes thành công và chuyển trạng thái sang PROPOSAL.");
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể xóa. Có thể ID sản phẩm không tồn tại.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý Delete Changes!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi xóa changes.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
+    public Response handleAcceptChanges(Request request) {
+        Response response = new Response();
+
+        try {
+            // Yêu cầu Client gửi lên itemId
+            if (request.getPayload() instanceof Number) {
+                int itemId = ((Number) request.getPayload()).intValue();
+
+                // Gọi hàm đắp dữ liệu từ changes sang description và xóa changes
+                boolean isAccepted = itemRepo.acceptChanges(itemId);
+
+                if (isAccepted) {
+                    // LOGIC TƯƠNG TỰ DELETE: Chuyển item và auction về lại trạng thái bình thường (WAITING)
+                    itemRepo.updateStatus(itemId, "WAITING");
+                    Auction auction = auctionRepo.getAuctionByItemId(itemId);
+                    if (auction != null) {
+                        auctionRepo.updateStatus(auction.getId(), "WAITING");
+                    }
+
+                    response.setStatus("SUCCESS");
+                    response.setMessage("Đã chấp nhận các thay đổi, cập nhật mô tả thành công và đưa sản phẩm về WAITING.");
+                } else {
+                    response.setStatus("FAIL");
+                    response.setMessage("Không thể chấp nhận thay đổi. Có thể ID sản phẩm không tồn tại hoặc không có thay đổi (changes) nào.");
+                }
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu Payload không hợp lệ. Yêu cầu truyền lên ID kiểu số (Integer).");
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi xử lý Accept Changes!");
+            response.setStatus("ERROR");
+            response.setMessage("Đã xảy ra lỗi trên Server khi chấp nhận thay đổi.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
+    public Response handleSellerDeleteProposal(Request request) {
+        Response response = new Response();
+        try {
+            if (request.getPayload() instanceof Number) {
+                int itemId = ((Number) request.getPayload()).intValue();
+                itemRepo.updateStatus(itemId, "DELETE_PROPOSAL");
+                Auction auction = auctionRepo.getAuctionByItemId(itemId);
+                if (auction != null) {
+                    auctionRepo.updateStatus(auction.getId(), "DELETE_PROPOSAL");
+                }
+                response.setStatus("SUCCESS");
+                response.setMessage("Đã gửi yêu cầu xóa sản phẩm đến quản trị viên.");
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu không hợp lệ.");
+            }
+        } catch (Exception e) {
+            response.setStatus("ERROR");
+            response.setMessage("Lỗi hệ thống.");
+            e.printStackTrace();
+        }
+        return response;
+    }
+
+    public Response handleRefuseDeleteProposal(Request request) {
+        Response response = new Response();
+        try {
+            if (request.getPayload() instanceof Number) {
+                int itemId = ((Number) request.getPayload()).intValue();
+                itemRepo.updateStatus(itemId, "WAITING");
+                Auction auction = auctionRepo.getAuctionByItemId(itemId);
+                if (auction != null) {
+                    auctionRepo.updateStatus(auction.getId(), "WAITING");
+                }
+                response.setStatus("SUCCESS");
+                response.setMessage("Đã từ chối yêu cầu xóa sản phẩm.");
+            } else {
+                response.setStatus("FAIL");
+                response.setMessage("Dữ liệu không hợp lệ.");
+            }
+        } catch (Exception e) {
+            response.setStatus("ERROR");
+            response.setMessage("Lỗi hệ thống.");
+            e.printStackTrace();
+        }
+        return response;
+    }
 }

@@ -38,6 +38,18 @@ public class SellerHandler implements ActionHandler {
             case SELLER_GET_REASON:
                 return itemController.handleGetRejectReason(request);
 
+            case PROPOSE_CHANGES:
+                return itemController.handleCreateChanges(request);
+
+            case SELLER_GET_CHANGES:
+                return itemController.handleGetChanges(request);
+
+            case SELLER_DELETE_CHANGES:
+                return itemController.handleDeleteChanges(request);
+
+            case SELLER_DELETE_PROPOSAL:
+                return itemController.handleSellerDeleteProposal(request);
+
             default:
                 LOGGER.warning("Unsupported seller action attempted: " + request.getAction());
                 return new Response("ERROR", null, "Seller action not supported.");

@@ -91,7 +91,7 @@ public class customSearchController {
         }
 
         String status = existingAuc.getStatus();
-        if ("RUNNING".equals(status) && timeToEndSeconds <= 0) {
+        if (("RUNNING".equals(status) || "PROPOSAL".equals(status) || "DELETE_PROPOSAL".equals(status)) && timeToEndSeconds <= 0) {
             status = "FINISHED";
         } else if ("WAITING".equals(status) && timeToStartSeconds <= 0) {
             if (timeToEndSeconds > 0) {
@@ -184,7 +184,7 @@ public class customSearchController {
 
                         if ("RUNNING".equals(status) && timeToEndSeconds <= 0) {
                             status = "FINISHED";
-                        } else if ("WAITING".equals(status) && timeToStartSeconds <= 0) {
+                        } else if (("WAITING".equals(status) || "PROPOSAL".equals(status) || "DELETE_PROPOSAL".equals(status)) && timeToStartSeconds <= 0) {
                             if (timeToEndSeconds > 0) {
                                 status = "RUNNING";
                             } else {

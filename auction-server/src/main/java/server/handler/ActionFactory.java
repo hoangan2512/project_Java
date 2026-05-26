@@ -27,6 +27,10 @@ public class ActionFactory {
             case ADMIN_GET_ITEM_REASON:
             case ADMIN_GET_AUCTION_REASON:
             case ADMIN_GET_USER_REASON:
+            case ADMIN_GET_CHANGES:
+            case ADMIN_DELETE_CHANGES:
+            case ADMIN_ACCEPT_CHANGES:
+            case ADMIN_REFUSE_DELETE_PROPOSAL:
                 return new AdminHandler();
 
             case CREATE_ITEM:
@@ -34,6 +38,10 @@ public class ActionFactory {
             case SELLER_DELETE_ITEM:
             case UPDATE_ITEM_DESCRIPTION:
             case SELLER_GET_REASON:
+            case PROPOSE_CHANGES:
+            case SELLER_GET_CHANGES:
+            case SELLER_DELETE_CHANGES:
+            case SELLER_DELETE_PROPOSAL:
                 return new SellerHandler();
 
             case BID:

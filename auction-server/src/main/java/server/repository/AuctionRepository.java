@@ -145,6 +145,23 @@ public class AuctionRepository {
         return null;
     }
 
+    public Auction getAuctionByItemId(int itemId) {
+        String sql = BASE_SELECT_SQL + " WHERE a.item_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToAuction(rs, false); // Xem chi tiết nạp full dữ liệu
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy thông tin phiên đấu giá theo Item ID " + itemId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public List<Auction> getAuctionsByStatus(String status) {
         List<Auction> auctions = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.status = ?";
@@ -169,7 +186,7 @@ public class AuctionRepository {
 
     public List<Auction> getWaitingAuctions() {
         List<Auction> auctions = new ArrayList<>();
-        String sql = BASE_SELECT_SQL + " WHERE a.status IN ('WAITING', 'PENDING_APPROVAL')";
+        String sql = BASE_SELECT_SQL + " WHERE a.status IN ('WAITING', 'PENDING_APPROVAL', 'PROPOSAL')";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -294,10 +311,10 @@ public class AuctionRepository {
                 if ("Bidding".equalsIgnoreCase(status)) {
                     sql.append("a.status = 'RUNNING'");
                 } else if ("Newly Listed".equalsIgnoreCase(status)) {
-                    sql.append("(a.status = 'WAITING' AND a.start_time > ?)");
+                    sql.append("((a.status = 'WAITING' OR a.status = 'PROPOSAL' OR a.status = 'DELETE_PROPOSAL') AND a.start_time > ?)");
                     parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
                 } else if ("Upcoming".equalsIgnoreCase(status)) {
-                    sql.append("(a.status = 'WAITING' AND a.start_time <= ?)");
+                    sql.append("(((a.status = 'WAITING' OR a.status = 'PROPOSAL' OR a.status = 'DELETE_PROPOSAL') AND a.start_time <= ?)");
                     parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
                 } else if ("Ending Soon".equalsIgnoreCase(status)) {
                     sql.append("(a.status = 'RUNNING' AND a.end_time <= ?)");

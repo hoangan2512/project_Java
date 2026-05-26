@@ -24,7 +24,7 @@ public class ItemManagerController {
     @FXML
     private ToggleButton approve, not_approve;
     @FXML
-    private Button confirm_btn, backBtn;
+    private Button confirm_btn, backBtn, proposal_refuse;
     @FXML
     private TextArea reasonArea;
     @FXML
@@ -40,6 +40,10 @@ public class ItemManagerController {
 
         if (confirm_btn != null) {
             confirm_btn.setOnAction(this::handleConfirmAction);
+        }
+
+        if (proposal_refuse != null) {
+            proposal_refuse.setOnAction(this::handleProposalRefuseAction);
         }
 
         // ========================================================
@@ -73,11 +77,16 @@ public class ItemManagerController {
         boolean isApprove = approve != null && approve.isSelected();
         boolean isReject = not_approve != null && not_approve.isSelected();
         String currentReason = reasonArea != null ? reasonArea.getText().trim() : "";
+        boolean isProposal = item != null && "PROPOSAL".equalsIgnoreCase(item.getModeration_status());
 
         if (isApprove) {
             confirm_btn.setDisable(false);
         } else if (isReject) {
-            confirm_btn.setDisable(currentReason.isEmpty());
+            if (isProposal) {
+                confirm_btn.setDisable(false); // No reason needed for proposal rejection
+            } else {
+                confirm_btn.setDisable(currentReason.isEmpty());
+            }
         } else {
             confirm_btn.setDisable(true);
         }
@@ -91,6 +100,7 @@ public class ItemManagerController {
         if (not_approve != null) not_approve.setDisable(disabled);
         if (reasonArea != null) reasonArea.setDisable(disabled);
         if (confirm_btn != null) confirm_btn.setDisable(disabled);
+        if (proposal_refuse != null) proposal_refuse.setDisable(disabled);
     }
 
     @FXML
@@ -112,7 +122,11 @@ public class ItemManagerController {
         if (confirm_btn != null) confirm_btn.setText("Processing...");
 
         new Thread(() -> {
-            Request req = new Request(Integer.valueOf(currentAuction.getId()), ActionType.ADMIN_APPROVE_ITEM);
+            boolean isProposal = currentAuction.getItem() != null && "PROPOSAL".equalsIgnoreCase(currentAuction.getItem().getModeration_status());
+            ActionType actionType = isProposal ? ActionType.ADMIN_ACCEPT_CHANGES : ActionType.ADMIN_APPROVE_ITEM;
+
+            Object payload = isProposal ? currentAuction.getItem_id() : currentAuction.getId();
+            Request req = new Request(payload, actionType);
             Response res = ClientSocket.sendRequest(req);
 
             Platform.runLater(() -> {
@@ -128,14 +142,26 @@ public class ItemManagerController {
 
     private void executeRejectItem() {
         String reasonText = (reasonArea != null) ? reasonArea.getText().trim() : "";
-        if (reasonText.isEmpty()) return;
+        boolean isProposal = currentAuction.getItem() != null && "PROPOSAL".equalsIgnoreCase(currentAuction.getItem().getModeration_status());
+
+        // For non-proposals, a reason is required.
+        if (!isProposal && reasonText.isEmpty()) {
+            return;
+        }
 
         setUIDisabled(true);
         if (confirm_btn != null) confirm_btn.setText("Processing...");
 
         new Thread(() -> {
-            Object[] payloadToSend = new Object[] { Integer.valueOf(currentAuction.getId()), reasonText };
-            Request req = new Request(payloadToSend, ActionType.ADMIN_REJECT_ITEM);
+            Request req;
+            if (isProposal) {
+                // SỬA LỖI: Gửi itemId thay vì auctionId khi delete changes
+                req = new Request(currentAuction.getItem_id(), ActionType.ADMIN_DELETE_CHANGES);
+            } else {
+                Object[] payloadToSend = new Object[] { Integer.valueOf(currentAuction.getId()), reasonText };
+                req = new Request(payloadToSend, ActionType.ADMIN_REJECT_ITEM);
+            }
+
             Response res = ClientSocket.sendRequest(req);
 
             Platform.runLater(() -> {
@@ -143,6 +169,51 @@ public class ItemManagerController {
                     if (onBackAction != null) onBackAction.run();
                 } else {
                     if (confirm_btn != null) confirm_btn.setText("Confirm");
+                    setUIDisabled(false);
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * Xử lý khi nhấn nút Proposal Refuse (Từ chối thay đổi hoặc từ chối xóa)
+     */
+    @FXML
+    private void handleProposalRefuseAction(ActionEvent event) {
+        if (currentAuction == null || currentAuction.getItem() == null) return;
+
+        String status = currentAuction.getItem().getModeration_status();
+        ActionType actionType = null;
+
+        if ("PROPOSAL".equalsIgnoreCase(status)) {
+            actionType = ActionType.ADMIN_DELETE_CHANGES;
+        } else if ("DELETE_PROPOSAL".equalsIgnoreCase(status)) {
+            actionType = ActionType.ADMIN_REFUSE_DELETE_PROPOSAL;
+        }
+
+        if (actionType == null) return;
+
+        setUIDisabled(true);
+        if (proposal_refuse != null) proposal_refuse.setText("Processing...");
+
+        final ActionType finalAction = actionType;
+        new Thread(() -> {
+            // SỬA LỖI: Gửi itemId thay vì auctionId khi từ chối proposal
+            Object payload = ("PROPOSAL".equalsIgnoreCase(status)) ? currentAuction.getItem_id() : currentAuction.getId();
+            Request req = new Request(payload, finalAction);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus())) {
+                    if (onBackAction != null) onBackAction.run();
+                } else {
+                    if (proposal_refuse != null) {
+                        if ("PROPOSAL".equalsIgnoreCase(status)) {
+                            proposal_refuse.setText("Refuse Change Proposal");
+                        } else {
+                            proposal_refuse.setText("Refuse Delete Proposal");
+                        }
+                    }
                     setUIDisabled(false);
                 }
             });
@@ -190,6 +261,10 @@ public class ItemManagerController {
             confirm_btn.setText("Confirm");
             confirm_btn.setDisable(true);
         }
+        if (proposal_refuse != null) {
+            proposal_refuse.setVisible(false);
+            proposal_refuse.setDisable(false);
+        }
     }
 
     /**
@@ -202,7 +277,7 @@ public class ItemManagerController {
         Item item = auction.getItem();
 
         resetActionComponents();
-        if (prdImage != null) prdImage.setImage(null); // Xóa ảnh cũ để tránh nháy ảnh cũ của phiên trước
+        if (prdImage != null) prdImage.setImage(null);
 
         // 1. Đổ thời gian thô (Hiển thị ngay lập tức)
         if (auction.getStart_time() != null) {
@@ -226,28 +301,45 @@ public class ItemManagerController {
 
         // 2. Đổ dữ liệu thô có sẵn từ LIST_SELECT_SQL lên UI ngay lập tức
         if (item != null) {
+            String status = item.getModeration_status();
+
             if (prdName != null) prdName.setText(item.getName());
 
-            // LƯU Ý: Giữ nguyên hiển thị đúng cột Giá khởi điểm gốc ban đầu (starting_price)
             if (startingPrice != null) {
                 startingPrice.setText(String.format("%,.0f đ", item.getStarting_price()));
             }
 
-            // Set chữ trạng thái chờ tải cho phần mô tả dài bị khuyết
             if (prd_description != null) {
                 prd_description.setText("Đang tải mô tả chi tiết từ hệ thống...");
             }
 
-            // ========================================================
-            // NẾU SẢN PHẨM ĐÃ BỊ TỪ CHỐI TỪ TRƯỚC -> KHÓA UI VÀ ĐỌC LÝ DO
-            // ========================================================
-            if ("REJECTED".equalsIgnoreCase(item.getModeration_status())) {
-                if (approve != null) approve.setDisable(true);
+            // Disable nút Approve nếu trạng thái là APPROVED hoặc DELETE_PROPOSAL
+            if (approve != null) {
+                approve.setDisable("APPROVED".equalsIgnoreCase(status) || "DELETE_PROPOSAL".equalsIgnoreCase(status));
+            }
 
-                if (not_approve != null) {
-                    not_approve.setSelected(true);
-                    not_approve.setDisable(true);
+            // Disable nút Reject nếu trạng thái là REJECTED
+            if (not_approve != null) {
+                not_approve.setDisable("REJECTED".equalsIgnoreCase(status));
+            }
+
+            // Xử lý riêng cho nút proposal_refuse
+            if (proposal_refuse != null) {
+                boolean isProposal = "PROPOSAL".equalsIgnoreCase(status);
+                boolean isDeleteProposal = "DELETE_PROPOSAL".equalsIgnoreCase(status);
+
+                proposal_refuse.setVisible(isProposal || isDeleteProposal);
+
+                if (isProposal) {
+                    proposal_refuse.setText("Refuse Change Proposal");
+                } else if (isDeleteProposal) {
+                    proposal_refuse.setText("Refuse Delete Proposal");
                 }
+            }
+
+            // Xử lý UI cũ cho trường hợp REJECTED
+            if ("REJECTED".equalsIgnoreCase(status)) {
+                if (not_approve != null) not_approve.setSelected(true);
 
                 if (reasonArea != null) {
                     reasonArea.setText("Đang tải lý do từ chối...");
@@ -258,16 +350,13 @@ public class ItemManagerController {
                     confirm_btn.setDisable(true);
                 }
 
-                // Gọi Server lấy lý do cũ
                 fetchRejectReason(auction.getId());
             }
         }
 
         updateConfirmButtonState();
 
-        // =======================================================================
-        // KÍCH HOẠT LAZY LOADING: Tải bất đồng bộ phần mô tả chữ dài và hình ảnh
-        // =======================================================================
+        // KÍCH HOẠT LAZY LOADING
         fetchDetailedItemData(auction.getId());
         fetchProductImageLazy(auction.getId());
     }
@@ -282,7 +371,6 @@ public class ItemManagerController {
 
             Platform.runLater(() -> {
                 if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() instanceof Auction detailedAuction) {
-                    // Đắp nối thuộc tính thiếu vào RAM của thực thể cũ
                     if (this.currentAuction != null && detailedAuction.getItem() != null) {
                         Item fullItem = detailedAuction.getItem();
                         Item currentItem = this.currentAuction.getItem();
@@ -293,16 +381,40 @@ public class ItemManagerController {
                         }
                     }
 
-                    // Đổ dữ liệu text mô tả chi tiết lên UI
                     Item item = this.currentAuction.getItem();
                     if (item != null && prd_description != null) {
                         prd_description.setText(item.getDescription() != null && !item.getDescription().trim().isEmpty()
                                 ? item.getDescription()
                                 : "Không có mô tả sản phẩm.");
+                                
+                        // NEW LOGIC: Fetch changes if status is PROPOSAL
+                        if ("PROPOSAL".equalsIgnoreCase(item.getModeration_status())) {
+                            // Note: We use item.getId() here as the payload for GET_CHANGES is the item ID
+                            fetchProposedChanges(item.getId());
+                        }
                     }
                 } else {
                     if (prd_description != null) {
                         prd_description.setText("Không thể kết nối để tải mô tả chi tiết.");
+                    }
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * Hàm bổ trợ để lấy nội dung đề xuất thay đổi và ghi đè lên description
+     */
+    private void fetchProposedChanges(int itemId) {
+        new Thread(() -> {
+            Request req = new Request(itemId, ActionType.ADMIN_GET_CHANGES);
+            Response res = ClientSocket.sendRequest(req);
+
+            Platform.runLater(() -> {
+                if (res != null && "SUCCESS".equals(res.getStatus()) && res.getData() != null) {
+                    String changes = (String) res.getData();
+                    if (prd_description != null && !changes.trim().isEmpty()) {
+                        prd_description.setText(changes);
                     }
                 }
             });
@@ -322,11 +434,9 @@ public class ItemManagerController {
                     try {
                         byte[] imageBytes = (byte[]) res.getData();
                         if (imageBytes != null && imageBytes.length > 0 && prdImage != null) {
-                            // Lưu trữ byte ảnh vào Ram đối tượng đề phòng cần tái cấu trúc dữ liệu
                             if (this.currentAuction != null && this.currentAuction.getItem() != null) {
                                 this.currentAuction.getItem().setImageBytes(imageBytes);
                             }
-                            // Dựng mảng byte stream thành đối tượng Image hiển thị
                             try (ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
                                 prdImage.setImage(new Image(bis));
                             }

@@ -282,12 +282,6 @@ public class prdPageController {
 
     private void initPriceChart() {
         if (prcieChart != null) {
-            try {
-                prcieChart.getStylesheets().add(getClass().getResource("/css/chart-style.css").toExternalForm());
-            } catch (Exception e) {
-                System.out.println("Lưu ý: Không tìm thấy file /css/chart-style.css. Vui lòng kiểm tra lại đường dẫn nếu biểu đồ hiển thị sai màu.");
-            }
-
             prcieChart.setAnimated(false);
             prcieChart.setCreateSymbols(true);
             prcieChart.setLegendVisible(false);
@@ -812,13 +806,14 @@ public class prdPageController {
         LocalDateTime now = LocalDateTime.now();
         String status = auction.getStatus();
 
+        // Xác định chính xác số giây còn lại dựa trên thời gian thực tế
         if ("RUNNING".equals(status) && auction.getEnd_time() != null) {
             if (now.isBefore(auction.getEnd_time())) {
                 this.remainingSeconds = java.time.Duration.between(now, auction.getEnd_time()).getSeconds();
             } else {
                 status = "FINISHED";
             }
-        } else if ("WAITING".equals(status) && auction.getStart_time() != null) {
+        } else if (("WAITING".equals(status) || "PROPOSAL".equals(status) || "DELETE_PROPOSAL".equals(status)) && auction.getStart_time() != null) {
             if (now.isBefore(auction.getStart_time())) {
                 this.remainingSeconds = java.time.Duration.between(now, auction.getStart_time()).getSeconds();
             } else {
@@ -833,7 +828,10 @@ public class prdPageController {
             this.remainingSeconds = 0;
         }
 
-        if ("WAITING".equals(status)) {
+        // =======================================================================
+        // XỬ LÝ ĐỒNG BỘ TRẠNG THÁI UI CHI TIẾT THEO TỪNG PHASE
+        // =======================================================================
+        if ("WAITING".equals(status) || "PROPOSAL".equals(status) || "DELETE_PROPOSAL".equals(status)) {
             updateUpcomingTimeLabel();
             if (remainingSeconds > 0) {
                 countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
@@ -850,11 +848,16 @@ public class prdPageController {
                 run();
             }
 
+            // Khóa phần đặt giá vì phiên đấu giá chưa thực sự bắt đầu (Upcoming)
             if (Bid != null) {
                 Bid.setDisable(true);
                 Bid.setText("Upcoming");
             }
             if (bidAmount != null) bidAmount.setDisable(true);
+
+            // ĐẢM BẢO: Các Tab hiển thị thông tin như mô tả vẫn phải mở để User có thể xem trước
+            if (description_btn != null) description_btn.setDisable(false);
+            if (prd_description != null) prd_description.setDisable(false);
 
         } else if ("RUNNING".equals(status)) {
             updateTimeLabel();
@@ -882,6 +885,7 @@ public class prdPageController {
             handleAuctionEnd();
         }
 
+        // Đổ hình ảnh lên giao diện
         if (prdImage != null) {
             if (imageBytes != null && imageBytes.length > 0) {
                 try {
@@ -915,10 +919,14 @@ public class prdPageController {
             }
         }
 
+        // Đổ văn bản mô tả mới (Đã được cập nhật từ database sau khi Accept Changes)
         if (prd_description != null && descriptionText != null) {
             prd_description.setText(descriptionText);
             auction_id.setText("Auction ID: " + auctionID);
         }
+
+        // Đồng bộ lại cơ chế ẩn hiện các Tab để đảm bảo văn bản mới được hiển thị ngay lập tức
+        updatePanelsVisibility();
 
         System.out.println("Displaying: " + name + " - Auction Status: " + status);
 
@@ -939,7 +947,6 @@ public class prdPageController {
                 e.printStackTrace();
             }
 
-            // TÍNH NĂNG MỚI: KIỂM TRA TRẠNG THÁI AUTOBID KHI VỪA VÀO TRANG
             checkAutoBidStatus();
         }
     }
@@ -1027,7 +1034,10 @@ public class prdPageController {
 
     private void run() {
         if (currentAuction != null) {
-            currentAuction.setStatus("RUNNING");
+            String currentStatus = currentAuction.getStatus();
+            if ("WAITING".equals(currentStatus) || "PROPOSAL".equals(currentStatus)) {
+                currentAuction.setStatus("RUNNING");
+            }
         }
 
         restartRunningCountdown();
