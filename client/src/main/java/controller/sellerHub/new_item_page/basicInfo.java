@@ -21,6 +21,7 @@ public class basicInfo {
 
     public void initialize() {
         categories.getItems().addAll("Art", "Electronics", "Vehicle");
+        categories.setValue("Choose product categories");
     }
 
     public String getPrdName() { return prdName.getText(); }

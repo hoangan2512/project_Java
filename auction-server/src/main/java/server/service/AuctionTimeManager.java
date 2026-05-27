@@ -29,6 +29,7 @@ public class AuctionTimeManager implements AutoCloseable {
     private static final String SUSPENDED_STATUS = "SUSPENDED";
     private static final String REJECTED_STATUS = "REJECTED"; // Thêm hằng số cho Item
     private static final String PROPOSAL_STATUS = "PROPOSAL";
+    private static final String DELETE_PROPOSAL_STATUS = "DELETE_PROPOSAL";
     private static final long DEFAULT_CHECK_INTERVAL_SECONDS = 5;
 
     // Singleton instance để các Service khác có thể gọi tới
@@ -182,12 +183,13 @@ public class AuctionTimeManager implements AutoCloseable {
                             }
                         }
                     }
-                } else if (PROPOSAL_STATUS.equals(item.getModeration_status()) && isTimeToStart) {
-                    // If the item is in PROPOSAL status and it's time to start the auction
+                } else if ((PROPOSAL_STATUS.equals(item.getModeration_status()) || DELETE_PROPOSAL_STATUS.equals(item.getModeration_status())) && isTimeToStart) {
+                    // If the item is in PROPOSAL status, and it's time to start the auction
                     // 1. Delete the changes
                     itemRepository.deleteChanges(item.getId());
 
                     // 2. Start the auction
+                    itemRepository.updateStatus(item.getId(), "APPROVED");
                     boolean updated = auctionRepository.updateStatus(auction.getId(), RUNNING_STATUS);
                     if (updated) {
                         auction.setStatus(RUNNING_STATUS);

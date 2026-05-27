@@ -348,7 +348,7 @@ public class sellerHubController_homepage {
                         }
                     });
                 }
-                NextBtn.setText("Back to product list");
+                NextBtn.setText("List new item");
                 Status.setVisible(false);
                 Status.setManaged(false);
                 currentDraft.clear();
@@ -449,10 +449,11 @@ public class sellerHubController_homepage {
                 startDateTime = LocalDateTime.of(sYear, sMonth, sDay, sHour, sMinute);
 
                 String[] durParts = draft.getDuration().split(" ");
-                int dHour = Integer.parseInt(durParts[0]);
-                int dMinute = Integer.parseInt(durParts[2]);
+                int dDay = Integer.parseInt(durParts[0]);
+                int dHour = Integer.parseInt(durParts[2]);
+                int dMinute = Integer.parseInt(durParts[4]);
 
-                endDateTime = startDateTime.plusHours(dHour).plusMinutes(dMinute);
+                endDateTime = startDateTime.plusDays(dDay).plusHours(dHour).plusMinutes(dMinute);
             } catch (Exception ex) {
                 System.err.println("Lỗi khi parse thời gian: " + ex.getMessage());
                 return false;
