@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.new_item_page.auctionInfo">
+<AnchorPane prefHeight="630.0" prefWidth="1030.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.sellerHub.new_item_page.auctionInfo">
    <children>
       <Label fx:id="InfoType" layoutX="49.0" layoutY="35.0" prefHeight="43.0" prefWidth="264.0" text="Auction Information" textFill="WHITE">
          <font>
             <Font name="System Bold" size="24.0" />
          </font>
       </Label>
-      <TextField fx:id="prdPrice" layoutX="49.0" layoutY="143.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert starting price" style="-fx-background-color: #2b2b2b; -fx-background-radius: 20px; -fx-border-color: #ff8e1f; -fx-border-radius: 20px;" styleClass="priceField" stylesheets="@../../prdPage.css">
+      <TextField fx:id="prdPrice" layoutX="49.0" layoutY="143.0" prefHeight="35.0" prefWidth="540.0" promptText="Insert starting price" style="-fx-background-color: black; -fx-background-radius: 7px; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-radius: 7;" styleClass="priceField" stylesheets="@graphicInfo.css">
          <font>
             <Font size="16.0" />
          </font>
@@ -38,7 +38,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <DatePicker fx:id="start_date" layoutX="49.0" layoutY="303.0" style="-fx-background-color: #2b2b2b;" />
+      <DatePicker fx:id="start_date" layoutX="46.0" layoutY="300.0" prefHeight="32.0" prefWidth="181.0" stylesheets="@graphicInfo.css" />
       <Label alignment="CENTER" layoutX="235.0" layoutY="303.0" prefHeight="25.0" prefWidth="17.0" text="at" textFill="WHITE">
          <font>
             <Font size="16.0" />
@@ -54,19 +54,29 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <ChoiceBox fx:id="duration_h" layoutX="49.0" layoutY="226.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-border-radius: 20;" styleClass="context-menu" stylesheets="@../../mainpage.css" />
-      <Label layoutX="116.0" layoutY="231.0" prefHeight="25.0" prefWidth="41.0" text=" H :" textFill="WHITE">
+
+      <ComboBox fx:id="duration_h" layoutX="149.0" layoutY="226.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: black; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-radius: 20; -fx-cursor: hand;" styleClass="combo-box" stylesheets="@graphicInfo.css" visibleRowCount="10" />
+      <Label layoutX="216.0" layoutY="231.0" prefHeight="25.0" prefWidth="41.0" text=" H :" textFill="WHITE">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <ChoiceBox fx:id="duration_m" layoutX="146.0" layoutY="226.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-border-radius: 20;" styleClass="context-menu" stylesheets="@../../mainpage.css" />
-      <Label layoutX="215.0" layoutY="231.0" prefHeight="25.0" prefWidth="41.0" text=" M" textFill="WHITE">
+
+      <ComboBox fx:id="duration_m" layoutX="246.0" layoutY="226.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: black; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-radius: 20; -fx-cursor: hand;" styleClass="combo-box" stylesheets="@graphicInfo.css" visibleRowCount="10" />
+      <Label layoutX="315.0" layoutY="231.0" prefHeight="25.0" prefWidth="41.0" text=" M" textFill="WHITE">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <ChoiceBox fx:id="start_h" layoutX="258.0" layoutY="298.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-border-radius: 20;" styleClass="context-menu" stylesheets="@../../mainpage.css" />
-      <ChoiceBox fx:id="start_m" layoutX="361.0" layoutY="298.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: #2b2b2b; -fx-border-color: #ff8e1f; -fx-border-radius: 20;" styleClass="context-menu" stylesheets="@../../mainpage.css" />
+
+      <ComboBox fx:id="start_h" layoutX="258.0" layoutY="298.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: black; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-radius: 20; -fx-cursor: hand;" styleClass="combo-box" stylesheets="@graphicInfo.css" visibleRowCount="10" />
+
+      <ComboBox fx:id="start_m" layoutX="361.0" layoutY="298.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: black; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-radius: 20; -fx-cursor: hand;" styleClass="combo-box" stylesheets="@graphicInfo.css" visibleRowCount="10" />
+      <ComboBox fx:id="duration_d" layoutX="49.0" layoutY="226.0" prefHeight="35.0" prefWidth="70.0" style="-fx-background-radius: 20; -fx-background-color: black; -fx-border-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%); -fx-border-radius: 20; -fx-cursor: hand;" styleClass="combo-box" stylesheets="@graphicInfo.css" visibleRowCount="10" />
+      <Label layoutX="116.0" layoutY="231.0" prefHeight="25.0" prefWidth="41.0" text=" D:" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>

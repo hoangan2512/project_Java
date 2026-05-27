@@ -14,7 +14,177 @@
     -fx-opacity: 1;
 }
 
+.priceField {
+    -fx-text-fill: white;
+}
+
 /* 3. Khi hover trực tiếp vào nút X */
 .delete-button:hover {
     -fx-background-color: #cc0000;
+}
+
+.context-menu {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+.context-menu .label{
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+}
+.context-menu .list-cell {
+    -fx-background-color: #1e1e1e;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #1e1e1e;
+    -fx-cursor: hand;
+}
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+}
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #ff8e1f;
+    -fx-text-fill: black;
+}
+
+.date-picker {
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-border-width: 1px;
+    -fx-background-color:  linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);
+}
+
+/* Bo góc lại cho phần text field bên trong hợp với viền ngoài */
+.date-picker > .text-field {
+    -fx-background-radius: 7px 0 0 7px;
+    -fx-background-color: black;
+    -fx-text-fill: white;
+}
+
+/* Bo góc lại cho nút lịch bên trong hợp với viền ngoài */
+.date-picker > .arrow-button {
+    -fx-background-radius: 0 7px 7px 0;
+    -fx-background-color:  linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%);
+}
+.date-picker > .arrow-button:hover {
+    -fx-background-color: #ff8e1f;
+}
+.date-picker > .arrow-button > .arrow{
+    -fx-background-color: black;
+}
+
+
+/* ==========================================================================
+   2. ĐỔI MÀU VIỀN BẢNG LỊCH KHI DROPDOWN (BUNG XUỐNG)
+   ========================================================================== */
+.date-picker-popup {
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-border-width: 1px;
+    -fx-border-color: #ff8e1f;
+    -fx-background-color: grey;
+}
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: #000000;
+    -fx-border-color: transparent transparent #ffffff transparent; /* Vạch kẻ ngang chuyển sang màu trắng */
+    -fx-border-width: 1px;
+}
+
+/* Chữ Tháng và Năm màu trắng sáng */
+/* 2. ĐÁNH GỤC TẤT CẢ CÁC ĐỐI TƯỢNG CHỮ nằm trong thanh tháng/năm */
+.date-picker-popup .month-year-pane * {
+    -fx-text-fill: #ffffff !important;
+    -fx-fill: #ffffff !important; /* Dành riêng cho đối tượng dạng SvgText/Text */
+}
+.date-picker-popup .month-year-pane .spinner .label,
+.date-picker-popup .month-year-pane .hover-base,
+.date-picker-popup .month-year-pane .label {
+    -fx-text-fill: #ffffff !important;
+    -fx-font-size: 14px !important;
+}
+
+.date-picker-popup .spinner .left-spinner-button,
+.date-picker-popup .spinner .right-spinner-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+/* 3. Trạng thái HOVER (Di chuột vào nút mũi tên) */
+.date-picker-popup .spinner .left-spinner-button:hover,
+.date-picker-popup .spinner .right-spinner-button:hover {
+    -fx-background-color: linear-gradient(from 20% 0% to 80% 100%, #bf6a12 0%, #ff8e1f 50%, #bf6a12 100%) !important;
+}
+
+/* 4. Trạng thái PRESSED (Khi nhấn giữ nút mũi tên) */
+.date-picker-popup .spinner .left-spinner-button:pressed,
+.date-picker-popup .spinner .right-spinner-button:pressed {
+    -fx-background-color: #ff8e1f !important;
+}
+.date-picker-popup > .month-year-pane > .left-button > .left-arrow,
+.date-picker-popup > .month-year-pane > .right-button > .right-arrow {
+    -fx-background-color: #ffffff;
+}
+.date-picker-popup > .calendar-grid {
+     -fx-background-color: #000000 !important;
+     -fx-padding: 8px;
+ }
+
+/* Ép tất cả các ô (gồm cả ô Thứ và ô Ngày) về nền đen */
+.date-picker-popup .calendar-grid .day-cell,
+.date-picker-popup .calendar-grid .week-day-cell {
+    -fx-background-color: #000000 !important;
+}
+
+.date-picker-popup .calendar-grid .text,
+.date-picker-popup .calendar-grid .day-cell,
+.date-picker-popup .calendar-grid .week-day-cell {
+    -fx-text-fill: #ffffff !important;
+    -fx-fill: #ffffff !important; /* Đổi màu cho đối tượng SvgText ẩn */
+}
+
+/* Giữ cho chữ của các ngày tháng trước/sau có màu xám tối để dễ phân biệt */
+.date-picker-popup .calendar-grid .previous-month .text,
+.date-picker-popup .calendar-grid .next-month .text,
+.date-picker-popup .calendar-grid .previous-month,
+.date-picker-popup .calendar-grid .next-month {
+    -fx-text-fill: #808080 !important;
+    -fx-fill: #808080 !important;
+}
+
+/* KHÓA CHẾT DÒNG THỨ: Luôn luôn nền đen chữ trắng, kể cả khi di chuột qua */
+.date-picker-popup .calendar-grid .week-day-cell:hover,
+.date-picker-popup .calendar-grid .week-day-cell:hover .text {
+    -fx-background-color: #000000 !important;
+    -fx-text-fill: #ffffff !important;
+    -fx-fill: #ffffff !important;
+}
+
+.date-picker-popup .calendar-grid .day-cell:hover,
+.date-picker-popup .calendar-grid .selected {
+    -fx-background-color: #ff8e1f !important; /* Nền hóa cam */
+    -fx-text-fill: #000000 !important;          /* Chữ hóa đen */
+    -fx-font-weight: bold !important;
+}
+
+/* Đảm bảo chữ bên trong ô ngày cũng hóa đen khi hover/selected */
+.date-picker-popup .calendar-grid .day-cell:hover .text,
+.date-picker-popup .calendar-grid .selected .text {
+    -fx-fill: #000000 !important;
+}
+
+/* Ô ngày hôm nay (Today) đổ dải màu chuyển sắc theo ý bạn */
+.date-picker-popup .calendar-grid .today {
+    -fx-background-color: #cc7514 !important;
+    -fx-text-fill: #ffffff !important;
+    -fx-font-weight: bold !important;
+}
+.date-picker-popup .calendar-grid .today .text {
+    -fx-fill: #ffffff !important;
 }
