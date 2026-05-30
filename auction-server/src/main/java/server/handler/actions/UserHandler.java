@@ -8,6 +8,7 @@ import message.Response;
 import model.User;
 import server.controller.UserController;
 import server.handler.ActionHandler;
+import server.network.AuctionServer;
 import server.network.ClientHandler;
 
 public class UserHandler implements ActionHandler {
@@ -36,7 +37,9 @@ public class UserHandler implements ActionHandler {
     private Response handleLogin(Request request, ClientHandler client) {
         Response response = userController.handleLogin(request);
         if ("SUCCESS".equals(response.getStatus()) && response.getData() instanceof User) {
-            client.setLoggedInUser((User) response.getData());
+            User loggedInUser = (User) response.getData();
+            AuctionServer.forceLogoutOtherSessions(loggedInUser.getID(), client);
+            client.setLoggedInUser(loggedInUser);
             LOGGER.info("Session successfully recorded for user: " + client.getLoggedInUser().getName());
         }
         return response;
@@ -45,7 +48,9 @@ public class UserHandler implements ActionHandler {
     private Response handleRegister(Request request, ClientHandler client) {
         Response response = userController.handleRegister(request);
         if ("SUCCESS".equals(response.getStatus()) && response.getData() instanceof User) {
-            client.setLoggedInUser((User) response.getData());
+            User loggedInUser = (User) response.getData();
+            AuctionServer.forceLogoutOtherSessions(loggedInUser.getID(), client);
+            client.setLoggedInUser(loggedInUser);
             LOGGER.info("Session automatically recorded after registration for user: " + client.getLoggedInUser().getName());
         }
         return response;
@@ -87,7 +92,9 @@ public class UserHandler implements ActionHandler {
             Response authResponse = userController.handleGoogleLoginAuth(email, name);
 
             if ("SUCCESS".equals(authResponse.getStatus()) && authResponse.getData() instanceof User) {
-                client.setLoggedInUser((User) authResponse.getData());
+                User loggedInUser = (User) authResponse.getData();
+                AuctionServer.forceLogoutOtherSessions(loggedInUser.getID(), client);
+                client.setLoggedInUser(loggedInUser);
                 LOGGER.info("=> Session recorded via Google for user: " + client.getLoggedInUser().getName());
             }
 
