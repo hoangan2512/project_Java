@@ -7,8 +7,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import controller.SessionManager;
 import controller.SceneSwitchController;
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import message.Request;
 import message.Response;
@@ -21,6 +28,7 @@ public class ClientSocket {
     private static Socket socket;
     private static ObjectOutputStream out;
     private static ObjectInputStream in;
+    private static Stage primaryStage;
 
     private static final BlockingQueue<Response> responseQueue = new LinkedBlockingQueue<>();
 
@@ -28,6 +36,10 @@ public class ClientSocket {
 
     // Khởi tạo instance cho bộ chuyển scene
     private static final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+
+    public static void setPrimaryStage(Stage stage) {
+        primaryStage = stage;
+    }
 
     public static void disconnect() {
         try {
@@ -99,6 +111,8 @@ public class ClientSocket {
                         // 2. Nhánh xử lý khi nhận được tín hiệu thắng cuộc đích danh (Unicast)
                         case "AUCTION_WON" -> Platform.runLater(() -> handleAuctionWon(res));
 
+                        case "FORCE_LOGOUT" -> Platform.runLater(() -> handleForceLogout(res));
+
                         // 3. Nhánh xử lý các phản hồi đồng bộ sau khi gửi Request lên
                         case null, default -> responseQueue.put(res);
                     }
@@ -138,6 +152,44 @@ public class ClientSocket {
 
         // Truyền productName vào thay vì truyền null
         sceneSwitcher.openWinner(productName);
+    }
+
+    private static void handleForceLogout(Response res) {
+        SessionManager.getInstance().logout();
+        responseQueue.clear();
+
+        try {
+            Stage stage = primaryStage != null ? primaryStage : findMainStage();
+            if (stage != null) {
+                for (Window window : new java.util.ArrayList<>(Window.getWindows())) {
+                    if (window instanceof Stage openStage && openStage != stage) {
+                        openStage.close();
+                    }
+                }
+
+                Parent root = FXMLLoader.load(ClientSocket.class.getResource("/view/welcome.fxml"));
+                stage.setScene(new Scene(root));
+                stage.show();
+            }
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("BidHub");
+            alert.setHeaderText("Session ended");
+            alert.setContentText(res.getMessage() != null ? res.getMessage() : "Your account has been logged out.");
+            alert.showAndWait();
+        } catch (Exception e) {
+            System.err.println("ERROR: Cannot switch to welcome after force logout: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static Stage findMainStage() {
+        for (Window window : Window.getWindows()) {
+            if (window instanceof Stage stage && stage.isShowing()) {
+                return stage;
+            }
+        }
+        return null;
     }
 
     // Hàm cung cấp Public Key cho các Controller (ví dụ lúc đăng nhập/đăng ký)

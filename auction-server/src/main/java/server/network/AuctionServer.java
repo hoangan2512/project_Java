@@ -125,17 +125,24 @@ public class AuctionServer {
     /**
      * Tìm ClientHandler của một User ID cụ thể và ép đăng xuất.
      */
-    public static void forceLogoutUser(int userId) {
+    public static void forceLogoutUser(long userId) {
+        forceLogoutUser(userId, null, "Tài khoản của bạn đã bị khóa bởi Admin.");
+    }
+
+    public static void forceLogoutOtherSessions(long userId, ClientHandler currentClient) {
+        forceLogoutUser(userId, currentClient, "Tài khoản của bạn đã đăng nhập ở thiết bị khác.");
+    }
+
+    private static void forceLogoutUser(long userId, ClientHandler excludedClient, String message) {
         for (ClientHandler client : clients) {
-            if (client.getLoggedInUser() != null && client.getLoggedInUser().getID() == userId) {
+            if (client != excludedClient && client.getLoggedInUser() != null && client.getLoggedInUser().getID() == userId) {
                 // Gửi thông báo ép đăng xuất tới Client này
-                Response forceLogoutResponse = new Response("FORCE_LOGOUT", null, "Tài khoản của bạn đã bị khóa bởi Admin.");
+                Response forceLogoutResponse = new Response("FORCE_LOGOUT", null, message);
                 client.sendMessage(forceLogoutResponse);
 
                 // Hủy session ở phía Server
                 client.clearSession();
                 LOGGER.info("Đã ép đăng xuất (Force Logout) đối với User ID: " + userId);
-                break; // Thường mỗi user chỉ log in 1 nơi, nếu cho phép multi-login thì bỏ break
             }
         }
     }

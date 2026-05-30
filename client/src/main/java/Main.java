@@ -16,6 +16,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+        ClientSocket.setPrimaryStage(primaryStage);
+
         // --- KIỂM TRA KẾT NỐI SERVER ---
         boolean isConnected = ClientSocket.tryConnect();
         
