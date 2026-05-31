@@ -22,6 +22,7 @@ public enum ActionType {
     GOOGLE_LOGIN,
     GET_IMAGE,
     CHECK_AUTOBID_STATUS,
+    GET_HIGHEST_BIDDER_ID,
 
     ADMIN_GET_ALL_USERS,
     ADMIN_BAN_USER,

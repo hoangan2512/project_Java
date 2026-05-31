@@ -619,9 +619,7 @@ public class sellerHubController_homepage {
                 listNode.setUserData(controller);
 
                 String formattedPrice = currencyFormatter.format(auction.getCurrent_price());
-                String prdId = (auction.getItem().getUser_prdID() != null && !auction.getItem().getUser_prdID().isEmpty())
-                        ? auction.getItem().getUser_prdID()
-                        : String.valueOf(auction.getItem_id());
+                String prdId = String.valueOf(auction.getItem_id());
 
                 String[] rowData = {
                         String.valueOf(auction.getId()),

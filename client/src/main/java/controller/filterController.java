@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -72,14 +73,62 @@ public class filterController {
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
+    // Tạo ToggleGroup cho các nút chọn khoảng giá nhanh
+    private final ToggleGroup priceGroup = new ToggleGroup();
+
     @FXML
     public void initialize() {
         // Gắn hiệu ứng format tiền Việt cho 2 ô nhập giá
         addCurrencyFormat(lowest);
         addCurrencyFormat(highest);
+
+        // Đưa các nút giá vào cùng một nhóm và thiết lập sự kiện lắng nghe
+        setupPriceActionButtons();
     }
-    
-    // --- HÀM MỚI: TỰ ĐỘNG CHỌN LẠI CÁC TRƯỜNG ĐÃ LỌC TRƯỚC ĐÓ ---
+
+    /**
+     * Hàm cấu hình ToggleGroup và xử lý tự động điền giá trị khi bấm nút chọn giá nhanh
+     */
+    private void setupPriceActionButtons() {
+        price1.setToggleGroup(priceGroup);
+        price2.setToggleGroup(priceGroup);
+        price3.setToggleGroup(priceGroup);
+
+        priceGroup.selectedToggleProperty().addListener((observable, oldToggle, newToggle) -> {
+            if (newToggle == null) {
+                // Nếu người dùng bỏ chọn nút hiện tại (hoặc bấm Clear), không tự động xóa text
+                // để tránh đè lên trường hợp họ muốn tự nhập tay sau đó.
+                return;
+            }
+
+            ToggleButton selectedBtn = (ToggleButton) newToggle;
+
+            if (selectedBtn == price1) {          // Dưới 1 triệu
+                lowest.setText("0");
+                highest.setText("1.000.000");
+            } else if (selectedBtn == price2) {   // Từ 1 triệu - 10 triệu
+                lowest.setText("1.000.000");
+                highest.setText("10.000.000");
+            } else if (selectedBtn == price3) {   // Trên 10 triệu
+                lowest.setText("10.000.000");
+                highest.clear(); // Giá cao nhất để trống đại diện cho vô cực
+            }
+        });
+
+        // Nếu người dùng chủ động gõ vào ô text, nhả nút chọn nhanh ra để tránh xung đột UI
+        lowest.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (lowest.isFocused() && priceGroup.getSelectedToggle() != null) {
+                priceGroup.selectToggle(null);
+            }
+        });
+        highest.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (highest.isFocused() && priceGroup.getSelectedToggle() != null) {
+                priceGroup.selectToggle(null);
+            }
+        });
+    }
+
+    // --- HÀM TỰ ĐỘNG CHỌN LẠI CÁC TRƯỜNG ĐÃ LỌC TRƯỚC ĐÓ ---
     public void setInitialCriteria(SearchCriteria criteria) {
         if (criteria == null) return;
 
@@ -105,13 +154,25 @@ public class filterController {
             auctionID.setText(criteria.getAuctionId());
         }
 
-        // Khôi phục Price
+        // Khôi phục Price (Ưu tiên điền text, các bộ lắng nghe listener sẽ tự xử lý)
         if (criteria.getMinPrice() > 0) {
-            lowest.setText(String.valueOf(criteria.getMinPrice())); 
+            lowest.setText(String.valueOf(criteria.getMinPrice()));
+        } else {
+            lowest.clear();
         }
+
         if (criteria.getMaxPrice() > 0) {
             highest.setText(String.valueOf(criteria.getMaxPrice()));
+        } else {
+            highest.clear();
         }
+
+        // Đồng bộ ngược lại trạng thái Nút bấm nhanh nếu khoảng giá khớp chính xác
+        long min = criteria.getMinPrice();
+        long max = criteria.getMaxPrice();
+        if (min == 0 && max == 1000000) price1.setSelected(true);
+        else if (min == 1000000 && max == 10000000) price2.setSelected(true);
+        else if (min == 10000000 && max == 0) price3.setSelected(true);
     }
 
     private void addCurrencyFormat(TextField textField) {
@@ -164,10 +225,13 @@ public class filterController {
     @FXML
     public void handleClearBtn(ActionEvent event) {
         // Gom tất cả các nút và trường nhập liệu vào mảng
-        ToggleButton[] allToggleButtons = {art, electronics, vehicle, real_estate, price1, price2, price3, bidding, newly_listed, ending_soon, upcoming, ended};
+        ToggleButton[] allToggleButtons = {art, electronics, vehicle, real_estate, bidding, newly_listed, ending_soon, upcoming, ended};
         TextField[] allTextFields = {lowest, highest, auctionID};
 
-        // Bỏ chọn tất cả các ToggleButton
+        // Bỏ chọn các nút khoảng giá thông qua ToggleGroup
+        priceGroup.selectToggle(null);
+
+        // Bỏ chọn tất cả các ToggleButton danh mục/trạng thái khác
         for (ToggleButton btn : allToggleButtons) {
             if (btn != null) {
                 btn.setSelected(false);
@@ -184,13 +248,9 @@ public class filterController {
 
     @FXML
     public void handleCustomSearch(ActionEvent event) {
-        // 1. Gom nhóm các nút
         ToggleButton[] categoryBtns = {art, electronics, vehicle, real_estate};
-        ToggleButton[] priceBtns = {price1, price2, price3};
         ToggleButton[] statusBtns = {bidding, newly_listed, ending_soon, upcoming, ended};
 
-        String lowPrice = lowest.getText().trim();
-        String highPrice = highest.getText().trim();
         String id = auctionID.getText().trim();
 
         // TẠO DTO ĐÓNG GÓI DỮ LIỆU TÌM KIẾM
@@ -213,10 +273,6 @@ public class filterController {
         }
     }
 
-    // ========================================================
-    // CÁC HÀM HỖ TRỢ (HELPERS)
-    // ========================================================
-
     private boolean isAnySelected(ToggleButton[] buttons) {
         for (ToggleButton btn : buttons) {
             if (btn != null && btn.isSelected()) {
@@ -226,7 +282,6 @@ public class filterController {
         return false;
     }
 
-    // Hàm mới: Trích xuất tên (text) của các nút đang được chọn để nhét vào List
     private List<String> getSelectedNames(ToggleButton[] buttons) {
         List<String> selected = new ArrayList<>();
         for (ToggleButton btn : buttons) {
