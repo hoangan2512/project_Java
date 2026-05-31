@@ -148,6 +148,10 @@ public class AuctionService {
                 return new Response("FAIL", null, "Lỗi: Phiên đấu giá đã kết thúc.");
             }
 
+            if (auction.getHighest_bidder_id() == bidderId) {
+                return new Response("FAIL", null, "Bạn đang giữ giá cao nhất, không cần đặt giá cao hơn.");
+            }
+
             // 4. KIỂM TRA BƯỚC GIÁ (Đảm bảo giá đặt hợp lý)
             double currentPrice = auction.getCurrent_price();
             double minIncrement = calculateMinimumIncrement(currentPrice);

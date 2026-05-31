@@ -79,6 +79,7 @@ public class prdPageController {
     private Timeline countdownTimer;
     private long remainingSeconds;
     private Auction currentAuction;
+    private int currentHighestBidderId = 0;
 
     // Biến định dạng số tiền chung để dùng lại
     private final DecimalFormat currencyFormatter;
@@ -509,8 +510,92 @@ public class prdPageController {
         }
     }
 
+    private int fetchHighestBidderId() {
+        if (currentAuction == null) {
+            return 0;
+        }
+
+        return fetchHighestBidderId(currentAuction.getId());
+    }
+
+    private int fetchHighestBidderId(int auctionId) {
+        Response response = ClientSocket.sendRequest(new Request(auctionId, ActionType.GET_HIGHEST_BIDDER_ID));
+        if (response != null && "SUCCESS".equals(response.getStatus()) && response.getData() instanceof Integer bidderId) {
+            return bidderId;
+        }
+
+        return currentHighestBidderId;
+    }
+
+    private void refreshHighestBidderIdAsync() {
+        if (currentAuction == null || !SessionManager.getInstance().isBidder()) {
+            return;
+        }
+
+        int requestedAuctionId = currentAuction.getId();
+        new Thread(() -> {
+            int bidderId = fetchHighestBidderId(requestedAuctionId);
+            Platform.runLater(() -> {
+                if (currentAuction == null || currentAuction.getId() != requestedAuctionId) {
+                    return;
+                }
+                currentHighestBidderId = bidderId;
+                currentAuction.setHighest_bidder_id(bidderId);
+                updateHighestBidderState();
+            });
+        }).start();
+    }
+
+    private boolean isCurrentUserHighestBidder() {
+        return SessionManager.getInstance().isBidder()
+                && currentHighestBidderId > 0
+                && SessionManager.getInstance().getCurrentUser().getId() == currentHighestBidderId;
+    }
+
+    private boolean isCurrentAuctionRunning() {
+        return currentAuction != null
+                && "RUNNING".equals(currentAuction.getStatus())
+                && currentAuction.getEnd_time() != null
+                && LocalDateTime.now().isBefore(currentAuction.getEnd_time());
+    }
+
+    private void updateHighestBidderState() {
+        if (currentAuction == null || !isCurrentAuctionRunning()) {
+            return;
+        }
+
+        if (isCurrentUserHighestBidder()) {
+            if (Bid != null) {
+                Bid.setDisable(true);
+                Bid.setText("Leading");
+            }
+            if (bidAmount != null) {
+                bidAmount.clear();
+                bidAmount.setDisable(true);
+                bidAmount.setPromptText("You are holding the highest bid.");
+            }
+            if (bid_increase != null) bid_increase.setDisable(true);
+            if (bid_decrease != null) bid_decrease.setDisable(true);
+        } else {
+            if (Bid != null) {
+                Bid.setDisable(false);
+                Bid.setText("Place Bid");
+            }
+            if (bidAmount != null) {
+                bidAmount.setDisable(false);
+                updateBidPrompt();
+            }
+            if (bid_increase != null) bid_increase.setDisable(false);
+            if (bid_decrease != null) bid_decrease.setDisable(false);
+        }
+    }
+
     private void handleBidIncrease() {
         if (currentAuction == null) return;
+        if (isCurrentUserHighestBidder()) {
+            updateHighestBidderState();
+            return;
+        }
         double step = getBidStep(currentAuction.getCurrent_price());
         proposedBidAmount += step;
 
@@ -520,6 +605,10 @@ public class prdPageController {
 
     private void handleBidDecrease() {
         if (currentAuction == null) return;
+        if (isCurrentUserHighestBidder()) {
+            updateHighestBidderState();
+            return;
+        }
         double minAllowed = currentAuction.getCurrent_price() + calculateMinimumIncrement(currentAuction.getCurrent_price());
         double step = getBidStep(currentAuction.getCurrent_price());
 
@@ -535,6 +624,11 @@ public class prdPageController {
 
     private void updateBidPrompt() {
         if (currentAuction != null && bidAmount != null) {
+            if (isCurrentUserHighestBidder()) {
+                bidAmount.setPromptText("You are holding the highest bid.");
+                return;
+            }
+
             double current = currentAuction.getCurrent_price();
             double minInc = calculateMinimumIncrement(current);
             double minAllowedBid = current + minInc;
@@ -547,6 +641,13 @@ public class prdPageController {
         if (SessionManager.getInstance().isBidder()) {
             if (currentAuction == null) {
                 System.err.println("Lỗi: Không có phiên đấu giá nào được chọn.");
+                return;
+            }
+
+            currentHighestBidderId = fetchHighestBidderId();
+            currentAuction.setHighest_bidder_id(currentHighestBidderId);
+            if (isCurrentUserHighestBidder()) {
+                updateHighestBidderState();
                 return;
             }
 
@@ -567,10 +668,14 @@ public class prdPageController {
 
                 if (response != null && "SUCCESS".equals(response.getStatus())) {
                     System.out.println("Đặt giá thành công: " + realBidAmount);
+                    int latestHighestBidderId = fetchHighestBidderId();
                     Platform.runLater(() -> {
+                        currentHighestBidderId = latestHighestBidderId;
+                        currentAuction.setHighest_bidder_id(latestHighestBidderId);
                         currentAuction.setCurrent_price(realBidAmount);
                         updateCurrentPriceLabel(realBidAmount);
                         bidAmount.clear();
+                        updateHighestBidderState();
                         try {
                             sceneSwitcher.openBidded();
                         } catch (IOException e) {
@@ -608,7 +713,9 @@ public class prdPageController {
                 if (newBid.getAuction_id() == currentAuction.getId()) {
                     System.out.println("Cập nhật giá mới từ Server: " + newBid.getAmount());
                     Platform.runLater(() -> {
+                        currentHighestBidderId = newBid.getBidder_id();
                         currentAuction.setCurrent_price(newBid.getAmount());
+                        currentAuction.setHighest_bidder_id(newBid.getBidder_id());
                         updateCurrentPriceLabel(newBid.getAmount());
 
                         // Thêm điểm vào biểu đồ sử dụng Smart Point
@@ -618,6 +725,7 @@ public class prdPageController {
                         }
 
                         updateBidPrompt();
+                        updateHighestBidderState();
 
                         if (bidAmount.getText() != null && !bidAmount.getText().isEmpty()) {
                             long typedAmount = getRealPrice(bidAmount);
@@ -787,6 +895,7 @@ public class prdPageController {
 
     public void setData(Auction auction) {
         this.currentAuction = auction;
+        this.currentHighestBidderId = auction.getHighest_bidder_id();
         String name = auction.getItem().getName();
         long price = (long) auction.getCurrent_price();
         String imagePath = auction.getItem().getImgPath();
@@ -827,6 +936,7 @@ public class prdPageController {
         } else if ("FINISHED".equals(status)) {
             this.remainingSeconds = 0;
         }
+        currentAuction.setStatus(status);
 
         // =======================================================================
         // XỬ LÝ ĐỒNG BỘ TRẠNG THÁI UI CHI TIẾT THEO TỪNG PHASE
@@ -866,6 +976,7 @@ public class prdPageController {
                 Bid.setText("Place Bid");
             }
             if (bidAmount != null) bidAmount.setDisable(false);
+            updateHighestBidderState();
 
             if (remainingSeconds > 0) {
                 countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
@@ -948,6 +1059,7 @@ public class prdPageController {
             }
 
             checkAutoBidStatus();
+            refreshHighestBidderIdAsync();
         }
     }
 
@@ -1019,6 +1131,7 @@ public class prdPageController {
         if (bidAmount != null) {
             bidAmount.setDisable(false);
         }
+        updateHighestBidderState();
 
         countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             remainingSeconds--;
