@@ -40,8 +40,7 @@ public class Auction implements Serializable {
         this.status = status;
     }
 
-    public Auction() {
-    }
+    public Auction() {}
 
     public int getId() {
         return id;
