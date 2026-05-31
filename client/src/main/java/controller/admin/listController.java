@@ -28,7 +28,7 @@ public class listController {
             col5.setText(rowData.length > 4 ? rowData[4] : "");
             col6.setText(rowData.length > 5 ? rowData[5] : "");
             col7.setText(rowData.length > 6 ? rowData[6] : "");
-            
+
             // Apply conditional styling for generic status if present in col7
             if (rowData.length > 6 && rowData[6] != null) {
                 String status = rowData[6].toUpperCase();
