@@ -80,6 +80,22 @@ public class signInController {
             OR.setVisible(true);
             google_login_pane.setVisible(true);
         }
+
+        // Bắt sự kiện Enter cho các trường nhập liệu
+        if (UsrNameField != null) {
+            UsrNameField.setOnAction(this::handleEnterKeyPress);
+        }
+        if (PassField != null) {
+            PassField.setOnAction(this::handleEnterKeyPress);
+        }
+    }
+
+    private void handleEnterKeyPress(ActionEvent event) {
+        if (LoginBtn != null && LoginBtn.isVisible()) {
+            logIn(event);
+        } else if (SignInBtn != null && SignInBtn.isVisible()) {
+            signIn(event);
+        }
     }
 
     public void signIn(ActionEvent event) {

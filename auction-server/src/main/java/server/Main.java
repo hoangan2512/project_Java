@@ -2,6 +2,7 @@ package server;
 
 import server.repository.DatabaseConnection;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 public class Main {
@@ -31,7 +32,6 @@ public class Main {
                 "imgpath5 TEXT, " +
                 "imgpath6 TEXT, " +
                 "categories TEXT, " +
-                "changes TEXT, " +
                 "moderation_status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL'," + // PENDING_APPROVAL, APPROVED, REJECTED
                 "FOREIGN KEY (seller_id) REFERENCES users(id)" +
                 ");";
@@ -75,6 +75,17 @@ public class Main {
             stmt.execute(auctionsTable);
             stmt.execute(bidsTable);
             stmt.execute(reasonsTable);
+
+            // Sửa lỗi: Thêm cột 'changes' vào bảng 'items' nếu chưa có
+            try {
+                stmt.execute("ALTER TABLE items ADD COLUMN changes TEXT");
+            } catch (SQLException e) {
+                // Bỏ qua lỗi nếu cột đã tồn tại ("duplicate column name")
+                if (!e.getMessage().contains("duplicate column name")) {
+                    throw e;
+                }
+            }
+
             System.out.println("Database structure is up-to-date. Admin user is ready.");
         } catch (Exception e) {
             System.err.println("Error during database initialization!");

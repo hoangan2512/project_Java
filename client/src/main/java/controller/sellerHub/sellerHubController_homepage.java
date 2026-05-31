@@ -75,6 +75,7 @@ public class sellerHubController_homepage {
     private String currentSortField = "STATUS_DEFAULT"; // ID, NAME, TIME, PRICE, STATUS_DEFAULT
     private boolean isAscending = true;
     private String currentStatusFilter = "ALL";
+    private String currentSearchKeyword = ""; // Thêm biến lưu từ khóa search
 
     // --- BIẾN GHI NHỚ ĐỂ BYPASS CẢNH BÁO ---
     private String lastWarnedName = "";
@@ -106,6 +107,11 @@ public class sellerHubController_homepage {
         if (col7_running != null) col7_running.setOnAction(e -> { currentStatusFilter = "RUNNING"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
         if (col7_finished != null) col7_finished.setOnAction(e -> { currentStatusFilter = "FINISHED"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
         if (col7_suspended != null) col7_suspended.setOnAction(e -> { currentStatusFilter = "SUSPENDED"; currentSortField = "STATUS_DEFAULT"; applySortAndFilter(); });
+
+        // Event listener cho Search Bar (ấn Enter)
+        if (searchBar != null) {
+            searchBar.setOnAction(e -> handleSearchBtnClick(null));
+        }
 
         try {
             Image usr_img = new Image(getClass().getResourceAsStream("../../image/avatar1.png"));
@@ -461,12 +467,6 @@ public class sellerHubController_homepage {
             newAuction.setStart_time(startDateTime);
             newAuction.setEnd_time(endDateTime);
 
-            if (startDateTime.isAfter(LocalDateTime.now())) {
-                newAuction.setStatus("WAITING");
-            } else {
-                newAuction.setStatus("RUNNING");
-            }
-
             Object[] payload = new Object[]{ newItem, newAuction };
 
             Request req = new Request(payload, ActionType.CREATE_ITEM);
@@ -488,11 +488,15 @@ public class sellerHubController_homepage {
     }
 
     public void handleSearchBtnClick(MouseEvent event) {
-        String searchText = searchBar.getText();
-        if (searchText == null || searchText.trim().isEmpty()) {
-            searchBar.requestFocus();
-        } else {
-            System.out.println("searching");
+        if (searchBar != null) {
+            String searchText = searchBar.getText();
+            if (searchText == null || searchText.trim().isEmpty()) {
+                currentSearchKeyword = "";
+                searchBar.clear();
+            } else {
+                currentSearchKeyword = searchText.trim();
+            }
+            applySortAndFilter();
         }
     }
 
@@ -566,6 +570,9 @@ public class sellerHubController_homepage {
                 .filter(a -> a.getItem() != null && a.getItem().getSeller_id() == currentSellerId)
                 .filter(a -> "ALL".equalsIgnoreCase(currentStatusFilter) ||
                         (a.getStatus() != null && a.getStatus().equalsIgnoreCase(currentStatusFilter)))
+                .filter(a -> currentSearchKeyword.isEmpty() ||
+                        (a.getItem().getName() != null && a.getItem().getName().toLowerCase().contains(currentSearchKeyword.toLowerCase())) ||
+                        (a.getItem().getUser_prdID() != null && a.getItem().getUser_prdID().toLowerCase().contains(currentSearchKeyword.toLowerCase())))
                 .collect(java.util.stream.Collectors.toList());
 
         // LỌC 2: Tiến hành Sắp xếp (Sort) dữ liệu dựa trên thuộc tính được chọn
@@ -662,6 +669,10 @@ public class sellerHubController_homepage {
         this.currentSortField = "STATUS_DEFAULT";
         this.isAscending = true;
         this.currentStatusFilter = "ALL";
+        this.currentSearchKeyword = "";
+        if (searchBar != null) {
+            searchBar.clear();
+        }
 
         // 2. Dọn sạch UI
         clearGridUIOnly();

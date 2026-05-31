@@ -51,7 +51,7 @@ public class ItemController {
                 String generatedID = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
                 newItem.setUser_prdID(generatedID);
             }
-            
+
             newItem.setModeration_status("PENDING_APPROVAL");
 
             int generatedItemId = itemRepo.addItem(newItem);
