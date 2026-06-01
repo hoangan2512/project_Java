@@ -167,6 +167,12 @@ public class auction_managerController {
                         if (currentItem != null) {
                             currentItem.setDescription(fullItem.getDescription());
                             currentItem.setCategories(fullItem.getCategories());
+                            currentItem.setUser_prdID(fullItem.getUser_prdID());
+                            if (prdIDbySeller != null) {
+                                prdIDbySeller.setText(fullItem.getUser_prdID() != null && !fullItem.getUser_prdID().trim().isEmpty()
+                                        ? fullItem.getUser_prdID()
+                                        : "Không có ID");
+                            }
                         }
 
                         // Cập nhật biến gốc
