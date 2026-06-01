@@ -33,3 +33,23 @@
 .btn-signin:armed {
     -fx-background-color: #e68200; /* Cam tối hơn khi nhấn */
 }
+
+.btn-signin2 {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #c6c6c6;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+    -fx-border-color: #ffa31a;
+    -fx-border-radius: 10px;
+}
+
+.btn-signin2:hover {
+    -fx-background-color: #272727; /* Cam sáng hơn một chút khi hover */
+    -fx-text-fill: #ffffff;
+}
+
+/* Hiệu ứng khi nhấn giữ (Pressed) */
+.btn-signin2:armed {
+    -fx-background-color: #2c2c2c; /* Cam tối hơn khi nhấn */
+}
