@@ -901,7 +901,6 @@ public class prdPageController {
         String imagePath = auction.getItem().getImgPath();
         byte[] imageBytes = auction.getItem().getImageBytes();
         String descriptionText = auction.getItem().getDescription();
-        String productId = auction.getItem().getUser_prdID();
         int auctionID = auction.getId();
 
         if (prdName != null) {
@@ -1038,8 +1037,7 @@ public class prdPageController {
                     : "No product description.");
         }
         if (auction_id != null) {
-            String displayProductId = productId != null && !productId.trim().isEmpty() ? productId : "N/A";
-            auction_id.setText("Auction ID: " + auctionID + " | Product ID: " + displayProductId);
+            auction_id.setText("Auction ID: " + auctionID);
         }
 
         // Đồng bộ lại cơ chế ẩn hiện các Tab để đảm bảo văn bản mới được hiển thị ngay lập tức

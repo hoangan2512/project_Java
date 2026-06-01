@@ -73,6 +73,7 @@ public class filterController {
     private Label status;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
+    private SearchCriteria currentCriteria;
 
     // Tạo ToggleGroup cho các nút chọn khoảng giá nhanh
     private final ToggleGroup priceGroup = new ToggleGroup();
@@ -131,6 +132,7 @@ public class filterController {
 
     // --- HÀM TỰ ĐỘNG CHỌN LẠI CÁC TRƯỜNG ĐÃ LỌC TRƯỚC ĐÓ ---
     public void setInitialCriteria(SearchCriteria criteria) {
+        this.currentCriteria = criteria;
         if (criteria == null) return;
 
         // Khôi phục Categories
@@ -257,7 +259,7 @@ public class filterController {
         String id = auctionID.getText().trim();
 
         // TẠO DTO ĐÓNG GÓI DỮ LIỆU TÌM KIẾM
-        SearchCriteria criteria = new SearchCriteria();
+        SearchCriteria criteria = this.currentCriteria != null ? this.currentCriteria : new SearchCriteria();
         criteria.setCategories(getSelectedNames(categoryBtns));
         criteria.setMinPrice(getRealPrice(lowest));
         criteria.setMaxPrice(getRealPrice(highest));
