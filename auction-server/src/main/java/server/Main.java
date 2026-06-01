@@ -32,6 +32,7 @@ public class Main {
                 "imgpath5 TEXT, " +
                 "imgpath6 TEXT, " +
                 "categories TEXT, " +
+                "changes TEXT, " +
                 "moderation_status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL'," + // PENDING_APPROVAL, APPROVED, REJECTED
                 "FOREIGN KEY (seller_id) REFERENCES users(id)" +
                 ");";

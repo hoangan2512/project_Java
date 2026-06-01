@@ -55,7 +55,7 @@ public class mainPageController {
     private customSearchController currentCustomSearchController;
 
     private prdPageController currentPrdPageController;
-    private SearchCriteria lastSearchCriteria = null;
+    private SearchCriteria lastSearchCriteria = new SearchCriteria();
 
     public static mainPageController getInstance() {
         return instance;
@@ -88,7 +88,7 @@ public class mainPageController {
 
             if (currentCustomSearchController != null) {
                 currentCustomSearchController.hideFilterButton();
-                currentCustomSearchController.setSearchCriteria(null);
+                currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
             }
             currentPrdPageController = null;
             prdPagePane.getChildren().setAll(customSearchNodeCached);
@@ -105,6 +105,11 @@ public class mainPageController {
     public void loadCustomSearchPane(SearchCriteria criteria) {
         this.lastSearchCriteria = criteria;
 
+        // Đồng bộ hóa thanh tìm kiếm với từ khóa của tiêu chí tìm kiếm hiện tại
+        if (searchBar != null && criteria != null) {
+            searchBar.setText(criteria.getKeyword() != null ? criteria.getKeyword() : "");
+        }
+
         // Tái sử dụng node đã được cache ở initialize
         currentPrdPageController = null;
         if (currentCustomSearchController != null) {
@@ -115,12 +120,15 @@ public class mainPageController {
     }
 
     public void handleBidHub(MouseEvent event) {
-        this.lastSearchCriteria = null;
+        this.lastSearchCriteria = new SearchCriteria();
+        if (searchBar != null) {
+            searchBar.clear();
+        }
 
         currentPrdPageController = null;
         if (currentCustomSearchController != null) {
             currentCustomSearchController.hideFilterButton();
-            currentCustomSearchController.setSearchCriteria(null);
+            currentCustomSearchController.setSearchCriteria(lastSearchCriteria);
         }
 
         switchToCachedSearchNode();
@@ -255,14 +263,11 @@ public class mainPageController {
 
     public void handleSearchBtnClick(MouseEvent event) {
         if (searchBar != null) {
-            String searchText = searchBar.getText();
-            if (searchText == null || searchText.trim().isEmpty()) {
-                searchBar.requestFocus();
-            } else {
-                SearchCriteria criteria = new SearchCriteria();
-                criteria.setKeyword(searchText.trim());
-                loadCustomSearchPane(criteria);
-            }
+            String searchText = searchBar.getText().trim();
+            // A new search from the bar should reset all filters and just use the keyword.
+            SearchCriteria criteria = new SearchCriteria();
+            criteria.setKeyword(searchText);
+            loadCustomSearchPane(criteria);
         }
     }
 
@@ -279,7 +284,17 @@ public class mainPageController {
     }
 
     public void handleCustomSearch(ActionEvent event) {
-        try { sceneSwitcher.openFilter(null); } catch (IOException e) {}
+        try {
+            if (lastSearchCriteria == null) {
+                lastSearchCriteria = new SearchCriteria();
+            }
+            if (searchBar != null) {
+                lastSearchCriteria.setKeyword(searchBar.getText().trim());
+            }
+            sceneSwitcher.openFilter(lastSearchCriteria);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadPolicyPane(String sectionType) {
