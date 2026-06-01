@@ -79,6 +79,21 @@ public class sellerHubController_signin {
             backToBidHub.setVisible(true);
             backToBidHub.setDisable(false);
         }
+
+        // Add Enter key handlers
+        UsrNameField.setOnAction(event -> {
+            if (LoginBtn.isVisible() || SignInBtn.isVisible()) {
+                PassField.requestFocus();
+            }
+        });
+
+        PassField.setOnAction(event -> {
+            if (LoginBtn.isVisible()) {
+                logIn(event);
+            } else if (SignInBtn.isVisible()) {
+                signIn(event);
+            }
+        });
     }
 
     public void signIn(ActionEvent event) {

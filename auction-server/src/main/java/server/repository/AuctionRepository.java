@@ -288,10 +288,6 @@ public class AuctionRepository {
             e.printStackTrace();
         }
 
-        if (criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) {
-            return filterByKeyword(resultList, criteria.getKeyword());
-        }
-
         return resultList;
     }
 
@@ -300,6 +296,11 @@ public class AuctionRepository {
             sql.append(" AND a.id = ?");
             parameters.add(criteria.getAuctionId());
             return;
+        }
+
+        if (criteria.getKeyword() != null && !criteria.getKeyword().trim().isEmpty()) {
+            sql.append(" AND i.name LIKE ?");
+            parameters.add("%" + criteria.getKeyword().trim() + "%");
         }
 
         if (criteria.getStatuses() != null && !criteria.getStatuses().isEmpty()) {
@@ -328,8 +329,6 @@ public class AuctionRepository {
                 firstStatus = false;
             }
             sql.append(")");
-        } else {
-            sql.append(" AND a.status != 'FINISHED'");
         }
 
         if (criteria.getMinPrice() > 0) {
