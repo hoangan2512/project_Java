@@ -1,6 +1,5 @@
 package controller;
 
-import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -10,9 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -31,7 +28,11 @@ public class filterController {
     @FXML
     private ToggleButton vehicle;
     @FXML
+    private ToggleButton antiques;
+    @FXML
     private ToggleButton real_estate;
+    @FXML
+    private ToggleButton exclusive_product;
 
     // price range
     @FXML
@@ -137,7 +138,9 @@ public class filterController {
             if (criteria.getCategories().contains("Art")) art.setSelected(true);
             if (criteria.getCategories().contains("Electronics")) electronics.setSelected(true);
             if (criteria.getCategories().contains("Vehicle")) vehicle.setSelected(true);
+            if (criteria.getCategories().contains("Antiques")) antiques.setSelected(true);
             if (criteria.getCategories().contains("Real Estate")) real_estate.setSelected(true);
+            if (criteria.getCategories().contains("Exclusive Product")) exclusive_product.setSelected(true);
         }
 
         // Khôi phục Status
@@ -225,7 +228,7 @@ public class filterController {
     @FXML
     public void handleClearBtn(ActionEvent event) {
         // Gom tất cả các nút và trường nhập liệu vào mảng
-        ToggleButton[] allToggleButtons = {art, electronics, vehicle, real_estate, bidding, newly_listed, ending_soon, upcoming, ended};
+        ToggleButton[] allToggleButtons = {art, electronics, vehicle, antiques, real_estate, exclusive_product, bidding, newly_listed, ending_soon, upcoming, ended};
         TextField[] allTextFields = {lowest, highest, auctionID};
 
         // Bỏ chọn các nút khoảng giá thông qua ToggleGroup
@@ -248,7 +251,7 @@ public class filterController {
 
     @FXML
     public void handleCustomSearch(ActionEvent event) {
-        ToggleButton[] categoryBtns = {art, electronics, vehicle, real_estate};
+        ToggleButton[] categoryBtns = {art, electronics, vehicle, antiques, real_estate, exclusive_product};
         ToggleButton[] statusBtns = {bidding, newly_listed, ending_soon, upcoming, ended};
 
         String id = auctionID.getText().trim();
