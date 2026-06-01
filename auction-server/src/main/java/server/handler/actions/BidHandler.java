@@ -27,6 +27,8 @@ public class BidHandler implements ActionHandler {
                 return bidController.handleUnregisterAutoBid(request);
             case GET_BID_HISTORY:
                 return bidController.handleGetBidHistory(request);
+            case GET_HIGHEST_BIDDER_ID:
+                return bidController.handleGetHighestBidderId(request);
             case CHECK_AUTOBID_STATUS:
                 return bidController.handleCheckAutobidStatus(request);
             default:

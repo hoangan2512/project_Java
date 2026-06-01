@@ -19,7 +19,9 @@
       <ToggleButton fx:id="art" layoutX="25.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="126.0" styleClass="filter-btn" text="Art" />
       <ToggleButton fx:id="electronics" layoutX="172.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="126.0" styleClass="filter-btn" text="Electronics" />
       <ToggleButton fx:id="vehicle" layoutX="318.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="126.0" styleClass="filter-btn" text="Vehicle" />
-      <ToggleButton fx:id="real_estate" layoutX="464.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="126.0" styleClass="filter-btn" text="Real Estate" />
+      <ToggleButton fx:id="antiques" layoutX="464.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="126.0" styleClass="filter-btn" text="Antiques" />
+      <ToggleButton fx:id="real_estate" layoutX="610.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="126.0" styleClass="filter-btn" text="Real Estate" />
+      <ToggleButton fx:id="exclusive_product" layoutX="756.0" layoutY="65.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="145.0" styleClass="filter-btn" text="Exclusive Product" />
 
       <Label layoutX="25.0" layoutY="137.0" prefHeight="25.0" prefWidth="190.0" text="Price Range" textFill="WHITE">
          <font>

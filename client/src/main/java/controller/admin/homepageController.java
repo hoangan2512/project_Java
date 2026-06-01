@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
@@ -19,9 +20,9 @@ import javafx.scene.shape.Circle;
 import message.Request;
 import message.Response;
 import model.ActionType;
-import model.User;
-import model.Item;
 import model.Auction;
+import model.Item;
+import model.User;
 import network.ClientSocket;
 
 import java.io.IOException;
@@ -36,6 +37,8 @@ import java.util.stream.Collectors;
 public class homepageController {
     @FXML
     private Circle userAvatar, searchBtn;
+    @FXML
+    private TextField searchBar; // Thêm search bar
     @FXML
     private ToggleButton Seller, Item, Auction;
     @FXML
@@ -85,6 +88,7 @@ public class homepageController {
     private String currentUserStatusFilter = "ALL";
     private String currentItemStatusFilter = "ALL";
     private String currentAuctionStatusFilter = "ALL";
+    private String currentSearchKeyword = "";
 
     public void initialize() {
         item_manager_pane.setManaged(false);
@@ -93,6 +97,13 @@ public class homepageController {
         seller_manager_pane.setVisible(false);
         auction_manager_pane.setManaged(false);
         auction_manager_pane.setVisible(false);
+
+        if (searchBar != null) {
+            searchBar.setOnAction(e -> handleSearch());
+        }
+        if (searchBtn != null) {
+            searchBtn.setOnMouseClicked(e -> handleSearch());
+        }
 
         try {
             Image usr_img = new Image(getClass().getResourceAsStream("../../image/avatar1.png"));
@@ -164,6 +175,20 @@ public class homepageController {
         if (Seller != null) Seller.setSelected(true);
     }
 
+    private void handleSearch() {
+        if (searchBar != null) {
+            currentSearchKeyword = searchBar.getText().trim();
+        }
+        // Trigger re-rendering based on the current tab
+        if (Seller.isSelected()) {
+            renderSellers(filterSellers());
+        } else if (Item.isSelected()) {
+            renderItems(filterItems());
+        } else if (Auction.isSelected()) {
+            renderAuctions(filterAuctions());
+        }
+    }
+
     /**
      * Giải phóng tài nguyên và ĐỒNG THỜI đặt lại toàn bộ các bộ lọc,
      * tiêu chí tìm kiếm về trạng thái mặc định ban đầu.
@@ -184,6 +209,10 @@ public class homepageController {
         currentUserStatusFilter = "ALL";
         currentItemStatusFilter = "ALL";
         currentAuctionStatusFilter = "ALL";
+        currentSearchKeyword = "";
+        if (searchBar != null) {
+            searchBar.clear();
+        }
     }
 
     // =========================================================================
@@ -282,7 +311,10 @@ public class homepageController {
             boolean matchesRole = "ALL".equals(currentUserRoleFilter) || currentUserRoleFilter.equalsIgnoreCase(u.getRole());
             String status = u.getStatus() != null ? u.getStatus() : "ACTIVE";
             boolean matchesStatus = "ALL".equals(currentUserStatusFilter) || currentUserStatusFilter.equalsIgnoreCase(status);
-            return matchesRole && matchesStatus;
+            boolean matchesSearch = currentSearchKeyword.isEmpty() ||
+                    (u.getUsername() != null && u.getUsername().toLowerCase().contains(currentSearchKeyword.toLowerCase())) ||
+                    String.valueOf(u.getID()).contains(currentSearchKeyword);
+            return matchesRole && matchesStatus && matchesSearch;
         }).collect(Collectors.toList());
     }
 
@@ -347,9 +379,13 @@ public class homepageController {
         return originalItemsData.stream().filter(auc -> {
             Item item = auc.getItem();
             if (item == null) return false;
-            if ("ALL".equals(currentItemStatusFilter)) return true;
-            String status = String.valueOf(item.getModeration_status()).toUpperCase();
-            return status.contains(currentItemStatusFilter);
+            boolean statusMatch = "ALL".equals(currentItemStatusFilter) ||
+                    (item.getModeration_status() != null && String.valueOf(item.getModeration_status()).toUpperCase().contains(currentItemStatusFilter));
+            boolean searchMatch = currentSearchKeyword.isEmpty() ||
+                    (item.getName() != null && item.getName().toLowerCase().contains(currentSearchKeyword.toLowerCase())) ||
+                    (item.getUser_prdID() != null && item.getUser_prdID().toLowerCase().contains(currentSearchKeyword.toLowerCase())) ||
+                    String.valueOf(item.getId()).contains(currentSearchKeyword);
+            return statusMatch && searchMatch;
         }).collect(Collectors.toList());
     }
 
@@ -423,9 +459,12 @@ public class homepageController {
     private List<Auction> filterAuctions() {
         return originalAuctionsData.stream().filter(auc -> {
             if (auc == null) return false;
-            if ("ALL".equals(currentAuctionStatusFilter)) return true;
-            String status = String.valueOf(auc.getStatus()).toUpperCase();
-            return status.contains(currentAuctionStatusFilter);
+            boolean statusMatch = "ALL".equals(currentAuctionStatusFilter) ||
+                    (auc.getStatus() != null && auc.getStatus().toUpperCase().contains(currentAuctionStatusFilter));
+            boolean searchMatch = currentSearchKeyword.isEmpty() ||
+                    (getAuctionName(auc) != null && getAuctionName(auc).toLowerCase().contains(currentSearchKeyword.toLowerCase())) ||
+                    String.valueOf(auc.getId()).contains(currentSearchKeyword);
+            return statusMatch && searchMatch;
         }).collect(Collectors.toList());
     }
 

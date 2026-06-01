@@ -75,6 +75,11 @@ public class mainPageController {
         instance = this;
         updateAvatarUI();
 
+        // Gắn sự kiện Enter cho thanh tìm kiếm
+        if (searchBar != null) {
+            searchBar.setOnAction(e -> handleSearchBtnClick(null));
+        }
+
         // CACHE MÀN HÌNH TÌM KIẾM ĐÚNG 1 LẦN DUY NHẤT VÀO RAM
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/customSearch.fxml"));
@@ -249,13 +254,15 @@ public class mainPageController {
     }
 
     public void handleSearchBtnClick(MouseEvent event) {
-        String searchText = searchBar.getText();
-        if (searchText == null || searchText.trim().isEmpty()) {
-            searchBar.requestFocus();
-        } else {
-            SearchCriteria criteria = new SearchCriteria();
-            criteria.setKeyword(searchText.trim());
-            loadCustomSearchPane(criteria);
+        if (searchBar != null) {
+            String searchText = searchBar.getText();
+            if (searchText == null || searchText.trim().isEmpty()) {
+                searchBar.requestFocus();
+            } else {
+                SearchCriteria criteria = new SearchCriteria();
+                criteria.setKeyword(searchText.trim());
+                loadCustomSearchPane(criteria);
+            }
         }
     }
 

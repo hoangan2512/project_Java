@@ -1,6 +1,6 @@
 package server.repository;
 
-import model.Bid; 
+import model.Bid;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,7 +16,7 @@ public class BidRepository {
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             
+
             pstmt.setInt(1, bid.getAuction_id());
             pstmt.setInt(2, bid.getBidder_id());
             pstmt.setDouble(3, bid.getAmount());
@@ -41,7 +41,7 @@ public class BidRepository {
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             
+
             pstmt.setInt(1, auctionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -75,7 +75,7 @@ public class BidRepository {
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             
+
             pstmt.setInt(1, auctionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

@@ -4,6 +4,7 @@ import message.Request;
 import message.Response;
 import model.AutoBidConfig;
 import model.Bid;
+import server.repository.AuctionRepository;
 import server.repository.BidRepository;
 import server.service.AuctionService;
 import server.service.AutoBidManager;
@@ -13,6 +14,7 @@ import java.util.List;
 public class BidController {
     private final AuctionService auctionService = new AuctionService();
     private final BidRepository bidRepo = new BidRepository();
+    private final AuctionRepository auctionRepo = new AuctionRepository();
 
     public Response handleBid(Request request) {
         Bid bid = (Bid) request.getPayload();
@@ -48,6 +50,22 @@ public class BidController {
         } catch (Exception e) {
             e.printStackTrace();
             return new Response("ERROR", null, "Lỗi server.");
+        }
+    }
+
+    public Response handleGetHighestBidderId(Request request) {
+        try {
+            int auctionId = (Integer) request.getPayload();
+            model.Auction auction = auctionRepo.getAuctionById(auctionId);
+
+            if (auction == null) {
+                return new Response("FAIL", null, "Auction not found.");
+            }
+
+            return new Response("SUCCESS", auction.getHighest_bidder_id(), "Fetched highest bidder id.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response("ERROR", null, "Error fetching highest bidder id.");
         }
     }
 

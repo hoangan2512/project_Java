@@ -48,6 +48,7 @@ public class ActionFactory {
             case REGISTER_AUTOBID:
             case UNREGISTER_AUTOBID:
             case GET_BID_HISTORY:
+            case GET_HIGHEST_BIDDER_ID:
             case CHECK_AUTOBID_STATUS:
                 return new BidHandler();
 

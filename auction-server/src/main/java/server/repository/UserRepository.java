@@ -1,7 +1,7 @@
 package server.repository;
 
 import model.User;
-import org.mindrot.jbcrypt.BCrypt; 
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -162,20 +162,20 @@ public class UserRepository {
         // Đăng nhập thất bại trả về null
         return null;
     }
-    
+
     // ==========================================
     // CÁC HÀM DÀNH CHO ADMIN QUẢN LÝ USER
     // ==========================================
-    
+
     public List<User> getAllUsers() {
         List<User> userList = new ArrayList<>();
         // language=SQLite
         String sql = "SELECT id, username, role, status FROM users";
-        
+
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
-            
+
             while (rs.next()) {
                 User user = new User();
                 user.setId(rs.getInt("id"));
@@ -185,24 +185,24 @@ public class UserRepository {
                 userList.add(user);
             }
         } catch (SQLException e) {
-             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách người dùng", e);
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách người dùng", e);
         }
         return userList;
     }
-    
+
     public boolean updateUserStatus(int userId, String status) {
         // language=SQLite
         String sql = "UPDATE users SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-             
+
             pstmt.setString(1, status);
             pstmt.setInt(2, userId);
-            
+
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-             LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái user ID " + userId, e);
-             return false;
+            LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái user ID " + userId, e);
+            return false;
         }
     }
 
