@@ -119,6 +119,9 @@ public class sellerHubController_homepage {
 
             Image search_img = new Image(getClass().getResourceAsStream("../../image/search_icon1.png"));
             searchBtn.setFill(new ImagePattern(search_img));
+            
+            // Allow clicking the search icon to search as well
+            searchBtn.setOnMouseClicked(this::handleSearchBtnClick);
         } catch (Exception e) {
             System.out.println("Không tìm thấy ảnh avatar, kiểm tra lại đường dẫn!");
         }

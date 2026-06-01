@@ -69,6 +69,7 @@ public class mainPageController {
 
             Image search_img = new Image(getClass().getResourceAsStream("/image/search_icon1.png"));
             searchBtn.setFill(new ImagePattern(search_img));
+            searchBtn.setOnMouseClicked(this::handleSearchBtnClick);
         } catch (Exception e) {
             System.out.println("Không tìm thấy ảnh avatar!");
         }

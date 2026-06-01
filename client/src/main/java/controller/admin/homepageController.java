@@ -325,7 +325,7 @@ public class homepageController {
     }
 
     private void renderSellers(List<Map<String, Object>> usersData) {
-        clearProductGridAndReleaseResources();
+        clearGridForReRender();
         for (Map<String, Object> userDataMap : usersData) {
             try {
                 User user = getUser(userDataMap);
@@ -396,7 +396,7 @@ public class homepageController {
     }
 
     private void renderItems(List<Auction> auctionList) {
-        clearProductGridAndReleaseResources();
+        clearGridForReRender();
         Locale localeVN = new Locale("vi", "VN");
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
 
@@ -475,7 +475,7 @@ public class homepageController {
     }
 
     private void renderAuctions(List<Auction> auctions) {
-        clearProductGridAndReleaseResources();
+        clearGridForReRender();
         Locale localeVN = new Locale("vi", "VN");
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
 
@@ -550,5 +550,17 @@ public class homepageController {
         auction_manager_pane.setManaged(true); auction_manager_pane.setVisible(true);
         item_manager_pane.setManaged(false); item_manager_pane.setVisible(false);
         seller_manager_pane.setManaged(false); seller_manager_pane.setVisible(false);
+    }
+
+    private void clearGridForReRender() {
+        if (productGrid != null) {
+            for (Node node : productGrid.getChildren()) {
+                Object controller = node.getUserData();
+                if (controller instanceof listController) {
+                    ((listController) controller).stopTimeline();
+                }
+            }
+            productGrid.getChildren().clear();
+        }
     }
 }
