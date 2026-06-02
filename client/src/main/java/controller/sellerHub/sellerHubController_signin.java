@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
@@ -27,17 +28,19 @@ import java.io.IOException;
 public class sellerHubController_signin {
 
     @FXML
-    private Label Status, OR;
+    private Label Status;
     @FXML
-    private TextField UsrNameField;
+    private TextField UsrNameField, UsrNameField1;
     @FXML
-    private PasswordField PassField;
+    private PasswordField PassField, PassField1;
     @FXML
     private Button LoginBtn;
     @FXML
     private Button SignInBtn, SignInOpt, LoginOpt, backBtn, LogoutBtn, backToBidHub;
     @FXML
-    private Line line1, line2;
+    private Line line1;
+    @FXML
+    private AnchorPane login_pane, option_pane, signup_pane;
 
     private final SceneSwitchController sceneSwitcher = new SceneSwitchController();
 
@@ -47,25 +50,37 @@ public class sellerHubController_signin {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
             Status.setVisible(false);
+
+            // Ẩn tất cả các trường nhập liệu
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
+            UsrNameField1.setVisible(false);
+            PassField1.setVisible(false);
+
             LoginBtn.setVisible(false);
             backBtn.setVisible(false);
             SignInBtn.setVisible(false);
             SignInOpt.setVisible(false);
             LoginOpt.setVisible(false);
             line1.setVisible(false);
-            line2.setVisible(false);
-            OR.setVisible(false);
-            backToBidHub.setVisible(false);
 
+            backToBidHub.setVisible(false);
             LogoutBtn.setVisible(true);
+
+            signup_pane.setVisible(false);
+            login_pane.setVisible(false);
+            option_pane.setVisible(false);
         } else {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
             Status.setVisible(false);
+
+            // Ẩn tất cả các trường nhập liệu
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
+            UsrNameField1.setVisible(false);
+            PassField1.setVisible(false);
+
             LoginBtn.setVisible(false);
             backBtn.setVisible(false);
             SignInBtn.setVisible(false);
@@ -74,31 +89,51 @@ public class sellerHubController_signin {
             SignInOpt.setVisible(true);
             LoginOpt.setVisible(true);
             line1.setVisible(true);
-            line2.setVisible(true);
-            OR.setVisible(true);
             backToBidHub.setVisible(true);
             backToBidHub.setDisable(false);
+
+            signup_pane.setVisible(false);
+            login_pane.setVisible(false);
+            option_pane.setVisible(true);
         }
 
-        // Add Enter key handlers
-        UsrNameField.setOnAction(event -> {
-            if (LoginBtn.isVisible() || SignInBtn.isVisible()) {
-                PassField.requestFocus();
-            }
-        });
+        // Bắt sự kiện Enter cho phần Đăng nhập (Login)
+        if (UsrNameField != null) {
+            UsrNameField.setOnAction(event -> {
+                if (LoginBtn.isVisible()) {
+                    PassField.requestFocus();
+                }
+            });
+        }
+        if (PassField != null) {
+            PassField.setOnAction(event -> {
+                if (LoginBtn.isVisible()) {
+                    logIn(event);
+                }
+            });
+        }
 
-        PassField.setOnAction(event -> {
-            if (LoginBtn.isVisible()) {
-                logIn(event);
-            } else if (SignInBtn.isVisible()) {
-                signIn(event);
-            }
-        });
+        // Bắt sự kiện Enter cho phần Đăng ký (Sign In)
+        if (UsrNameField1 != null) {
+            UsrNameField1.setOnAction(event -> {
+                if (SignInBtn.isVisible()) {
+                    PassField1.requestFocus();
+                }
+            });
+        }
+        if (PassField1 != null) {
+            PassField1.setOnAction(event -> {
+                if (SignInBtn.isVisible()) {
+                    signIn(event);
+                }
+            });
+        }
     }
 
     public void signIn(ActionEvent event) {
-        String password = PassField.getText();
-        String username = UsrNameField.getText();
+        // Sử dụng UsrNameField1 và PassField1 cho Đăng ký
+        String password = PassField1.getText();
+        String username = UsrNameField1.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
             Status.setText("Please insert username & password");
@@ -277,40 +312,49 @@ public class sellerHubController_signin {
         SignInOpt.setVisible(false);
         LoginOpt.setVisible(false);
         line1.setVisible(false);
-        line2.setVisible(false);
-        OR.setVisible(false);
+        option_pane.setVisible(false);
 
-        UsrNameField.setVisible(true);
-        PassField.setVisible(true);
+        // Đổi sang bật hiển thị UsrNameField1 và PassField1
+        UsrNameField1.setVisible(true);
+        PassField1.setVisible(true);
+
         SignInBtn.setVisible(true);
         backBtn.setVisible(true);
+        signup_pane.setVisible(true);
     }
 
     public void handleLoginOpt(ActionEvent event) {
         SignInOpt.setVisible(false);
         LoginOpt.setVisible(false);
         line1.setVisible(false);
-        line2.setVisible(false);
-        OR.setVisible(false);
+        option_pane.setVisible(false);
 
+        // Giữ nguyên hiển thị UsrNameField và PassField cho Login
         UsrNameField.setVisible(true);
         PassField.setVisible(true);
+
         LoginBtn.setVisible(true);
         backBtn.setVisible(true);
+        login_pane.setVisible(true);
     }
 
     public void handleBackBtn(ActionEvent event) {
+        // Đảm bảo ẩn cả 4 trường nhập liệu khi nhấn nút Back
         UsrNameField.setVisible(false);
         PassField.setVisible(false);
+        UsrNameField1.setVisible(false);
+        PassField1.setVisible(false);
+
         LoginBtn.setVisible(false);
         backBtn.setVisible(false);
         SignInBtn.setVisible(false);
+        login_pane.setVisible(false);
+        signup_pane.setVisible(false);
 
         SignInOpt.setVisible(true);
         LoginOpt.setVisible(true);
         line1.setVisible(true);
-        line2.setVisible(true);
-        OR.setVisible(true);
+        option_pane.setVisible(true);
     }
 
     public void handleLogout(ActionEvent event) {

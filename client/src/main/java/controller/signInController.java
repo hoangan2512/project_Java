@@ -29,19 +29,19 @@ import java.net.URI;
 public class signInController {
 
     @FXML
-    private Label Status, OR;
+    private Label Status;
     @FXML
-    private TextField UsrNameField;
+    private TextField UsrNameField, UsrNameField1;
     @FXML
-    private PasswordField PassField;
+    private PasswordField PassField, PassField1;
     @FXML
     private Button LoginBtn;
     @FXML
     private Button SignInBtn, SignInOpt, LoginOpt, backBtn, LogoutBtn;
     @FXML
-    private Line line1, line2;
+    private Line line1;
     @FXML
-    private AnchorPane google_login_pane;
+    private AnchorPane google_login_pane, signup_pane, login_pane, option_pane;
 
     @FXML
     public void initialize() {
@@ -49,25 +49,36 @@ public class signInController {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
             Status.setVisible(false);
+
+            // Ẩn các trường nhập liệu của cả hai form
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
+            UsrNameField1.setVisible(false);
+            PassField1.setVisible(false);
+
             LoginBtn.setVisible(false);
             backBtn.setVisible(false);
             SignInBtn.setVisible(false);
             SignInOpt.setVisible(false);
             LoginOpt.setVisible(false);
             line1.setVisible(false);
-            line2.setVisible(false);
-            OR.setVisible(false);
             google_login_pane.setVisible(false);
+            signup_pane.setVisible(false);
+            login_pane.setVisible(false);
+            option_pane.setVisible(false);
 
             LogoutBtn.setVisible(true);
         } else {
             Status.setAlignment(javafx.geometry.Pos.CENTER);
             Status.setMaxWidth(Double.MAX_VALUE);
             Status.setVisible(false);
+
+            // Ẩn các trường nhập liệu của cả hai form
             UsrNameField.setVisible(false);
             PassField.setVisible(false);
+            UsrNameField1.setVisible(false);
+            PassField1.setVisible(false);
+
             LoginBtn.setVisible(false);
             backBtn.setVisible(false);
             SignInBtn.setVisible(false);
@@ -76,17 +87,26 @@ public class signInController {
             SignInOpt.setVisible(true);
             LoginOpt.setVisible(true);
             line1.setVisible(true);
-            line2.setVisible(true);
-            OR.setVisible(true);
             google_login_pane.setVisible(true);
+            signup_pane.setVisible(false);
+            login_pane.setVisible(false);
+            option_pane.setVisible(true);
         }
 
-        // Bắt sự kiện Enter cho các trường nhập liệu
+        // Bắt sự kiện Enter cho các trường nhập liệu (Login)
         if (UsrNameField != null) {
             UsrNameField.setOnAction(this::handleEnterKeyPress);
         }
         if (PassField != null) {
             PassField.setOnAction(this::handleEnterKeyPress);
+        }
+
+        // Bắt sự kiện Enter cho các trường nhập liệu (Sign In)
+        if (UsrNameField1 != null) {
+            UsrNameField1.setOnAction(this::handleEnterKeyPress);
+        }
+        if (PassField1 != null) {
+            PassField1.setOnAction(this::handleEnterKeyPress);
         }
     }
 
@@ -99,8 +119,9 @@ public class signInController {
     }
 
     public void signIn(ActionEvent event) {
-        String password = PassField.getText();
-        String username = UsrNameField.getText();
+        // Sử dụng UsrNameField1 và PassField1 cho quá trình Sign In (Register)
+        String password = PassField1.getText();
+        String username = UsrNameField1.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
             Status.setText("Please insert username & password");
@@ -273,40 +294,49 @@ public class signInController {
         SignInOpt.setVisible(false);
         LoginOpt.setVisible(false);
         line1.setVisible(false);
-        line2.setVisible(false);
-        OR.setVisible(false);
+        option_pane.setVisible(false);
 
-        UsrNameField.setVisible(true);
-        PassField.setVisible(true);
+        // Hiển thị các trường của Sign In
+        UsrNameField1.setVisible(true);
+        PassField1.setVisible(true);
+
         SignInBtn.setVisible(true);
         backBtn.setVisible(true);
+        signup_pane.setVisible(true);
     }
 
     public void handleLoginOpt(ActionEvent event) {
         SignInOpt.setVisible(false);
         LoginOpt.setVisible(false);
         line1.setVisible(false);
-        line2.setVisible(false);
-        OR.setVisible(false);
+        option_pane.setVisible(false);
 
+        // Hiển thị các trường của Login
         UsrNameField.setVisible(true);
         PassField.setVisible(true);
+
         LoginBtn.setVisible(true);
         backBtn.setVisible(true);
+        login_pane.setVisible(true);
     }
 
     public void handleBackBtn(ActionEvent event) {
+        // Ẩn tất cả các trường nhập liệu khi quay lại menu chọn
         UsrNameField.setVisible(false);
         PassField.setVisible(false);
+        UsrNameField1.setVisible(false);
+        PassField1.setVisible(false);
+
         LoginBtn.setVisible(false);
         backBtn.setVisible(false);
         SignInBtn.setVisible(false);
+        login_pane.setVisible(false);
+        signup_pane.setVisible(false);
 
         SignInOpt.setVisible(true);
         LoginOpt.setVisible(true);
         line1.setVisible(true);
-        line2.setVisible(true);
-        OR.setVisible(true);
+        option_pane.setVisible(true);
     }
 
     public void handleLogout(ActionEvent event) {

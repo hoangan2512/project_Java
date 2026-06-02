@@ -10,25 +10,146 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="600.0" prefWidth="300.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.signInController">
+<AnchorPane prefHeight="600.0" prefWidth="300.0" style="-fx-background-color: #1e1e1e;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.signInController">
    <children>
-      <Button fx:id="SignInOpt" layoutX="44.0" layoutY="428.0" mnemonicParsing="false" onAction="#handleSigninOpt" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="Register new account" visible="false">
-         <font>
-            <Font name="System Bold" size="14.0" />
-         </font></Button>
-      <TextField fx:id="UsrNameField" layoutX="125.0" layoutY="428.0" promptText="Username" visible="false" />
-      <Label fx:id="Status" alignment="CENTER" layoutX="43.0" layoutY="564.0" prefHeight="26.0" prefWidth="320.0" text="Signing In..." textAlignment="CENTER" textFill="WHITE" />
-      <PasswordField fx:id="PassField" layoutX="125.0" layoutY="477.0" prefHeight="40.0" prefWidth="158.0" promptText="Password" visible="false" />
-      <Button fx:id="LoginOpt" layoutX="44.0" layoutY="524.0" mnemonicParsing="false" onAction="#handleLoginOpt" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 10;" styleClass="btn-signin2" stylesheets="@sellerHub/sellerHub_signin.css" text="Login with username and password" visible="false">
-         <font>
-            <Font name="System Bold" size="14.0" />
-         </font></Button>
+      <AnchorPane fx:id="option_pane" layoutX="29.0" layoutY="246.0">
+         <children>
+            <Button fx:id="SignInOpt" layoutY="71.0" mnemonicParsing="false" onAction="#handleSigninOpt" prefHeight="38.0" prefWidth="348.0" style="-fx-background-radius: 10;" styleClass="btn-signin" stylesheets="@sellerHub/sellerHub_signin.css" text="Register new account">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+            <Button fx:id="LoginOpt" layoutX="5.0" layoutY="202.0" mnemonicParsing="false" onAction="#handleLoginOpt" prefHeight="38.0" prefWidth="348.0" style="-fx-background-radius: 10;" styleClass="btn-signin2" stylesheets="@sellerHub/sellerHub_signin.css" text="Login with username and password">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+            <Line fx:id="line1" endX="269.0" layoutX="84.0" layoutY="260.0" startX="-84.0" stroke="#ababab" style="-fx-stroke-width: 0.3;" />
+            <AnchorPane fx:id="google_login_pane" layoutX="16.0" layoutY="279.0">
+               <children>
+                  <Button fx:id="google_login" mnemonicParsing="false" onAction="#handleGoogleLogin" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 20; -fx-background-color: white;" text="Log in with Google">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Button>
+                  <ImageView fitHeight="33.0" fitWidth="40.0" layoutX="13.0" layoutY="4.0" onMouseClicked="#handleGoogleLogin" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../image/google_transparent.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </AnchorPane>
+            <Label fx:id="register_text2" alignment="TOP_LEFT" layoutX="56.0" layoutY="24.0" prefHeight="35.0" prefWidth="281.0" text="Join our exclusive network of premium automotive sellers. Verified listings receive more engagement." textFill="#ababab" wrapText="true">
+               <font>
+                  <Font size="11.0" />
+               </font>
+            </Label>
+            <Label fx:id="register_text1" layoutX="56.0" prefHeight="23.0" prefWidth="116.0" text="Start Bidding Today" textFill="WHITE" wrapText="true">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <ImageView fx:id="register_icon" fitHeight="35.0" fitWidth="35.0" layoutX="3.0" layoutY="6.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../image/register-icon.jpg" />
+               </image>
+            </ImageView>
+            <ImageView fx:id="login_icon" fitHeight="35.0" fitWidth="35.0" layoutX="6.0" layoutY="141.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../image/login-icon.jpg" />
+               </image>
+            </ImageView>
+            <Label fx:id="login_text2" layoutX="62.0" layoutY="149.0" prefHeight="50.0" prefWidth="281.0" text="Access your dashboard to manage auctions, respond to inquiries, and review analytics." textFill="#ababab" wrapText="true">
+               <font>
+                  <Font size="11.0" />
+               </font>
+            </Label>
+            <Label fx:id="login_text1" layoutX="62.0" layoutY="134.0" prefHeight="23.0" prefWidth="116.0" text="Welcome Back" textFill="WHITE" wrapText="true">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="login_pane" layoutX="12.0" layoutY="229.0" visible="false">
+         <children>
+            <TextField fx:id="UsrNameField" layoutX="23.0" layoutY="138.0" prefHeight="39.0" prefWidth="340.0" promptText="Enter username" style="-fx-border-color: grey; -fx-border-radius: 7px;" />
+            <PasswordField fx:id="PassField" layoutX="23.0" layoutY="223.0" prefHeight="40.0" prefWidth="340.0" promptText="Password" style="-fx-border-color: grey; -fx-border-radius: 7px;" />
+            <Button fx:id="LoginBtn" layoutX="23.0" layoutY="296.0" mnemonicParsing="false" onAction="#logIn" prefHeight="35.0" prefWidth="340.0" style="-fx-background-radius: 7;" styleClass="btn-signin" text="LOGIN">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="backBtn" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="40.0" prefWidth="40.0" style="-fx-background-radius: 10; -fx-background-color: transparent;" text="&lt;" textFill="WHITE">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Button>
+            <Label layoutX="23.0" layoutY="48.0" text="Welcome Back" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+            <Label layoutX="25.0" layoutY="85.0" text="Access your trading cockpit." textFill="#ababab">
+               <font>
+                  <Font size="13.0" />
+               </font>
+            </Label>
+            <Label layoutX="32.0" layoutY="117.0" text="USERNAME" textFill="#ababab">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+            <Label layoutX="32.0" layoutY="199.0" text="PASSWORD" textFill="#ababab">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="signup_pane" layoutX="12.0" layoutY="229.0" visible="false">
+         <children>
+            <TextField fx:id="UsrNameField1" layoutX="23.0" layoutY="138.0" prefHeight="39.0" prefWidth="340.0" promptText="Enter username" style="-fx-border-color: grey; -fx-border-radius: 7px;" />
+            <PasswordField fx:id="PassField1" layoutX="23.0" layoutY="223.0" prefHeight="40.0" prefWidth="340.0" promptText="Password" style="-fx-border-color: grey; -fx-border-radius: 7px;" />
+            <Button fx:id="SignInBtn" layoutX="23.0" layoutY="296.0" mnemonicParsing="false" onAction="#signIn" prefHeight="35.0" prefWidth="340.0" style="-fx-background-radius: 7;" styleClass="btn-signin" text="SIGN UP">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="backBtn1" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="40.0" prefWidth="40.0" style="-fx-background-radius: 10; -fx-background-color: transparent;" text="&lt;" textFill="WHITE">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Button>
+            <Label layoutX="23.0" layoutY="48.0" text="Welcome to BidHub" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+            <Label layoutX="25.0" layoutY="85.0" text="Access your trading cockpit." textFill="#ababab">
+               <font>
+                  <Font size="13.0" />
+               </font>
+            </Label>
+            <Label layoutX="32.0" layoutY="117.0" text="USERNAME" textFill="#ababab">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+            <Label layoutX="32.0" layoutY="199.0" text="PASSWORD" textFill="#ababab">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <Label fx:id="Status" alignment="CENTER" layoutX="45.0" layoutY="573.0" prefHeight="16.0" prefWidth="320.0" text="Signing In..." textAlignment="CENTER" textFill="WHITE" visible="false" />
       <ImageView fitHeight="407.0" fitWidth="407.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/mercedes.jpg" />
          </image>
       </ImageView>
-      <ImageView fitHeight="101.0" fitWidth="158.0" layoutX="125.0" layoutY="41.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fitHeight="101.0" fitWidth="158.0" layoutX="125.0" layoutY="27.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/logo_project_2-removebg.png" />
          </image>
@@ -38,46 +159,10 @@
             <Font name="System Bold" size="18.0" />
          </font>
       </Label>
-      <Label fx:id="OR" layoutX="194.0" layoutY="487.0" text="OR" textFill="WHITE" visible="false">
-         <font>
-            <Font name="System Bold" size="14.0" />
-         </font>
-      </Label>
-      <Line fx:id="line1" endX="31.79998779296875" layoutX="153.0" layoutY="497.0" startX="-78.5999755859375" stroke="WHITE" visible="false" />
-      <Line fx:id="line2" endX="31.79998779296875" layoutX="305.0" layoutY="497.0" startX="-78.5999755859375" stroke="WHITE" visible="false" />
-      <Button fx:id="SignInBtn" layoutX="152.0" layoutY="530.0" mnemonicParsing="false" onAction="#signIn" prefHeight="27.0" prefWidth="102.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="SignIn" visible="false">
-         <font>
-            <Font name="System Bold" size="12.0" />
-         </font>
-      </Button>
-      <Button fx:id="LoginBtn" layoutX="152.0" layoutY="530.0" mnemonicParsing="false" onAction="#logIn" prefHeight="27.0" prefWidth="102.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="LogIn" visible="false">
-         <font>
-            <Font name="System Bold" size="12.0" />
-         </font>
-      </Button>
-      <Button fx:id="backBtn" layoutX="3.0" layoutY="410.0" mnemonicParsing="false" onAction="#handleBackBtn" prefHeight="40.0" prefWidth="40.0" style="-fx-background-radius: 10; -fx-background-color: transparent;" text="&lt;" textFill="WHITE" visible="false">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Button>
-      <Button fx:id="LogoutBtn" layoutX="43.0" layoutY="477.0" mnemonicParsing="false" onAction="#handleLogout" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="Log Out of BidHub">
+      <Button fx:id="LogoutBtn" layoutX="43.0" layoutY="374.0" mnemonicParsing="false" onAction="#handleLogout" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 10;" styleClass="btn-signin" text="Log Out of BidHub" visible="false">
          <font>
             <Font name="System Bold" size="14.0" />
          </font>
       </Button>
-      <AnchorPane fx:id="google_login_pane" layoutX="44.0" layoutY="340.0">
-         <children>
-            <Button fx:id="google_login" mnemonicParsing="false" onAction="#handleGoogleLogin" prefHeight="40.0" prefWidth="320.0" style="-fx-background-radius: 20; -fx-background-color: white;" text="Log in with Google">
-               <font>
-                  <Font name="System Bold" size="14.0" />
-               </font>
-            </Button>
-            <ImageView fitHeight="33.0" fitWidth="40.0" layoutX="13.0" layoutY="4.0" onMouseClicked="#handleGoogleLogin" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../image/google_transparent.png" />
-               </image>
-            </ImageView>
-         </children>
-      </AnchorPane>
    </children>
 </AnchorPane>

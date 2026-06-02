@@ -19,10 +19,11 @@
 
 .btn-signin {
     -fx-background-color: #ffa31a;
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: black;
     -fx-font-weight: bold;
     -fx-background-radius: 5px;
     -fx-cursor: hand;
+    -fx-border-radius: 7px;
 }
 
 .btn-signin:hover {
@@ -40,8 +41,9 @@
     -fx-font-weight: bold;
     -fx-background-radius: 5px;
     -fx-cursor: hand;
-    -fx-border-color: #ffa31a;
-    -fx-border-radius: 10px;
+    -fx-border-color: #c6c6c6;
+    -fx-border-radius: 7px;
+    -fx-border-width: 0.5;
 }
 
 .btn-signin2:hover {
