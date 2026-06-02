@@ -259,7 +259,7 @@ public class filterController {
         String id = auctionID.getText().trim();
 
         // TẠO DTO ĐÓNG GÓI DỮ LIỆU TÌM KIẾM
-        SearchCriteria criteria = this.currentCriteria != null ? this.currentCriteria : new SearchCriteria();
+        SearchCriteria criteria = new SearchCriteria();
         criteria.setCategories(getSelectedNames(categoryBtns));
         criteria.setMinPrice(getRealPrice(lowest));
         criteria.setMaxPrice(getRealPrice(highest));
