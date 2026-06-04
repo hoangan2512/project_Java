@@ -107,11 +107,7 @@ public class AuctionServer {
             if (client.getLoggedInUser() != null && client.getLoggedInUser().getID() == userId) {
                 client.sendMessage(message);
                 isOnline = true;
-
-                // Lưu ý: Nếu hệ thống cho phép 1 tài khoản đăng nhập trên nhiều máy cùng lúc,
-                // hãy BỎ 'break;' để máy nào cũng nhận được thông báo.
-                // Nếu chỉ 1 máy, giữ 'break;' để tối ưu hiệu năng.
-                // break;
+                break;
             }
         }
 
