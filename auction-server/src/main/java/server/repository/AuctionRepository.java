@@ -202,23 +202,6 @@ public class AuctionRepository {
         return auctions;
     }
 
-    public List<Auction> getAllAuctions() {
-        List<Auction> auctions = new ArrayList<>();
-        String sql = BASE_SELECT_SQL;
-
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            while (rs.next()) {
-                auctions.add(mapRowToAuction(rs, false));
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi getAllAuctions: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return auctions;
-    }
 
     public boolean updateBid(int auctionId, double newPrice, int bidderId) {
         String sql = "UPDATE auctions SET current_price = ?, highest_bidder_id = ? WHERE id = ?";
@@ -315,7 +298,8 @@ public class AuctionRepository {
                     sql.append("((a.status = 'WAITING' OR a.status = 'PROPOSAL' OR a.status = 'DELETE_PROPOSAL') AND a.start_time > ?)");
                     parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
                 } else if ("Upcoming".equalsIgnoreCase(status)) {
-                    sql.append("(((a.status = 'WAITING' OR a.status = 'PROPOSAL' OR a.status = 'DELETE_PROPOSAL') AND a.start_time <= ?)");
+                    sql.append("((a.status = 'WAITING' OR a.status = 'PROPOSAL' OR a.status = 'DELETE_PROPOSAL') AND a.start_time > ? AND a.start_time <= ?)");
+                    parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now()));
                     parameters.add(Timestamp.valueOf(java.time.LocalDateTime.now().plusHours(1)));
                 } else if ("Ending Soon".equalsIgnoreCase(status)) {
                     sql.append("(a.status = 'RUNNING' AND a.end_time <= ?)");
@@ -456,7 +440,7 @@ public class AuctionRepository {
 
     public Auction getAuctionDetails(int auctionId) {
         String sql = "SELECT a.id, i.categories, i.description, i.starting_price, i.user_prdID, i.moderation_status " +
-                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
+                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ? ";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

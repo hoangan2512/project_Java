@@ -8,8 +8,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-
-<AnchorPane prefHeight="404.0" prefWidth="714.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.winnerController">
+<AnchorPane prefHeight="404.0" prefWidth="714.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.winnerController">
    <children>
       <ImageView fitHeight="404.0" fitWidth="725.0" pickOnBounds="true" preserveRatio="true">
          <image>
@@ -26,7 +25,7 @@
             <Font name="System Bold" size="14.0" />
          </font>
       </Label>
-      <Label fx:id="prdname" alignment="CENTER" layoutX="232.0" layoutY="166.0" prefHeight="38.0" prefWidth="248.0" text="prdname" textAlignment="CENTER" textFill="WHITE">
+      <Label fx:id="prdname" alignment="CENTER" layoutX="232.0" layoutY="166.0" prefHeight="38.0" prefWidth="248.0" text="prdname" textAlignment="CENTER" textFill="WHITE" visible="false">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>

@@ -43,7 +43,7 @@ public class AuctionServiceTest {
 
     @BeforeEach
     void setUp() {
-        // --- Create common test objects ---
+        // --- Tạo đối tượng kiểm thử dùng chung ---
         testUser = new User();
         testUser.setId(1);
         testUser.setStatus("ACTIVE");
@@ -53,33 +53,30 @@ public class AuctionServiceTest {
         testAuction.setStatus("RUNNING");
         testAuction.setCurrent_price(1000.0);
         testAuction.setEnd_time(LocalDateTime.now().plusMinutes(10));
-        testAuction.setHighest_bidder_id(2); // Someone else is the highest bidder
+        testAuction.setHighest_bidder_id(2); // Người khác đang dẫn đầu giá
 
         testBid = new Bid();
         testBid.setAuction_id(100);
         testBid.setBidder_id(1);
-        testBid.setAmount(1100.0); // Valid bid amount
+        testBid.setAmount(1100.0); // Mức giá hợp lệ
     }
 
     @Test
     void placeBid_whenSuccessful_returnsSuccessResponse() {
-        // --- Arrange (Given) ---
-        // When the service asks for the user, return our active test user
-        when(userRepository.getUserById(1)).thenReturn(testUser);
-        // When the service asks for the auction, return our running test auction
-        when(auctionRepository.getAuctionById(100)).thenReturn(testAuction);
-        // When the service tries to update the bid in the DB, assume it succeeds
+        // --- Arrange ---
+        // Sử dụng any() hoặc anyInt() giúp cô lập hoàn toàn lỗi ép sai kiểu dữ liệu của ID
+        when(userRepository.getUserById(anyInt())).thenReturn(testUser);
+        when(auctionRepository.getAuctionById(anyInt())).thenReturn(testAuction);
         when(auctionRepository.updateBid(anyInt(), anyDouble(), anyInt())).thenReturn(true);
 
-        // --- Act (When) ---
+        // --- Act ---
         Response response = auctionService.placeBid(testBid);
 
-        // --- Assert (Then) ---
+        // --- Assert ---
         assertEquals("SUCCESS", response.getStatus());
         assertNotNull(response.getData());
         assertEquals("Đặt giá thành công! Bạn đang dẫn đầu.", response.getMessage());
 
-        // Verify that the repositories were called correctly
         verify(auctionRepository).updateBid(100, 1100.0, 1);
         verify(bidRepository).placeBid(testBid);
     }
@@ -88,7 +85,7 @@ public class AuctionServiceTest {
     void placeBid_whenUserIsBanned_returnsFailResponse() {
         // --- Arrange ---
         testUser.setStatus("BANNED");
-        when(userRepository.getUserById(1)).thenReturn(testUser);
+        when(userRepository.getUserById(anyInt())).thenReturn(testUser);
 
         // --- Act ---
         Response response = auctionService.placeBid(testBid);
@@ -96,17 +93,16 @@ public class AuctionServiceTest {
         // --- Assert ---
         assertEquals("FAIL", response.getStatus());
         assertEquals("Lỗi: Tài khoản của bạn đã bị khóa. Không thể thực hiện đấu giá.", response.getMessage());
-        
-        // Verify that no database updates were attempted
+
         verify(auctionRepository, never()).updateBid(anyInt(), anyDouble(), anyInt());
     }
-    
+
     @Test
     void placeBid_whenAuctionIsNotRunning_returnsFailResponse() {
         // --- Arrange ---
         testAuction.setStatus("FINISHED");
-        when(userRepository.getUserById(1)).thenReturn(testUser);
-        when(auctionRepository.getAuctionById(100)).thenReturn(testAuction);
+        when(userRepository.getUserById(anyInt())).thenReturn(testUser);
+        when(auctionRepository.getAuctionById(anyInt())).thenReturn(testAuction);
 
         // --- Act ---
         Response response = auctionService.placeBid(testBid);
@@ -120,9 +116,9 @@ public class AuctionServiceTest {
     @Test
     void placeBid_whenBidAmountIsTooLow_returnsFailResponse() {
         // --- Arrange ---
-        testBid.setAmount(1005.0); // Current price is 1000, min increment is 10k, so min bid is 1010k
-        when(userRepository.getUserById(1)).thenReturn(testUser);
-        when(auctionRepository.getAuctionById(100)).thenReturn(testAuction);
+        testBid.setAmount(1005.0);
+        when(userRepository.getUserById(anyInt())).thenReturn(testUser);
+        when(auctionRepository.getAuctionById(anyInt())).thenReturn(testAuction);
 
         // --- Act ---
         Response response = auctionService.placeBid(testBid);
@@ -132,13 +128,15 @@ public class AuctionServiceTest {
         assertTrue(response.getMessage().contains("Lỗi: Giá đặt không hợp lệ."));
         verify(auctionRepository, never()).updateBid(anyInt(), anyDouble(), anyInt());
     }
-    
+
     @Test
     void placeBid_whenUserIsAlreadyHighestBidder_returnsFailResponse() {
         // --- Arrange ---
-        testAuction.setHighest_bidder_id(1); // The user is already winning
-        when(userRepository.getUserById(1)).thenReturn(testUser);
-        when(auctionRepository.getAuctionById(100)).thenReturn(testAuction);
+        testAuction.setHighest_bidder_id(1); // Thiết lập chính User này đang dẫn đầu giá
+
+        // Dùng bộ khớp dữ liệu linh hoạt để đảm bảo Mockito nhận diện đúng thực thể
+        when(userRepository.getUserById(anyInt())).thenReturn(testUser);
+        when(auctionRepository.getAuctionById(anyInt())).thenReturn(testAuction);
 
         // --- Act ---
         Response response = auctionService.placeBid(testBid);
@@ -152,20 +150,17 @@ public class AuctionServiceTest {
     @Test
     void placeBid_whenAntiSnipingIsTriggered_extendsAuctionTime() {
         // --- Arrange ---
-        // Set end time to be within the anti-sniping window (e.g., 15 seconds from now)
         testAuction.setEnd_time(LocalDateTime.now().plusSeconds(15));
-        
-        when(userRepository.getUserById(1)).thenReturn(testUser);
-        when(auctionRepository.getAuctionById(100)).thenReturn(testAuction);
+
+        when(userRepository.getUserById(anyInt())).thenReturn(testUser);
+        when(auctionRepository.getAuctionById(anyInt())).thenReturn(testAuction);
         when(auctionRepository.updateBid(anyInt(), anyDouble(), anyInt())).thenReturn(true);
-        // Assume the end time update succeeds
         when(auctionRepository.updateEndTime(anyInt(), any(LocalDateTime.class))).thenReturn(true);
 
         // --- Act ---
         auctionService.placeBid(testBid);
 
         // --- Assert ---
-        // Verify that the method to extend the auction time was called
         verify(auctionRepository).updateEndTime(eq(100), any(LocalDateTime.class));
     }
 }
